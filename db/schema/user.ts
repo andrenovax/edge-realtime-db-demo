@@ -1,20 +1,26 @@
+/**
+ * Better Auth core tables (D1).
+ * Matches https://www.better-auth.com/docs/concepts/database
+ * - `user`: accounts with profile information
+ * - `session`: active sessions
+ * - `account`: credential/OAuth provider links
+ * - `verification`: email-verification / password-reset tokens
+ */
 import { relations, sql } from "drizzle-orm";
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "boolean" })
-    .default(false)
-    .notNull(),
+  emailVerified: integer("email_verified", { mode: "boolean" }).default(false).notNull(),
   image: text("image"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
     .notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -28,7 +34,7 @@ export const session = sqliteTable(
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -63,7 +69,7 @@ export const account = sqliteTable(
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -81,19 +87,11 @@ export const verification = sqliteTable(
       .notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
-
-export const jwks = sqliteTable("jwks", {
-  id: text("id").primaryKey(),
-  publicKey: text("public_key").notNull(),
-  privateKey: text("private_key").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
-});
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),

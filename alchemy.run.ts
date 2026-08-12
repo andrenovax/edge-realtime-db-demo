@@ -14,7 +14,7 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     // Cross-user directory: Better Auth tables + JWKS keys.
     const db = yield* Cloudflare.D1.Database("db", {
-      migrationsDir: "./migrations",
+      migrationsDir: "./db/migrations",
       migrationsTable: "drizzle_migrations",
     });
 

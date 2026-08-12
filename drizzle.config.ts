@@ -1,7 +1,8 @@
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
+// Cross-user directory (D1): Better Auth tables.
 export default defineConfig({
-	dialect: 'sqlite',
-	schema: './src/db/schema.ts',
-	out: './migrations',
+  dialect: "sqlite",
+  schema: "./db/schema/index.ts",
+  out: "./db/migrations",
 });

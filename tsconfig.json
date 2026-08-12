@@ -7,7 +7,8 @@
 			"ESNext"
 		],
 		"types": [
-			"node"
+			"node",
+			"@cloudflare/workers-types/experimental"
 		],
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,
@@ -16,6 +17,11 @@
 		"noEmit": true
 	},
 	"include": [
-		"src"
+		"src",
+		"db",
+		"scripts",
+		"alchemy.run.ts",
+		"drizzle.config.ts",
+		"drizzle-do.config.ts"
 	]
 }

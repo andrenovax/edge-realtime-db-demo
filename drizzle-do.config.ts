@@ -1,9 +1,9 @@
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
 // Per-user schema, applied inside each UserDO on wake.
 export default defineConfig({
-	dialect: 'sqlite',
-	driver: 'durable-sqlite',
-	schema: './src/user-do/schema.ts',
-	out: './migrations-do',
+  dialect: "sqlite",
+  driver: "durable-sqlite",
+  schema: "./db/do-schema/index.ts",
+  out: "./db/migrations-do",
 });
