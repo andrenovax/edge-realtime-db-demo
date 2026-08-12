@@ -1,20 +1,30 @@
 import { newWorkersRpcResponse, RpcTarget, type RpcStub } from 'capnweb';
 import { DurableObject } from 'cloudflare:workers';
+import { desc } from 'drizzle-orm';
+import { drizzle, type DrizzleSqliteDODatabase } from 'drizzle-orm/durable-sqlite';
+import { migrate } from 'drizzle-orm/durable-sqlite/migrator';
+import migrations from '../migrations-do/migrations.js';
+import { items } from './user-do/schema.ts';
 
-type Item = { id: number; title: string; createdAt: number };
+type Item = typeof items.$inferSelect;
 
 // Client-provided callback; capnweb passes it by reference over the WS.
 type Subscriber = { onItem(item: Item): void };
 
 // Per-user database + realtime hub. One instance per userId.
+// Schema migrates on wake, before any query runs.
 export class UserDO extends DurableObject {
 	#subscribers = new Set<RpcStub<Subscriber>>();
+	#db: DrizzleSqliteDODatabase;
 
 	constructor(ctx: DurableObjectState, env: unknown) {
 		super(ctx, env as never);
-		ctx.storage.sql.exec(
-			'CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, created_at INTEGER NOT NULL)',
-		);
+		this.#db = drizzle(ctx.storage);
+		ctx.blockConcurrencyWhile(async () => {
+			// One-time reset of the pre-drizzle hand-rolled table (demo data).
+			ctx.storage.sql.exec('DROP TABLE IF EXISTS items');
+			await migrate(this.#db, migrations);
+		});
 	}
 
 	// capnweb session (HTTP batch or WebSocket) terminates inside the DO.
@@ -23,19 +33,15 @@ export class UserDO extends DurableObject {
 	}
 
 	listItems() {
-		return this.ctx.storage.sql
-			.exec('SELECT id, title, created_at AS createdAt FROM items ORDER BY id')
-			.toArray() as Item[];
+		return this.#db.select().from(items).orderBy(desc(items.id)).all();
 	}
 
 	addItem(title: string) {
-		const row = this.ctx.storage.sql
-			.exec(
-				'INSERT INTO items (title, created_at) VALUES (?, ?) RETURNING id, title, created_at AS createdAt',
-				title,
-				Date.now(),
-			)
-			.one() as Item;
+		const row = this.#db
+			.insert(items)
+			.values({ title, createdAt: Date.now() })
+			.returning()
+			.get();
 		this.#push(row);
 		return row;
 	}
