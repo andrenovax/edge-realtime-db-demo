@@ -9,7 +9,12 @@
 		"check:types": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@effect/platform-bun": ">=4.0.0-beta.105 || >=4.0.0",
+		"@effect/platform-node": ">=4.0.0-beta.105 || >=4.0.0",
 		"@flue/runtime": "^2.0.3",
+		"alchemy": "^2.0.0-beta.72",
+		"capnweb": "^0.10.0",
+		"effect": ">=4.0.0-beta.105 || >=4.0.0",
 		"hono": "^4.7.0"
 	},
 	"devDependencies": {

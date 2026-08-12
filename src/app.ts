@@ -1,8 +1,13 @@
 import { createAgentRouter } from '@flue/runtime/routing';
+import { newWorkersRpcResponse } from 'capnweb';
 import { Hono } from 'hono';
 import { Hello } from './agents/hello.ts';
+import { UserApi } from './rpc.ts';
 
 const app = new Hono();
+
+// capnweb RPC: HTTP batch + WebSocket on one endpoint.
+app.all('/rpc', (c) => newWorkersRpcResponse(c.req.raw, new UserApi()));
 
 // The route map: every agent, channel, and custom route is mounted here
 // explicitly. Talk to Hello with one POST per message:
