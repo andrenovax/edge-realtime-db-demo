@@ -14,11 +14,29 @@
       ]
     },
     "env": {
+      "DB": {
+        "databaseId": "e2c0c033-f0a4-4127-a6b5-ec60abd6cca9",
+        "databaseName": "flue-demo-db-dev-andrii-novak-35gw2k3rke5lfqya",
+        "jurisdiction": "default",
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "migrationsDir": "./migrations",
+        "migrationsTable": "drizzle_migrations",
+        "migrationsHashes": {
+          "0000_strong_morgan_stark.sql": "66aa24c1650de43e3240f01805560e3401a34c9568958876cb3b5eaa42113f6a"
+        },
+        "importHashes": {}
+      },
+      "USER_DO": {
+        "kind": "Cloudflare.DurableObject",
+        "name": "UserDO",
+        "className": "UserDO"
+      },
       "FLUE_HELLO_AGENT": {
         "kind": "Cloudflare.DurableObject",
         "name": "FlueHelloAgent",
         "className": "FlueHelloAgent"
-      }
+      },
+      "BETTER_AUTH_SECRET": "flue-alchemy-demo-secret-0812"
     },
     "isExternal": true
   },
@@ -34,21 +52,46 @@
       "alchemy:stack:flue-demo",
       "alchemy:stage:dev_andrii.novak",
       "alchemy:id:agent",
-      "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent"
+      "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent;USER_DO=UserDO"
     ],
     "durableObjectNamespaces": {
-      "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026"
+      "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026",
+      "UserDO": "81a5aeb189fb44858cd23062bd137740"
     },
     "accountId": "7fef66cba56e993c82b71db654d57783",
     "routes": [],
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "ed201db6ec498a17a2d6b560b497c4b78b9f64f3d5a5650d941f72676160f14e",
-      "metadata": "33fe98c70c0ac6e53f1eaca8ab1ca50c5ed1fcd95b33bf57216b7a2b15fbe46a"
+      "bundle": "285c6eeeb47502c4b54db9f2b7c2cee4455c17e81d9a0fa25ec5b4faf1a47844",
+      "metadata": "9de4153da7542dbebc5a75099254a8d5817502714eeef2715ee8868a0bb158fd"
     }
   },
   "bindings": [
+    {
+      "sid": "BETTER_AUTH_SECRET",
+      "data": {
+        "bindings": [
+          {
+            "type": "plain_text",
+            "name": "BETTER_AUTH_SECRET",
+            "text": "flue-alchemy-demo-secret-0812"
+          }
+        ]
+      }
+    },
+    {
+      "sid": "DB",
+      "data": {
+        "bindings": [
+          {
+            "type": "d1",
+            "databaseId": "e2c0c033-f0a4-4127-a6b5-ec60abd6cca9",
+            "name": "DB"
+          }
+        ]
+      }
+    },
     {
       "sid": "FLUE_HELLO_AGENT",
       "data": {
@@ -57,6 +100,18 @@
             "type": "durable_object_namespace",
             "name": "FLUE_HELLO_AGENT",
             "className": "FlueHelloAgent"
+          }
+        ]
+      }
+    },
+    {
+      "sid": "USER_DO",
+      "data": {
+        "bindings": [
+          {
+            "type": "durable_object_namespace",
+            "name": "USER_DO",
+            "className": "UserDO"
           }
         ]
       }
