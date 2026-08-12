@@ -1,24 +1,50 @@
-// Two capnweb sessions into ONE user's DO:
-//  A: WebSocket, subscribes with a callback stub (server push).
-//  B: HTTP batch, adds an item.
-// Pass: A receives the item pushed by B without polling.
+// JWT flow across two workers, then realtime push:
+//  auth worker: login -> session cookie -> GET /api/auth/token -> JWT
+//  agent worker: verifies JWT via JWKS (service binding), routes to UserDO
+//  A: WebSocket subscriber (server push).  B: HTTP batch mutator.
 import { newHttpBatchRpcSession, newWebSocketRpcSession, RpcTarget } from 'capnweb';
 
-const origin =
+const agentOrigin =
 	process.env.RPC_ORIGIN ??
 	'https://flue-demo-agent-dev-andrii-novak-hbodklgf42incbph.hello-andrii-novak.workers.dev';
+const authOrigin =
+	process.env.AUTH_ORIGIN ??
+	'https://flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz.hello-andrii-novak.workers.dev';
 
-// Login for a fresh session cookie.
-const login = await fetch(`${origin}/api/auth/sign-in/email`, {
+// 1. Session on the auth worker.
+const login = await fetch(`${authOrigin}/api/auth/sign-in/email`, {
 	method: 'POST',
 	headers: { 'content-type': 'application/json' },
 	body: JSON.stringify({ email: 'alice@example.com', password: 'jxt-wuc1rmj8rqy8-WGU' }),
 });
-if (!login.ok) throw new Error(`login failed: ${login.status}`);
+if (!login.ok) throw new Error(`login failed: ${login.status} ${await login.text()}`);
 const cookie = login.headers.get('set-cookie')?.split(';')[0];
 if (!cookie) throw new Error('no session cookie');
-console.log('logged in, cookie:', `${cookie.slice(0, 40)}...`);
 
+// 2. JWT for that session.
+const tokenRes = await fetch(`${authOrigin}/api/auth/token`, { headers: { cookie } });
+if (!tokenRes.ok) throw new Error(`token failed: ${tokenRes.status} ${await tokenRes.text()}`);
+const { token } = (await tokenRes.json()) as { token: string };
+const sub = JSON.parse(atob(token.split('.')[1])).sub as string;
+console.log('JWT for user:', sub);
+
+// 3. Negative checks on the agent worker.
+const noAuth = await fetch(`${agentOrigin}/do/rpc`, { method: 'POST', body: '[]' });
+console.log('no token -> /do/rpc:', noAuth.status);
+const wrongConvo = await fetch(`${agentOrigin}/agents/hello/someone-else`, {
+	method: 'POST',
+	headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+	body: JSON.stringify({ kind: 'user', body: 'hi' }),
+});
+console.log("other user's conversation:", wrongConvo.status);
+const ownConvo = await fetch(`${agentOrigin}/agents/hello/${sub}`, {
+	method: 'POST',
+	headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+	body: JSON.stringify({ kind: 'user', body: 'hi' }),
+});
+console.log('own conversation:', ownConvo.status);
+
+// 4. Realtime: WS subscriber + HTTP batch mutator, same user's DO.
 type Item = { id: number; title: string; createdAt: number };
 interface UserDoApi {
 	listItems(): Promise<Item[]>;
@@ -26,7 +52,6 @@ interface UserDoApi {
 	subscribe(cb: Subscriber): Promise<number>;
 }
 
-// Client A — WebSocket subscriber (browser WS can't set headers → ?auth=).
 class Subscriber extends RpcTarget {
 	onItem(item: Item) {
 		console.log(`A received push after ${Date.now() - sentAt}ms:`, JSON.stringify(item));
@@ -37,27 +62,25 @@ class Subscriber extends RpcTarget {
 const received = Promise.withResolvers<Item>();
 let sentAt = 0;
 
-const wsUrl = `${origin.replace('https://', 'wss://')}/do/rpc?auth=${encodeURIComponent(cookie)}`;
-const a = newWebSocketRpcSession<UserDoApi>(wsUrl);
-const subCount = await a.subscribe(new Subscriber());
-console.log('A subscribed over WS, subscribers:', subCount);
+const a = newWebSocketRpcSession<UserDoApi>(
+	`${agentOrigin.replace('https://', 'wss://')}/do/rpc?auth=${encodeURIComponent(token)}`,
+);
+console.log('A subscribed over WS, subscribers:', await a.subscribe(new Subscriber()));
 
-// Client B — separate HTTP batch session, same user.
-const httpUrl = `${origin}/do/rpc?auth=${encodeURIComponent(cookie)}`;
-const b = newHttpBatchRpcSession<UserDoApi>(httpUrl);
+const httpUrl = `${agentOrigin}/do/rpc?auth=${encodeURIComponent(token)}`;
 sentAt = Date.now();
-const added = await b.addItem(`realtime @ ${new Date().toISOString()}`);
+const added = await newHttpBatchRpcSession<UserDoApi>(httpUrl).addItem(
+	`realtime-jwt @ ${new Date().toISOString()}`,
+);
 console.log('B added item:', JSON.stringify(added));
 
-// Wait for the push (10s timeout).
 const pushed = await Promise.race([
 	received.promise,
 	new Promise<never>((_, rej) => setTimeout(() => rej(new Error('TIMEOUT: no push')), 10_000)),
 ]);
 if (pushed.id !== added.id) throw new Error('pushed item != added item');
 
-// Confirm persistence in DO SQLite.
 const items = await newHttpBatchRpcSession<UserDoApi>(httpUrl).listItems();
 console.log('DO SQLite item count:', items.length);
-console.log('PASS: realtime push via capnweb WS in UserDO');
+console.log('PASS: JWT auth split + realtime push');
 process.exit(0);

@@ -14,17 +14,28 @@
       ]
     },
     "env": {
-      "DB": {
-        "databaseId": "e2c0c033-f0a4-4127-a6b5-ec60abd6cca9",
-        "databaseName": "flue-demo-db-dev-andrii-novak-35gw2k3rke5lfqya",
-        "jurisdiction": "default",
+      "AUTH": {
+        "workerId": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
+        "workerName": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
+        "logpush": false,
+        "url": "https://flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz.hello-andrii-novak.workers.dev",
+        "urls": [
+          "https://flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz.hello-andrii-novak.workers.dev"
+        ],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:auth"
+        ],
+        "durableObjectNamespaces": {},
         "accountId": "7fef66cba56e993c82b71db654d57783",
-        "migrationsDir": "./migrations",
-        "migrationsTable": "drizzle_migrations",
-        "migrationsHashes": {
-          "0000_strong_morgan_stark.sql": "66aa24c1650de43e3240f01805560e3401a34c9568958876cb3b5eaa42113f6a"
-        },
-        "importHashes": {}
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "06cff17d793f0d9c55d30a793502cfdc9c1113a75bd8633aa8ec75c6bd311a06",
+          "metadata": "eb26861a6a463a2e1b947fcb191003c7d288e3483a17543817a0931eb048f364"
+        }
       },
       "USER_DO": {
         "kind": "Cloudflare.DurableObject",
@@ -35,8 +46,7 @@
         "kind": "Cloudflare.DurableObject",
         "name": "FlueHelloAgent",
         "className": "FlueHelloAgent"
-      },
-      "BETTER_AUTH_SECRET": "flue-alchemy-demo-secret-0812"
+      }
     },
     "isExternal": true
   },
@@ -63,31 +73,19 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "285c6eeeb47502c4b54db9f2b7c2cee4455c17e81d9a0fa25ec5b4faf1a47844",
-      "metadata": "9de4153da7542dbebc5a75099254a8d5817502714eeef2715ee8868a0bb158fd"
+      "bundle": "c5f9e52a9a3f14113bce0c6d3d67fb71b59cce9be34ade25cf093ef19a374b26",
+      "metadata": "5ae13ce2d8f449a629a0c046de919b0e060a67a3471e2d6fcd654e4bbec8edab"
     }
   },
   "bindings": [
     {
-      "sid": "BETTER_AUTH_SECRET",
+      "sid": "AUTH",
       "data": {
         "bindings": [
           {
-            "type": "plain_text",
-            "name": "BETTER_AUTH_SECRET",
-            "text": "flue-alchemy-demo-secret-0812"
-          }
-        ]
-      }
-    },
-    {
-      "sid": "DB",
-      "data": {
-        "bindings": [
-          {
-            "type": "d1",
-            "databaseId": "e2c0c033-f0a4-4127-a6b5-ec60abd6cca9",
-            "name": "DB"
+            "type": "service",
+            "name": "AUTH",
+            "service": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz"
           }
         ]
       }

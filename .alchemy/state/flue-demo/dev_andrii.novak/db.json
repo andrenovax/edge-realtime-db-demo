@@ -1,5 +1,5 @@
 {
-  "status": "created",
+  "status": "updated",
   "fqn": "db",
   "logicalId": "db",
   "instanceId": "df4d6d2b71513ab2c3007fbf2d6cc6d4",
@@ -16,14 +16,15 @@
     "migrationsDir": "./migrations",
     "migrationsTable": "drizzle_migrations",
     "migrationsHashes": {
-      "0000_strong_morgan_stark.sql": "66aa24c1650de43e3240f01805560e3401a34c9568958876cb3b5eaa42113f6a"
+      "0000_strong_morgan_stark.sql": "66aa24c1650de43e3240f01805560e3401a34c9568958876cb3b5eaa42113f6a",
+      "0001_worthless_sway.sql": "15eeee071cea8b2bfb3c483ffce7ca7c2d1d5b247bcb8d1d49c1df7dd97ceae3"
     },
     "importHashes": {}
   },
   "bindings": [],
   "providerVersion": 0,
   "downstream": [
-    "agent"
+    "auth"
   ],
   "removalPolicy": "destroy",
   "providerMode": "live"
