@@ -1,25 +1,28 @@
 /// <reference types="@cloudflare/workers-types" />
 /**
- * API worker: hosts the per-user DOs and owns all data-plane dispatch.
- * No public route — reached only via the front worker's service binding,
- * which verifies the JWT and stamps x-user-id.
+ * API worker: hosts the per-user DOs and owns all data-plane dispatch,
+ * including the LiveStore sync protocol and its authentication (the
+ * sync payload carries the JWT — a protocol detail that belongs here,
+ * not in the front proxy).
+ * No public route — /do/* arrives with a front-verified x-user-id.
  */
 import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sync-cf/cf-worker";
 import { newWorkersRpcResponse } from "capnweb";
+import { verifyToken, type AuthEnv } from "../shared/jwt.ts";
 import { UserApi } from "./rpc.ts";
 
 export { UserSyncBackendDO } from "../do/sync-backend.ts";
 export { UserDO } from "../do/user-do.ts";
 
-interface Env {
+interface Env extends AuthEnv {
   USER_DO: DurableObjectNamespace;
   USER_SYNC_BACKEND_DO: DurableObjectNamespace;
 }
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    // LiveStore sync (own query-param protocol). Front already verified
-    // the JWT; the store id must match the stamped identity.
+    // LiveStore sync (own query-param protocol). The syncPayload carries
+    // the JWT; verify it and pin the store to the token's subject.
     const searchParams = matchSyncRequest(request as unknown as CfTypes.Request);
     if (searchParams !== undefined) {
       return (await handleSyncRequest({
@@ -29,8 +32,15 @@ export default {
         env: env as never,
         ctx: ctx as unknown as CfTypes.ExecutionContext,
         syncBackendBinding: "USER_SYNC_BACKEND_DO",
-        validatePayload: (_payload, { storeId, headers }) => {
-          if (headers.get("x-user-id") !== storeId) throw new Error("forbidden: not your store");
+        validatePayload: async (payload, { storeId }) => {
+          const token =
+            typeof payload === "object" && payload !== null && "authToken" in payload
+              ? (payload as { authToken: unknown }).authToken
+              : undefined;
+          if (typeof token !== "string") throw new Error("missing auth token");
+          const userId = await verifyToken(env, token);
+          if (!userId) throw new Error("invalid auth token");
+          if (storeId !== userId) throw new Error("forbidden: not your store");
         },
       })) as unknown as Response;
     }

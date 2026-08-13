@@ -1,7 +1,1 @@
-import { t as e } from "./rolldown-runtime-Dq54dT1u.js";
-var t,
-  n,
-  r = e(() => {
-    ((t = `kysely_migration`), (n = `kysely_migration_lock`));
-  });
-export { t as n, r, n as t };
+import{t as e}from"./rolldown-runtime-Dq54dT1u.js";var t,n,r=e(()=>{t=`kysely_migration`,n=`kysely_migration_lock`});export{t as n,r,n as t};

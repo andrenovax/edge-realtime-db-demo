@@ -58,7 +58,7 @@ const localStore = await createStorePromise({
   schema,
   adapter: makeAdapter({
     storage: { type: "fs", baseDirectory: dataDir },
-    sync: { backend: makeWsSync({ url: front.replace("https://", "wss://") }) },
+    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/sync` }) },
   }),
   storeId: sub,
   syncPayload: { authToken: token },

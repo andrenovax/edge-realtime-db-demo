@@ -9,9 +9,31 @@
     "workersDev": false,
     "compatibility": {
       "date": "2026-06-01",
-      "flags": ["nodejs_compat"]
+      "flags": [
+        "nodejs_compat"
+      ]
     },
     "env": {
+      "AUTH": {
+        "workerId": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
+        "workerName": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
+        "logpush": false,
+        "urls": [],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:auth"
+        ],
+        "durableObjectNamespaces": {},
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "283914e3a85de92ed44c68d8d066dbe309739eb328c4b179929a8f52690146a8",
+          "metadata": "2b5350a14b9cd640a1642e31c0bb0042fd5410f25c33352d62f341c479844857"
+        }
+      },
       "USER_DO": {
         "kind": "Cloudflare.DurableObject",
         "name": "UserDO",
@@ -45,11 +67,23 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "414739e5220e7ff2c8c6b0c5b993e269453b26ba2c23f26f4696abcb8bfcf4a5",
-      "metadata": "82486a0835c91aa646dd08fcd940347f93ccd56eb47b634c318e852d093303aa"
+      "bundle": "668dbb218efa3876d2faaa4bb8b5e2cb9bc02268cf2c2a0406ff6e3f72a3c943",
+      "metadata": "e40eab752dfa356597af665d1789490ce72bc5d2d6b170162db2f2573d43b7c5"
     }
   },
   "bindings": [
+    {
+      "sid": "AUTH",
+      "data": {
+        "bindings": [
+          {
+            "type": "service",
+            "name": "AUTH",
+            "service": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz"
+          }
+        ]
+      }
+    },
     {
       "sid": "USER_DO",
       "data": {
@@ -76,7 +110,10 @@
     }
   ],
   "providerVersion": 0,
-  "downstream": ["agent", "front"],
+  "downstream": [
+    "agent",
+    "front"
+  ],
   "removalPolicy": "destroy",
   "providerMode": "live"
 }

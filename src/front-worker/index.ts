@@ -1,16 +1,17 @@
 /// <reference types="@cloudflare/workers-types" />
 /**
- * Public entry point — a proxy with JWT validation, nothing else.
- * - /auth/*            -> auth worker (Better Auth + D1), path-rewritten
- * - LiveStore sync     -> verify JWT from syncPayload (storeId === sub),
- *                         forward to api worker with x-user-id
- * - /do/*              -> verify JWT, forward to api worker with x-user-id
- * - /rpc               -> unauthenticated capnweb demo, forwarded as-is
- * - /agents/*          -> verify JWT, forward to flue worker with x-user-id
- * - everything else    -> static assets (SPA) once bound
+ * Public entry point — a path router with JWT validation, nothing else.
+ * No framework or data-layer imports: LiveStore, capnweb, drizzle are
+ * implementation details of the workers behind the bindings.
+ * - /auth/*   -> auth worker (Better Auth + D1), path-rewritten
+ * - /sync     -> api worker, forwarded as-is (sync protocol authenticates
+ *                itself there via its own payload)
+ * - /do/*     -> verify JWT, forward to api worker with x-user-id
+ * - /rpc      -> unauthenticated capnweb demo, forwarded as-is
+ * - /agents/* -> verify JWT, forward to flue worker with x-user-id
+ * - else      -> static assets (SPA) once bound
  */
-import { matchSyncRequest, type CfTypes } from "@livestore/sync-cf/cf-worker";
-import { verifyToken, verifyUser } from "./jwt.ts";
+import { verifyUser } from "../shared/jwt.ts";
 
 interface Env {
   AUTH: Fetcher;
@@ -38,21 +39,13 @@ export default {
       return env.AUTH.fetch(new Request(target, request));
     }
 
-    // LiveStore sync (own query-param protocol, any path).
-    const syncParams = matchSyncRequest(request as unknown as CfTypes.Request);
-    if (syncParams !== undefined) {
-      const payload = syncParams.payload;
-      const token =
-        typeof payload === "object" && payload !== null && "authToken" in payload
-          ? (payload as { authToken: unknown }).authToken
-          : undefined;
-      if (typeof token !== "string") return new Response("missing auth token", { status: 401 });
-      const userId = await verifyToken(env, token);
-      if (!userId) return new Response("invalid auth token", { status: 401 });
-      if (syncParams.storeId !== userId) {
-        return new Response("forbidden: not your store", { status: 403 });
-      }
-      return forwardAsUser(request, env.API, userId);
+    // LiveStore sync: the protocol carries its own credentials; the api
+    // worker (which owns the protocol) validates them.
+    if (url.pathname === "/sync") {
+      // Never let a public caller smuggle an identity header through.
+      const headers = new Headers(request.headers);
+      headers.delete("x-user-id");
+      return env.API.fetch(new Request(request.url, new Request(request, { headers })));
     }
 
     if (url.pathname.startsWith("/do/")) {

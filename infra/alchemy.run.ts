@@ -35,6 +35,7 @@ export default Alchemy.Stack(
       workersDev: false,
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
       env: {
+        AUTH: auth,
         USER_DO: Cloudflare.DurableObject("UserDO"),
         USER_SYNC_BACKEND_DO: Cloudflare.DurableObject("UserSyncBackendDO"),
       },

@@ -8,7 +8,9 @@
     "main": "../src/front-worker/index.ts",
     "compatibility": {
       "date": "2026-06-01",
-      "flags": ["nodejs_compat"]
+      "flags": [
+        "nodejs_compat"
+      ]
     },
     "env": {
       "AUTH": {
@@ -16,7 +18,11 @@
         "workerName": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
         "logpush": false,
         "urls": [],
-        "tags": ["alchemy:stack:flue-demo", "alchemy:stage:dev_andrii.novak", "alchemy:id:auth"],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:auth"
+        ],
         "durableObjectNamespaces": {},
         "accountId": "7fef66cba56e993c82b71db654d57783",
         "routes": [],
@@ -71,8 +77,8 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "414739e5220e7ff2c8c6b0c5b993e269453b26ba2c23f26f4696abcb8bfcf4a5",
-          "metadata": "82486a0835c91aa646dd08fcd940347f93ccd56eb47b634c318e852d093303aa"
+          "bundle": "668dbb218efa3876d2faaa4bb8b5e2cb9bc02268cf2c2a0406ff6e3f72a3c943",
+          "metadata": "e40eab752dfa356597af665d1789490ce72bc5d2d6b170162db2f2573d43b7c5"
         }
       }
     },
@@ -86,15 +92,19 @@
     "urls": [
       "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev"
     ],
-    "tags": ["alchemy:stack:flue-demo", "alchemy:stage:dev_andrii.novak", "alchemy:id:front"],
+    "tags": [
+      "alchemy:stack:flue-demo",
+      "alchemy:stage:dev_andrii.novak",
+      "alchemy:id:front"
+    ],
     "durableObjectNamespaces": {},
     "accountId": "7fef66cba56e993c82b71db654d57783",
     "routes": [],
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "b6d1ddc80a2f2bf1f3a45bff67d7a9ad60980b4e968a31b0cce22529fbb2dc61",
-      "metadata": "b957d5675454321460613ad11c9527cd2dff1e10b47bc8b2bd7c04ccf397b67c"
+      "bundle": "38d2d8b5a1c8d422d2af4d8aa547e64fed1d35a5d1809c0c434bcaf75586136e",
+      "metadata": "38023c368fc22a265da75659d5a2addafd33f96270ba30786670dc3a9864ed13"
     }
   },
   "bindings": [
