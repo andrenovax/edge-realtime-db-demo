@@ -10,10 +10,10 @@ import { events, schema, tables } from "../db/livestore/schema.ts";
 
 const agentOrigin =
   process.env.RPC_ORIGIN ??
-  "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev";
+  "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
 const authOrigin =
   process.env.AUTH_ORIGIN ??
-  "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev";
+  "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
 const wsUrl = agentOrigin.replace("https://", "wss://");
 const dataDir = ".livestore-smoke";
 

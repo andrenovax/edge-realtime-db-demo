@@ -13,7 +13,9 @@
     "db:generate": "drizzle-kit generate",
     "smoke": "nub scripts/realtime-smoke.ts",
     "deploy:cf": "cd infra && nub run deploy",
-    "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/notes-bridge-smoke.ts"
+    "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/notes-bridge-smoke.ts && nub scripts/projection-smoke.ts",
+    "dev:stack": "cd infra && nub run dev",
+    "dev:agent": "vite dev"
   },
   "dependencies": {
     "@flue/runtime": "^2.0.3",

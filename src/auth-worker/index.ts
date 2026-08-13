@@ -16,6 +16,12 @@ export default {
     const auth = betterAuth({
       database: drizzleAdapter(drizzle(env.DB, { schema }), { provider: "sqlite" }),
       secret: env.BETTER_AUTH_SECRET,
+      // alchemy dev proxies service bindings across local ports, so the
+      // derived baseURL origin differs from the browser's; trust localhost.
+      trustedOrigins: (req) => {
+        const origin = req?.headers?.get("origin");
+        return origin?.startsWith("http://localhost:") ? [origin] : [];
+      },
       emailAndPassword: { enabled: true },
       plugins: [jwt()],
     });

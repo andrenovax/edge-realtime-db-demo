@@ -1,8 +1,8 @@
 {
-  "status": "updated",
+  "status": "created",
   "fqn": "agent",
   "logicalId": "agent",
-  "instanceId": "385c352cc5e690d105e71d274529f44e",
+  "instanceId": "3a62c57995dc1357e7a748722fa82456",
   "resourceType": "Cloudflare.Worker",
   "props": {
     "main": "../dist/flue_alchemy_demo/index.js",
@@ -22,14 +22,14 @@
         "kind": "Cloudflare.DurableObject",
         "name": "UserDO",
         "className": "UserDO",
-        "scriptName": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh"
+        "scriptName": "flue-demo-api-dev-andrii-novak-rzmkt4xx64hnsg6w"
       }
     },
     "isExternal": true
   },
   "attr": {
-    "workerId": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph",
-    "workerName": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph",
+    "workerId": "flue-demo-agent-dev-andrii-novak-hjrmk6mv3qjvpz5h",
+    "workerName": "flue-demo-agent-dev-andrii-novak-hjrmk6mv3qjvpz5h",
     "logpush": false,
     "urls": [],
     "tags": [
@@ -39,8 +39,8 @@
       "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent"
     ],
     "durableObjectNamespaces": {
-      "FlueHelloAgent": "a198bb78752a4029b6fd80fa712935d4",
-      "UserDO": "7523334cd695450c9b5f9b9cc4c07f3b"
+      "FlueHelloAgent": "e4f553b9bf8f412aa5106bba2438679b",
+      "UserDO": "571950ed94fe40468a6ef0cbc0a326e4"
     },
     "accountId": "7fef66cba56e993c82b71db654d57783",
     "routes": [],
@@ -48,9 +48,11 @@
     "tailConsumers": [],
     "hash": {
       "bundle": "694ec5594152b91d5da95334f8f544b231b10b15a19d59f0a216b8736264a16d",
-      "metadata": "1fcd37a92f13c6bfa8e47f75fcb99a1983a3b025c20727f039b2eb6fe176ebf6"
+      "metadata": "6a11dbf1890cdd1e30f4436ceeb2b763237bd99facbace0567a4cf89842e9370"
     }
   },
+  "providerVersion": 0,
+  "downstream": ["front"],
   "bindings": [
     {
       "sid": "FLUE_HELLO_AGENT",
@@ -72,14 +74,12 @@
             "type": "durable_object_namespace",
             "name": "USER_DO",
             "className": "UserDO",
-            "scriptName": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh"
+            "scriptName": "flue-demo-api-dev-andrii-novak-rzmkt4xx64hnsg6w"
           }
         ]
       }
     }
   ],
-  "providerVersion": 0,
-  "downstream": ["front"],
   "removalPolicy": "destroy",
   "providerMode": "live"
 }

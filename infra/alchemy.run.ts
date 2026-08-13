@@ -29,6 +29,10 @@ export default Alchemy.Stack(
       },
     });
 
+    // CQRS projection feed: sync DOs enqueue accepted event batches,
+    // the api worker's queue handler folds them into D1.
+    const events = yield* Cloudflare.Queues.Queue("events");
+
     // Data plane: hosts the per-user DOs and owns all data-plane dispatch.
     const api = yield* Cloudflare.Worker("api", {
       main: "../src/api-worker/index.ts",
@@ -36,9 +40,17 @@ export default Alchemy.Stack(
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
       env: {
         AUTH: auth,
+        DB: db,
+        EVENTS_QUEUE: events,
         USER_DO: Cloudflare.DurableObject("UserDO"),
         USER_SYNC_BACKEND_DO: Cloudflare.DurableObject("UserSyncBackendDO"),
       },
+    });
+
+    yield* Cloudflare.Queues.Consumer("events-consumer", {
+      queueId: events.queueId,
+      scriptName: api.workerName,
+      settings: { batchSize: 25, maxWaitTimeMs: 2000 },
     });
 
     const agent = yield* Cloudflare.Worker("agent", {

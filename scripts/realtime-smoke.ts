@@ -12,7 +12,7 @@ import { schema, tables } from "../db/livestore/schema.ts";
 
 const front =
   process.env.FRONT_ORIGIN ??
-  "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev";
+  "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
 const dataDir = ".realtime-smoke";
 rmSync(dataDir, { recursive: true, force: true });
 

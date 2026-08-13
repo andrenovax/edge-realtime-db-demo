@@ -2,28 +2,32 @@
   "status": "updated",
   "fqn": "db",
   "logicalId": "db",
-  "instanceId": "df4d6d2b71513ab2c3007fbf2d6cc6d4",
+  "instanceId": "1e4e1c443c439b316ee31fabbcae3b47",
   "resourceType": "Cloudflare.D1Database",
   "props": {
     "migrationsDir": "../db/migrations",
     "migrationsTable": "drizzle_migrations"
   },
   "attr": {
-    "databaseId": "e2c0c033-f0a4-4127-a6b5-ec60abd6cca9",
-    "databaseName": "flue-demo-db-dev-andrii-novak-35gw2k3rke5lfqya",
+    "databaseId": "abede511-913e-4e5d-9bbe-47475d95e476",
+    "databaseName": "flue-demo-db-dev-andrii-novak-dzhbyrb4iontc3xd",
     "jurisdiction": "default",
     "accountId": "7fef66cba56e993c82b71db654d57783",
     "migrationsDir": "../db/migrations",
     "migrationsTable": "drizzle_migrations",
     "migrationsHashes": {
       "0000_strong_morgan_stark.sql": "66aa24c1650de43e3240f01805560e3401a34c9568958876cb3b5eaa42113f6a",
-      "0001_worthless_sway.sql": "15eeee071cea8b2bfb3c483ffce7ca7c2d1d5b247bcb8d1d49c1df7dd97ceae3"
+      "0001_worthless_sway.sql": "15eeee071cea8b2bfb3c483ffce7ca7c2d1d5b247bcb8d1d49c1df7dd97ceae3",
+      "0002_foamy_mercury.sql": "4be0abf4659de90fc5f8c30fe07a1f9129686abf203ada75d1183c0ad6ab323e"
     },
     "importHashes": {}
   },
   "bindings": [],
   "providerVersion": 0,
-  "downstream": ["auth"],
+  "downstream": [
+    "auth",
+    "api"
+  ],
   "removalPolicy": "destroy",
   "providerMode": "live"
 }

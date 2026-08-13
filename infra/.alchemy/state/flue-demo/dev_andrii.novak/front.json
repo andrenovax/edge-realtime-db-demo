@@ -2,7 +2,7 @@
   "status": "updated",
   "fqn": "front",
   "logicalId": "front",
-  "instanceId": "3a73312947400a309cf3ab1ca8a35baa",
+  "instanceId": "acc8a7b2dc4eafd6e6ffa52aafb14f94",
   "resourceType": "Cloudflare.Worker",
   "props": {
     "main": "../src/front-worker/index.ts",
@@ -14,8 +14,8 @@
     },
     "env": {
       "AUTH": {
-        "workerId": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
-        "workerName": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
+        "workerId": "flue-demo-auth-dev-andrii-novak-k3hl4zf3ajmtrmd4",
+        "workerName": "flue-demo-auth-dev-andrii-novak-k3hl4zf3ajmtrmd4",
         "logpush": false,
         "urls": [],
         "tags": [
@@ -29,13 +29,13 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "283914e3a85de92ed44c68d8d066dbe309739eb328c4b179929a8f52690146a8",
-          "metadata": "2b5350a14b9cd640a1642e31c0bb0042fd5410f25c33352d62f341c479844857"
+          "bundle": "1b917acbb3ee0814ddf8e635b6e3db1cb3fb8dba779e615e50ba1c38d4ca8c4e",
+          "metadata": "03eacc86f95203814da625a44e50f5d68a8425114fec20ceb0cc256207c32902"
         }
       },
       "AGENT": {
-        "workerId": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph",
-        "workerName": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph",
+        "workerId": "flue-demo-agent-dev-andrii-novak-hjrmk6mv3qjvpz5h",
+        "workerName": "flue-demo-agent-dev-andrii-novak-hjrmk6mv3qjvpz5h",
         "logpush": false,
         "urls": [],
         "tags": [
@@ -45,8 +45,8 @@
           "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent"
         ],
         "durableObjectNamespaces": {
-          "FlueHelloAgent": "a198bb78752a4029b6fd80fa712935d4",
-          "UserDO": "7523334cd695450c9b5f9b9cc4c07f3b"
+          "FlueHelloAgent": "e4f553b9bf8f412aa5106bba2438679b",
+          "UserDO": "571950ed94fe40468a6ef0cbc0a326e4"
         },
         "accountId": "7fef66cba56e993c82b71db654d57783",
         "routes": [],
@@ -54,12 +54,12 @@
         "tailConsumers": [],
         "hash": {
           "bundle": "694ec5594152b91d5da95334f8f544b231b10b15a19d59f0a216b8736264a16d",
-          "metadata": "1fcd37a92f13c6bfa8e47f75fcb99a1983a3b025c20727f039b2eb6fe176ebf6"
+          "metadata": "6a11dbf1890cdd1e30f4436ceeb2b763237bd99facbace0567a4cf89842e9370"
         }
       },
       "API": {
-        "workerId": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh",
-        "workerName": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh",
+        "workerId": "flue-demo-api-dev-andrii-novak-rzmkt4xx64hnsg6w",
+        "workerName": "flue-demo-api-dev-andrii-novak-rzmkt4xx64hnsg6w",
         "logpush": false,
         "urls": [],
         "tags": [
@@ -69,28 +69,28 @@
           "alchemy:dos:USER_DO=UserDO;USER_SYNC_BACKEND_DO=UserSyncBackendDO"
         ],
         "durableObjectNamespaces": {
-          "UserDO": "7523334cd695450c9b5f9b9cc4c07f3b",
-          "UserSyncBackendDO": "dbbe00c85eba4a20aa63979e01b68b28"
+          "UserDO": "571950ed94fe40468a6ef0cbc0a326e4",
+          "UserSyncBackendDO": "bb4a81c60d0e4ea6af98cf90f52ca829"
         },
         "accountId": "7fef66cba56e993c82b71db654d57783",
         "routes": [],
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "668dbb218efa3876d2faaa4bb8b5e2cb9bc02268cf2c2a0406ff6e3f72a3c943",
-          "metadata": "e40eab752dfa356597af665d1789490ce72bc5d2d6b170162db2f2573d43b7c5"
+          "bundle": "28722e5e57b3b98fcf625208869fd85a0839cb19426286e2f4ba387e3dbcab68",
+          "metadata": "1d47e3f535018f76bd79d241d4c0f0141b7c7413327c673d565cf09b35ba9637"
         }
       }
     },
     "isExternal": true
   },
   "attr": {
-    "workerId": "flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht",
-    "workerName": "flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht",
+    "workerId": "flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7",
+    "workerName": "flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7",
     "logpush": false,
-    "url": "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev",
+    "url": "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev",
     "urls": [
-      "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev"
+      "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev"
     ],
     "tags": [
       "alchemy:stack:flue-demo",
@@ -104,7 +104,7 @@
     "tailConsumers": [],
     "hash": {
       "bundle": "38d2d8b5a1c8d422d2af4d8aa547e64fed1d35a5d1809c0c434bcaf75586136e",
-      "metadata": "38023c368fc22a265da75659d5a2addafd33f96270ba30786670dc3a9864ed13"
+      "metadata": "d2677330c3ac548506e69685b7f96ce0bd79844552c6a219e35e39b1d01d82c9"
     }
   },
   "bindings": [
@@ -115,7 +115,7 @@
           {
             "type": "service",
             "name": "AGENT",
-            "service": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph"
+            "service": "flue-demo-agent-dev-andrii-novak-hjrmk6mv3qjvpz5h"
           }
         ]
       }
@@ -127,7 +127,7 @@
           {
             "type": "service",
             "name": "API",
-            "service": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh"
+            "service": "flue-demo-api-dev-andrii-novak-rzmkt4xx64hnsg6w"
           }
         ]
       }
@@ -139,7 +139,7 @@
           {
             "type": "service",
             "name": "AUTH",
-            "service": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz"
+            "service": "flue-demo-auth-dev-andrii-novak-k3hl4zf3ajmtrmd4"
           }
         ]
       }
