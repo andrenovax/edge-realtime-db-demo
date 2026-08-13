@@ -10,24 +10,24 @@ import { events, schema, tables } from "../src/livestore/schema.ts";
 
 const agentOrigin =
   process.env.RPC_ORIGIN ??
-  "https://flue-demo-agent-dev-andrii-novak-hbodklgf42incbph.hello-andrii-novak.workers.dev";
+  "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev";
 const authOrigin =
   process.env.AUTH_ORIGIN ??
-  "https://flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz.hello-andrii-novak.workers.dev";
+  "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev";
 const wsUrl = agentOrigin.replace("https://", "wss://");
 const dataDir = ".livestore-smoke";
 
 rmSync(dataDir, { recursive: true, force: true });
 
 // JWT
-const login = await fetch(`${authOrigin}/api/auth/sign-in/email`, {
+const login = await fetch(`${authOrigin}/auth/sign-in/email`, {
   method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
 });
 if (!login.ok) throw new Error(`login failed: ${login.status}`);
 const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-const tokenRes = await fetch(`${authOrigin}/api/auth/token`, { headers: { cookie } });
+const tokenRes = await fetch(`${authOrigin}/auth/token`, { headers: { cookie } });
 const { token } = (await tokenRes.json()) as { token: string };
 const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
 console.log("JWT for user:", sub);

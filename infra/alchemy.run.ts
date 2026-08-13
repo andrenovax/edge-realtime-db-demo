@@ -20,6 +20,7 @@ export default Alchemy.Stack(
 
     const auth = yield* Cloudflare.Worker("auth", {
       main: "../src/auth-worker/index.ts",
+      workersDev: false,
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
       env: {
         DB: db,
@@ -31,17 +32,24 @@ export default Alchemy.Stack(
     const agent = yield* Cloudflare.Worker("agent", {
       main: "../dist/flue_alchemy_demo/index.js",
       bundle: false,
+      workersDev: false,
       // rpc_params_dup_stubs (workerd#5733, fixes capnweb#110) is default
       // since compat date 2026-01-20 — covered by 2026-06-01.
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
       env: {
-        AUTH: auth,
         USER_DO: Cloudflare.DurableObject("UserDO"),
         SYNC_BACKEND_DO: Cloudflare.DurableObject("SyncBackendDO"),
         FLUE_HELLO_AGENT: Cloudflare.DurableObject("FlueHelloAgent"),
       },
     });
 
-    return { url: agent.url, authUrl: auth.url, database: db.databaseName };
+    // The only public worker: assets + auth proxy + JWT gate for the agent.
+    const front = yield* Cloudflare.Worker("front", {
+      main: "../src/front-worker/index.ts",
+      compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
+      env: { AUTH: auth, AGENT: agent },
+    });
+
+    return { url: front.url, database: db.databaseName };
   }),
 );

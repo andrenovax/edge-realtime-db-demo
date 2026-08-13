@@ -3,13 +3,19 @@ import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sy
 import { newWorkersRpcResponse } from "capnweb";
 import { Hono } from "hono";
 import { Hello } from "./agents/hello.ts";
-import { verifyToken, verifyUser, type AgentEnv } from "./jwt.ts";
 import { UserApi } from "./rpc.ts";
 
+type AgentEnv = {
+  USER_DO: DurableObjectNamespace;
+  SYNC_BACKEND_DO: DurableObjectNamespace;
+};
+
+// This worker has no public route. Identity arrives as x-user-id, verified
+// and stamped by the front worker; JWT/JWKS never appear here.
 const app = new Hono<{ Bindings: AgentEnv; Variables: { userId: string } }>();
 
-// LiveStore sync (WS/HTTP, own query-param protocol). Auth: the client's
-// syncPayload carries the JWT; the store id must be the token's sub.
+// LiveStore sync (own query-param protocol). Front already authenticated;
+// defense in depth: the store id must still match the stamped identity.
 app.use("*", async (c, next) => {
   const request = c.req.raw as unknown as CfTypes.Request;
   const searchParams = matchSyncRequest(request);
@@ -21,29 +27,20 @@ app.use("*", async (c, next) => {
     env: c.env as never,
     ctx: c.executionCtx as unknown as CfTypes.ExecutionContext,
     syncBackendBinding: "SYNC_BACKEND_DO",
-    validatePayload: async (payload, { storeId }) => {
-      const token =
-        typeof payload === "object" && payload !== null && "authToken" in payload
-          ? (payload as { authToken: unknown }).authToken
-          : undefined;
-      if (typeof token !== "string") throw new Error("missing auth token");
-      const userId = await verifyToken(c.env, token);
-      if (!userId) throw new Error("invalid auth token");
-      if (storeId !== userId) throw new Error("forbidden: not your store");
+    validatePayload: (_payload, { storeId, headers }) => {
+      if (headers.get("x-user-id") !== storeId) throw new Error("forbidden: not your store");
     },
   })) as unknown as Response;
 });
 
-// JWT gate: signature checked against the auth worker's JWKS (cached),
-// authenticated userId stamped onto the request context.
 app.use("/do/*", async (c, next) => {
-  const userId = await verifyUser(c.env, c.req.raw);
+  const userId = c.req.header("x-user-id");
   if (!userId) return c.json({ error: "unauthorized" }, 401);
   c.set("userId", userId);
   await next();
 });
 app.use("/agents/hello/*", async (c, next) => {
-  const userId = await verifyUser(c.env, c.req.raw);
+  const userId = c.req.header("x-user-id");
   if (!userId) return c.json({ error: "unauthorized" }, 401);
   // Conversation id is caller-chosen: only your own.
   const conversationId = c.req.path.split("/")[3];

@@ -1,0 +1,107 @@
+{
+  "status": "created",
+  "fqn": "front",
+  "logicalId": "front",
+  "instanceId": "3a73312947400a309cf3ab1ca8a35baa",
+  "resourceType": "Cloudflare.Worker",
+  "props": {
+    "main": "../src/front-worker/index.ts",
+    "compatibility": {
+      "date": "2026-06-01",
+      "flags": ["nodejs_compat"]
+    },
+    "env": {
+      "AUTH": {
+        "workerId": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
+        "workerName": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz",
+        "logpush": false,
+        "urls": [],
+        "tags": ["alchemy:stack:flue-demo", "alchemy:stage:dev_andrii.novak", "alchemy:id:auth"],
+        "durableObjectNamespaces": {},
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "c1caf23e44bff4799b1cb81f6a58325613700d7749705e950cd44ad06e587cb7",
+          "metadata": "2b5350a14b9cd640a1642e31c0bb0042fd5410f25c33352d62f341c479844857"
+        }
+      },
+      "AGENT": {
+        "workerId": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph",
+        "workerName": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph",
+        "logpush": false,
+        "urls": [],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:agent",
+          "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent;SYNC_BACKEND_DO=SyncBackendDO;USER_DO=UserDO"
+        ],
+        "durableObjectNamespaces": {
+          "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026",
+          "SyncBackendDO": "7124d8f325e44a6888441b2700c1f8c8",
+          "UserDO": "81a5aeb189fb44858cd23062bd137740"
+        },
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "7ab74ada5564ed6eb26578d4769cc6d1c7b4ed14c50a0f5b83e0aa859c4fd792",
+          "metadata": "9ef447abd8c8d3fd76e745db68bce9cc17a944c94d99f42b12900122e8fd0b04"
+        }
+      }
+    },
+    "isExternal": true
+  },
+  "attr": {
+    "workerId": "flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht",
+    "workerName": "flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht",
+    "logpush": false,
+    "url": "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev",
+    "urls": [
+      "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev"
+    ],
+    "tags": ["alchemy:stack:flue-demo", "alchemy:stage:dev_andrii.novak", "alchemy:id:front"],
+    "durableObjectNamespaces": {},
+    "accountId": "7fef66cba56e993c82b71db654d57783",
+    "routes": [],
+    "crons": [],
+    "tailConsumers": [],
+    "hash": {
+      "bundle": "e76f3d9f8c1f0c917c13a015863c8d3ffcc843120045a3c7464247640eaa46da",
+      "metadata": "fa061702a4b2bd55aea43e78fc1572924196e4427c52d92286f85666830a36ac"
+    }
+  },
+  "bindings": [
+    {
+      "sid": "AGENT",
+      "data": {
+        "bindings": [
+          {
+            "type": "service",
+            "name": "AGENT",
+            "service": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph"
+          }
+        ]
+      }
+    },
+    {
+      "sid": "AUTH",
+      "data": {
+        "bindings": [
+          {
+            "type": "service",
+            "name": "AUTH",
+            "service": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz"
+          }
+        ]
+      }
+    }
+  ],
+  "providerVersion": 0,
+  "downstream": [],
+  "removalPolicy": "destroy",
+  "providerMode": "live"
+}

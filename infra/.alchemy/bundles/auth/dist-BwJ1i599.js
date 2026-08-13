@@ -580,16 +580,14 @@ var createKyselyAdapter,
             supportsUUIDs: r?.type === `postgres`,
             transaction: r?.transaction
               ? (t) =>
-                  e
-                    .transaction()
-                    .execute((e) =>
-                      t(
-                        n({
-                          config: { ...o.config, transaction: !1 },
-                          adapter: createCustomAdapter(e, !0),
-                        })(i),
-                      ),
-                    )
+                  e.transaction().execute((e) =>
+                    t(
+                      n({
+                        config: { ...o.config, transaction: !1 },
+                        adapter: createCustomAdapter(e, !0),
+                      })(i),
+                    ),
+                  )
               : !1,
           },
           adapter: createCustomAdapter(e),

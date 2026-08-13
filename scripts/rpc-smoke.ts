@@ -1,7 +1,7 @@
 import { newHttpBatchRpcSession } from "capnweb";
 import type { UserApi } from "../src/rpc.ts";
 
-const url = `${process.env.RPC_ORIGIN ?? "https://flue-demo-agent-dev-andrii-novak-hbodklgf42incbph.hello-andrii-novak.workers.dev"}/rpc`;
+const url = `${process.env.RPC_ORIGIN ?? "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev"}/rpc`;
 
 // Count actual HTTP requests.
 let fetches = 0;

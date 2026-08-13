@@ -1,10 +1,7 @@
 import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
 
-export type AgentEnv = {
-  USER_DO: DurableObjectNamespace;
-  SYNC_BACKEND_DO: DurableObjectNamespace;
-  AUTH: Fetcher;
-};
+// Any worker holding a service binding to the auth worker can verify.
+export type AuthEnv = { AUTH: Fetcher };
 
 // JWKS via service binding, cached per isolate. Signature check is
 // CPU-only after that — no auth-worker or DB hop per request.
@@ -12,7 +9,7 @@ let jwks: ReturnType<typeof createLocalJWKSet> | null = null;
 let fetchedAt = 0;
 const JWKS_TTL_MS = 10 * 60 * 1000;
 
-async function getJwks(env: AgentEnv) {
+async function getJwks(env: AuthEnv) {
   if (!jwks || Date.now() - fetchedAt > JWKS_TTL_MS) {
     // Host is never dialed; the binding routes to the auth worker.
     const res = await env.AUTH.fetch("https://auth.internal/api/auth/jwks");
@@ -24,7 +21,7 @@ async function getJwks(env: AgentEnv) {
 }
 
 // Returns userId, or null when the token is invalid.
-export async function verifyToken(env: AgentEnv, token: string) {
+export async function verifyToken(env: AuthEnv, token: string) {
   try {
     const { payload } = await jwtVerify(token, await getJwks(env));
     return typeof payload.sub === "string" ? payload.sub : null;
@@ -41,7 +38,7 @@ export async function verifyToken(env: AgentEnv, token: string) {
 }
 
 // Returns userId, or null when the token is absent/invalid.
-export async function verifyUser(env: AgentEnv, request: Request) {
+export async function verifyUser(env: AuthEnv, request: Request) {
   const url = new URL(request.url);
   const token =
     request.headers.get("authorization")?.replace(/^Bearer /, "") ?? url.searchParams.get("auth"); // browser WS can't set headers

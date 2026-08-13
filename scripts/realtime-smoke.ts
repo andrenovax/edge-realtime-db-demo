@@ -1,18 +1,18 @@
 // JWT flow across two workers, then realtime push:
-//  auth worker: login -> session cookie -> GET /api/auth/token -> JWT
+//  auth worker: login -> session cookie -> GET /auth/token -> JWT
 //  agent worker: verifies JWT via JWKS (service binding), routes to UserDO
 //  A: WebSocket subscriber (server push).  B: HTTP batch mutator.
 import { newHttpBatchRpcSession, newWebSocketRpcSession, RpcTarget } from "capnweb";
 
 const agentOrigin =
   process.env.RPC_ORIGIN ??
-  "https://flue-demo-agent-dev-andrii-novak-hbodklgf42incbph.hello-andrii-novak.workers.dev";
+  "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev";
 const authOrigin =
   process.env.AUTH_ORIGIN ??
-  "https://flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz.hello-andrii-novak.workers.dev";
+  "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev";
 
 // 1. Session on the auth worker.
-const login = await fetch(`${authOrigin}/api/auth/sign-in/email`, {
+const login = await fetch(`${authOrigin}/auth/sign-in/email`, {
   method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
@@ -22,7 +22,7 @@ const cookie = login.headers.get("set-cookie")?.split(";")[0];
 if (!cookie) throw new Error("no session cookie");
 
 // 2. JWT for that session.
-const tokenRes = await fetch(`${authOrigin}/api/auth/token`, { headers: { cookie } });
+const tokenRes = await fetch(`${authOrigin}/auth/token`, { headers: { cookie } });
 if (!tokenRes.ok) throw new Error(`token failed: ${tokenRes.status} ${await tokenRes.text()}`);
 const { token } = (await tokenRes.json()) as { token: string };
 const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
