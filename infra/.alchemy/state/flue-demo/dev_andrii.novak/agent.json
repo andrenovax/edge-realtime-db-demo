@@ -39,7 +39,7 @@
       "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent"
     ],
     "durableObjectNamespaces": {
-      "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026",
+      "FlueHelloAgent": "a198bb78752a4029b6fd80fa712935d4",
       "UserDO": "81a5aeb189fb44858cd23062bd137740"
     },
     "accountId": "7fef66cba56e993c82b71db654d57783",

@@ -39,7 +39,7 @@
           "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent"
         ],
         "durableObjectNamespaces": {
-          "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026",
+          "FlueHelloAgent": "a198bb78752a4029b6fd80fa712935d4",
           "UserDO": "81a5aeb189fb44858cd23062bd137740"
         },
         "accountId": "7fef66cba56e993c82b71db654d57783",
@@ -85,7 +85,7 @@
     "tailConsumers": [],
     "hash": {
       "bundle": "a1eb4363a27ddb101042063d54c18dbe70a0c1e8dabd44e86161c80c8b9af6b0",
-      "metadata": "58a796e4044cc3ecfc69de5cf3331a06609e17565bf80bf37c3ee1518c81affc"
+      "metadata": "5df6e56c8eeeca31c0a21c1d3c8ca018d107d04e7b4b990c653aca676f0aa7e7"
     }
   },
   "bindings": [
