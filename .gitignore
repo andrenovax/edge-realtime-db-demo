@@ -3,3 +3,8 @@ dist/
 .env
 .wrangler/
 .livestore-smoke/
+.realtime-smoke/
+.notes-bridge-smoke/
+infra/.alchemy/bundles/
+infra/.alchemy/log/
+infra/.alchemy/version-check.json

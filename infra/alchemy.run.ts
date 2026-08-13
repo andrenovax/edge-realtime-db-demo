@@ -54,11 +54,17 @@ export default Alchemy.Stack(
       },
     });
 
-    // The only public worker: assets + auth proxy + JWT gate.
+    // The only public worker: assets + auth proxy + JWT gate. Dispatches
+    // the per-user DOs directly via cross-script bindings (no extra hop).
     const front = yield* Cloudflare.Worker("front", {
       main: "../src/front-worker/index.ts",
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
-      env: { AUTH: auth, AGENT: agent, API: api },
+      env: {
+        AUTH: auth,
+        AGENT: agent,
+        USER_DO: Cloudflare.DurableObject("UserDO", { scriptName: api.workerName }),
+        SYNC_BACKEND_DO: Cloudflare.DurableObject("SyncBackendDO", { scriptName: api.workerName }),
+      },
     });
 
     return { url: front.url, database: db.databaseName };

@@ -8,7 +8,7 @@ import { makeAdapter } from "@livestore/adapter-node";
 import { createStorePromise, nanoid } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { newHttpBatchRpcSession } from "capnweb";
-import { events, schema, tables } from "../src/livestore/schema.ts";
+import { events, schema, tables } from "../db/livestore/schema.ts";
 
 const front =
   process.env.FRONT_ORIGIN ??
@@ -19,7 +19,7 @@ rmSync(dataDir, { recursive: true, force: true });
 // JWT
 const login = await fetch(`${front}/auth/sign-in/email`, {
   method: "POST",
-  headers: { "content-type": "application/json" },
+  headers: { "content-type": "application/json", origin: front },
   body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
 });
 if (!login.ok) throw new Error(`login failed: ${login.status}`);

@@ -1,5 +1,5 @@
 import { newHttpBatchRpcSession } from "capnweb";
-import type { UserApi } from "../src/rpc.ts";
+import type { UserApi } from "../src/front-worker/rpc.ts";
 
 const url = `${process.env.RPC_ORIGIN ?? "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev"}/rpc`;
 

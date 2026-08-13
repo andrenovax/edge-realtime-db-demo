@@ -3,7 +3,7 @@ import type { Store } from "@livestore/livestore";
 import { handleSyncUpdateRpc } from "@livestore/sync-cf/client";
 import { newWorkersRpcResponse, RpcTarget } from "capnweb";
 import { DurableObject } from "cloudflare:workers";
-import { events, schema, tables } from "./livestore/schema.ts";
+import { events, schema, tables } from "../../db/livestore/schema.ts";
 
 type UserDoEnv = {
   SYNC_BACKEND_DO: DurableObjectNamespace;
