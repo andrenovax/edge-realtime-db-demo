@@ -16019,12 +16019,10 @@ var iw,
   uw = __esmMin(() => {
     (xC(),
       sw(),
-      (cw = [`/do/`, `/agents/`, `/rpc`]),
+      (cw = [`/do/`, `/rpc`]),
       (forwardAsUser = (e, t, n) => {
         let r = new Headers(e.headers);
-        return (
-          r.set(`x-user-id`, n), t.AGENT.fetch(new Request(e.url, new Request(e, { headers: r })))
-        );
+        return (r.set(`x-user-id`, n), t.fetch(new Request(e.url, new Request(e, { headers: r }))));
       }),
       (lw = {
         async fetch(e, t) {
@@ -16044,15 +16042,21 @@ var iw,
             let a = await verifyToken(t, i);
             return a
               ? r.storeId === a
-                ? forwardAsUser(e, t, a)
+                ? forwardAsUser(e, t.API, a)
                 : new Response(`forbidden: not your store`, { status: 403 })
               : new Response(`invalid auth token`, { status: 401 });
           }
           if (cw.some((e) => n.pathname.startsWith(e))) {
-            if (n.pathname === `/rpc`) return t.AGENT.fetch(e);
+            if (n.pathname === `/rpc`) return t.API.fetch(e);
             let r = await verifyUser(t, e);
             return r
-              ? forwardAsUser(e, t, r)
+              ? forwardAsUser(e, t.API, r)
+              : Response.json({ error: `unauthorized` }, { status: 401 });
+          }
+          if (n.pathname.startsWith(`/agents/`)) {
+            let n = await verifyUser(t, e);
+            return n
+              ? forwardAsUser(e, t.AGENT, n)
               : Response.json({ error: `unauthorized` }, { status: 401 });
           }
           return t.ASSETS

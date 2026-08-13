@@ -87,11 +87,13 @@ await poll("B sees C's offline note after reconnect", () =>
 );
 console.log(`PASS reconnect: offline event synced to B after ${Date.now() - reconnectAt}ms`);
 
-// 4. Both stores fully converged.
-const a = storeA.query(tables.notes.select()).length;
-const b = storeB.query(tables.notes.select()).length;
-const c = storeC2.query(tables.notes.select()).length;
-console.log(`note counts A=${a} B=${b} C=${c}`);
-if (a !== b || b !== c) throw new Error("stores diverged");
+// 4. All stores converge (poll: sync is eventual).
+await poll("stores converge", () => {
+  const a = storeA.query(tables.notes.select()).length;
+  const b = storeB.query(tables.notes.select()).length;
+  const c = storeC2.query(tables.notes.select()).length;
+  return a === b && b === c ? a : undefined;
+});
+console.log(`note counts converged at ${storeB.query(tables.notes.select()).length}`);
 console.log("PASS: LiveStore local-first sync via SyncBackendDO");
 process.exit(0);

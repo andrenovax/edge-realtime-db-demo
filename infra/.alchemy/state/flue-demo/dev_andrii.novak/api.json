@@ -1,0 +1,86 @@
+{
+  "status": "updated",
+  "fqn": "api",
+  "logicalId": "api",
+  "instanceId": "57c6c0033622f3e250a529715963ed28",
+  "resourceType": "Cloudflare.Worker",
+  "props": {
+    "main": "../src/api-worker/index.ts",
+    "workersDev": false,
+    "compatibility": {
+      "date": "2026-06-01",
+      "flags": ["nodejs_compat"]
+    },
+    "env": {
+      "USER_DO": {
+        "kind": "Cloudflare.DurableObject",
+        "name": "UserDO",
+        "className": "UserDO",
+        "transferredFrom": "agent"
+      },
+      "SYNC_BACKEND_DO": {
+        "kind": "Cloudflare.DurableObject",
+        "name": "SyncBackendDO",
+        "className": "SyncBackendDO",
+        "transferredFrom": "agent"
+      }
+    },
+    "isExternal": true
+  },
+  "attr": {
+    "workerId": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff",
+    "workerName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff",
+    "logpush": false,
+    "urls": [],
+    "tags": [
+      "alchemy:stack:flue-demo",
+      "alchemy:stage:dev_andrii.novak",
+      "alchemy:id:api",
+      "alchemy:dos:SYNC_BACKEND_DO=SyncBackendDO;USER_DO=UserDO"
+    ],
+    "durableObjectNamespaces": {
+      "SyncBackendDO": "7124d8f325e44a6888441b2700c1f8c8",
+      "UserDO": "81a5aeb189fb44858cd23062bd137740"
+    },
+    "accountId": "7fef66cba56e993c82b71db654d57783",
+    "routes": [],
+    "crons": [],
+    "tailConsumers": [],
+    "hash": {
+      "bundle": "e41125098d94ac7cf193140c89beff41055ccf5bac76282026c2b1654c41ceb4",
+      "metadata": "f2690ae76288b6c6fd93968775f1b0010cc4e365380fe3137e78d4da58876d2f"
+    }
+  },
+  "bindings": [
+    {
+      "sid": "SYNC_BACKEND_DO",
+      "data": {
+        "bindings": [
+          {
+            "type": "durable_object_namespace",
+            "name": "SYNC_BACKEND_DO",
+            "className": "SyncBackendDO",
+            "transferredFrom": ["agent"]
+          }
+        ]
+      }
+    },
+    {
+      "sid": "USER_DO",
+      "data": {
+        "bindings": [
+          {
+            "type": "durable_object_namespace",
+            "name": "USER_DO",
+            "className": "UserDO",
+            "transferredFrom": ["agent"]
+          }
+        ]
+      }
+    }
+  ],
+  "providerVersion": 0,
+  "downstream": ["agent", "front"],
+  "removalPolicy": "destroy",
+  "providerMode": "live"
+}

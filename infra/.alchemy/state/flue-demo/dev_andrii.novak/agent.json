@@ -13,20 +13,16 @@
       "flags": ["nodejs_compat"]
     },
     "env": {
-      "USER_DO": {
-        "kind": "Cloudflare.DurableObject",
-        "name": "UserDO",
-        "className": "UserDO"
-      },
-      "SYNC_BACKEND_DO": {
-        "kind": "Cloudflare.DurableObject",
-        "name": "SyncBackendDO",
-        "className": "SyncBackendDO"
-      },
       "FLUE_HELLO_AGENT": {
         "kind": "Cloudflare.DurableObject",
         "name": "FlueHelloAgent",
         "className": "FlueHelloAgent"
+      },
+      "USER_DO": {
+        "kind": "Cloudflare.DurableObject",
+        "name": "UserDO",
+        "className": "UserDO",
+        "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
       }
     },
     "isExternal": true
@@ -40,11 +36,10 @@
       "alchemy:stack:flue-demo",
       "alchemy:stage:dev_andrii.novak",
       "alchemy:id:agent",
-      "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent;SYNC_BACKEND_DO=SyncBackendDO;USER_DO=UserDO"
+      "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent"
     ],
     "durableObjectNamespaces": {
       "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026",
-      "SyncBackendDO": "7124d8f325e44a6888441b2700c1f8c8",
       "UserDO": "81a5aeb189fb44858cd23062bd137740"
     },
     "accountId": "7fef66cba56e993c82b71db654d57783",
@@ -52,8 +47,8 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "7ab74ada5564ed6eb26578d4769cc6d1c7b4ed14c50a0f5b83e0aa859c4fd792",
-      "metadata": "9ef447abd8c8d3fd76e745db68bce9cc17a944c94d99f42b12900122e8fd0b04"
+      "bundle": "94f9bf0e70f29021a4fc68d1b53f19e67c57eb4d22f2319927f2659d086d46ac",
+      "metadata": "664f5a497a87101ed429453cfeef761b83eed5e75b9e6bfe7abc0e923dcad497"
     }
   },
   "bindings": [
@@ -70,25 +65,14 @@
       }
     },
     {
-      "sid": "SYNC_BACKEND_DO",
-      "data": {
-        "bindings": [
-          {
-            "type": "durable_object_namespace",
-            "name": "SYNC_BACKEND_DO",
-            "className": "SyncBackendDO"
-          }
-        ]
-      }
-    },
-    {
       "sid": "USER_DO",
       "data": {
         "bindings": [
           {
             "type": "durable_object_namespace",
             "name": "USER_DO",
-            "className": "UserDO"
+            "className": "UserDO",
+            "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
           }
         ]
       }

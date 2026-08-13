@@ -1,3 +1,6 @@
+import { createStoreDoPromise, type ClientDoWithRpcCallback } from "@livestore/adapter-cloudflare";
+import type { Store } from "@livestore/livestore";
+import { handleSyncUpdateRpc } from "@livestore/sync-cf/client";
 import { newWorkersRpcResponse, RpcTarget, type RpcStub } from "capnweb";
 import { DurableObject } from "cloudflare:workers";
 import { desc, eq } from "drizzle-orm";
@@ -6,6 +9,7 @@ import { migrate } from "drizzle-orm/durable-sqlite/migrator";
 import migrations from "../db/migrations-do/migrations.js";
 import { items } from "../db/do-schema/items.ts";
 import { syncedState } from "../db/do-schema/synced-state.ts";
+import { events, schema, tables } from "./livestore/schema.ts";
 
 type Item = typeof items.$inferSelect;
 
@@ -17,14 +21,21 @@ export type SyncedValue = { value: unknown; version: number };
 // Per-key state subscriber; pushed on every setState of that key.
 type KeySubscriber = { onState(state: SyncedValue): void };
 
-// Per-user database + realtime hub. One instance per userId.
-// Schema migrates on wake, before any query runs.
-export class UserDO extends DurableObject {
+type UserDoEnv = {
+  SYNC_BACKEND_DO: DurableObjectNamespace;
+};
+
+// Per-user database + realtime hub + LiveStore client. One per userId.
+// Also a LiveStore *client*: hosts a live materialized store synced with
+// the user's SyncBackendDO, so server-side writes (capnweb, agent tools
+// via cross-worker binding) flow through the same event log as browsers.
+export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
   #subscribers = new Set<RpcStub<Subscriber>>();
   #keySubscribers = new Map<string, Set<RpcStub<KeySubscriber>>>();
   #db: DrizzleSqliteDODatabase;
+  #store: Store<typeof schema> | undefined;
 
-  constructor(ctx: DurableObjectState, env: unknown) {
+  constructor(ctx: DurableObjectState, env: UserDoEnv) {
     super(ctx, env as never);
     this.#db = drizzle(ctx.storage);
     ctx.blockConcurrencyWhile(() => migrate(this.#db, migrations));
@@ -33,6 +44,47 @@ export class UserDO extends DurableObject {
   // capnweb session (HTTP batch or WebSocket) terminates inside the DO.
   override fetch(request: Request) {
     return newWorkersRpcResponse(request, new UserDoApi(this));
+  }
+
+  // LiveStore live-pull callback (sync backend -> this client DO).
+  async syncUpdateRpc(payload: Parameters<ClientDoWithRpcCallback["syncUpdateRpc"]>[0]) {
+    await handleSyncUpdateRpc(payload as never);
+  }
+
+  async getStore() {
+    if (this.#store) return this.#store;
+    const storeId = this.ctx.id.name;
+    if (!storeId) throw new Error("UserDO must be addressed by name (userId)");
+    const env = this.env as UserDoEnv;
+    this.#store = await createStoreDoPromise({
+      schema,
+      storeId,
+      clientId: "user-do",
+      sessionId: "user-do",
+      durableObject: {
+        ctx: this.ctx as never,
+        env: this.env,
+        bindingName: "USER_DO",
+      },
+      syncBackendStub: env.SYNC_BACKEND_DO.get(env.SYNC_BACKEND_DO.idFromName(storeId)) as never,
+      livePull: true,
+    });
+    return this.#store;
+  }
+
+  // Notes live in the LiveStore event log, not in this DO's own tables:
+  // one commit here fans out to every synced client of this user.
+  async addNote(text: string) {
+    const store = await this.getStore();
+    const id = crypto.randomUUID();
+    const updatedAt = Date.now();
+    store.commit(events.noteCreated({ id, text, updatedAt }));
+    return { id, text, updatedAt };
+  }
+
+  async listNotes() {
+    const store = await this.getStore();
+    return store.query(tables.notes.select());
   }
 
   listItems() {
@@ -114,6 +166,15 @@ class UserDoApi extends RpcTarget {
   addItem(title: unknown) {
     if (typeof title !== "string" || !title.trim()) throw new Error("title required");
     return this.#owner.addItem(title.trim());
+  }
+
+  addNote(text: unknown) {
+    if (typeof text !== "string" || !text.trim()) throw new Error("text required");
+    return this.#owner.addNote(text.trim());
+  }
+
+  listNotes() {
+    return this.#owner.listNotes();
   }
 
   subscribe(callback: RpcStub<Subscriber>) {

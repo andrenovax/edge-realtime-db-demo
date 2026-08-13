@@ -1,5 +1,5 @@
 {
-  "status": "created",
+  "status": "updated",
   "fqn": "front",
   "logicalId": "front",
   "instanceId": "3a73312947400a309cf3ab1ca8a35baa",
@@ -23,7 +23,7 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "c1caf23e44bff4799b1cb81f6a58325613700d7749705e950cd44ad06e587cb7",
+          "bundle": "05881d32cf105e3bd085e2a24074f7b9d9526fbaa3cebaf360b86d93c096a6e3",
           "metadata": "2b5350a14b9cd640a1642e31c0bb0042fd5410f25c33352d62f341c479844857"
         }
       },
@@ -36,10 +36,33 @@
           "alchemy:stack:flue-demo",
           "alchemy:stage:dev_andrii.novak",
           "alchemy:id:agent",
-          "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent;SYNC_BACKEND_DO=SyncBackendDO;USER_DO=UserDO"
+          "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent"
         ],
         "durableObjectNamespaces": {
           "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026",
+          "UserDO": "81a5aeb189fb44858cd23062bd137740"
+        },
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "94f9bf0e70f29021a4fc68d1b53f19e67c57eb4d22f2319927f2659d086d46ac",
+          "metadata": "664f5a497a87101ed429453cfeef761b83eed5e75b9e6bfe7abc0e923dcad497"
+        }
+      },
+      "API": {
+        "workerId": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff",
+        "workerName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff",
+        "logpush": false,
+        "urls": [],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:api",
+          "alchemy:dos:SYNC_BACKEND_DO=SyncBackendDO;USER_DO=UserDO"
+        ],
+        "durableObjectNamespaces": {
           "SyncBackendDO": "7124d8f325e44a6888441b2700c1f8c8",
           "UserDO": "81a5aeb189fb44858cd23062bd137740"
         },
@@ -48,8 +71,8 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "7ab74ada5564ed6eb26578d4769cc6d1c7b4ed14c50a0f5b83e0aa859c4fd792",
-          "metadata": "9ef447abd8c8d3fd76e745db68bce9cc17a944c94d99f42b12900122e8fd0b04"
+          "bundle": "e41125098d94ac7cf193140c89beff41055ccf5bac76282026c2b1654c41ceb4",
+          "metadata": "f2690ae76288b6c6fd93968775f1b0010cc4e365380fe3137e78d4da58876d2f"
         }
       }
     },
@@ -70,8 +93,8 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "e76f3d9f8c1f0c917c13a015863c8d3ffcc843120045a3c7464247640eaa46da",
-      "metadata": "fa061702a4b2bd55aea43e78fc1572924196e4427c52d92286f85666830a36ac"
+      "bundle": "d0806284bf405aa0e2851a6bf0e55be0aa6c2af0bf024e8ee4f7ce032c8e0981",
+      "metadata": "e120855e652b6d3eb126b20e84b7bad90292eb7e2f4b3a959ac51396daeda3cd"
     }
   },
   "bindings": [
@@ -83,6 +106,18 @@
             "type": "service",
             "name": "AGENT",
             "service": "flue-demo-agent-dev-andrii-novak-hbodklgf42incbph"
+          }
+        ]
+      }
+    },
+    {
+      "sid": "API",
+      "data": {
+        "bindings": [
+          {
+            "type": "service",
+            "name": "API",
+            "service": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
           }
         ]
       }

@@ -13,17 +13,18 @@ import { verifyToken, verifyUser } from "../jwt.ts";
 interface Env {
   AUTH: Fetcher;
   AGENT: Fetcher;
+  API: Fetcher;
   ASSETS?: Fetcher;
 }
 
-const AGENT_PREFIXES = ["/do/", "/agents/", "/rpc"];
+const API_PREFIXES = ["/do/", "/rpc"];
 
 // Forward with the authenticated identity attached; the agent worker has
 // no public route, so the header is trustworthy.
-const forwardAsUser = (request: Request, env: Env, userId: string) => {
+const forwardAsUser = (request: Request, target: Fetcher, userId: string) => {
   const headers = new Headers(request.headers);
   headers.set("x-user-id", userId);
-  return env.AGENT.fetch(new Request(request.url, new Request(request, { headers })));
+  return target.fetch(new Request(request.url, new Request(request, { headers })));
 };
 
 export default {
@@ -51,16 +52,22 @@ export default {
       if (syncParams.storeId !== userId) {
         return new Response("forbidden: not your store", { status: 403 });
       }
-      return forwardAsUser(request, env, userId);
+      return forwardAsUser(request, env.API, userId);
     }
 
-    if (AGENT_PREFIXES.some((p) => url.pathname.startsWith(p))) {
+    if (API_PREFIXES.some((p) => url.pathname.startsWith(p))) {
       // Demo-only capnweb surface stays unauthenticated.
-      if (url.pathname === "/rpc") return env.AGENT.fetch(request);
+      if (url.pathname === "/rpc") return env.API.fetch(request);
 
       const userId = await verifyUser(env, request);
       if (!userId) return Response.json({ error: "unauthorized" }, { status: 401 });
-      return forwardAsUser(request, env, userId);
+      return forwardAsUser(request, env.API, userId);
+    }
+
+    if (url.pathname.startsWith("/agents/")) {
+      const userId = await verifyUser(env, request);
+      if (!userId) return Response.json({ error: "unauthorized" }, { status: 401 });
+      return forwardAsUser(request, env.AGENT, userId);
     }
 
     if (env.ASSETS) return env.ASSETS.fetch(request);
