@@ -6,7 +6,7 @@ import { DurableObject } from "cloudflare:workers";
 import { events, schema, tables } from "../../db/livestore/schema.ts";
 
 type UserDoEnv = {
-  SYNC_BACKEND_DO: DurableObjectNamespace;
+  USER_SYNC_BACKEND_DO: DurableObjectNamespace;
 };
 
 // Per-user LiveStore client. One per userId. All state lives in the
@@ -15,6 +15,7 @@ type UserDoEnv = {
 // out to every synced client — realtime comes from sync, not callbacks.
 export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
   #store: Store<typeof schema> | undefined;
+  #storeCreatedAt = 0;
 
   // capnweb session (HTTP batch or WebSocket) terminates inside the DO:
   // the slim command lane.
@@ -28,7 +29,13 @@ export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
   }
 
   async getStore() {
-    if (this.#store) return this.#store;
+    // The do-rpc sync session decays silently on a long-lived store
+    // (backend DO restarts are not resurvived); recreate past the TTL.
+    if (this.#store && Date.now() - this.#storeCreatedAt < 60_000) return this.#store;
+    if (this.#store) {
+      await this.#store.shutdownPromise().catch(() => {});
+      this.#store = undefined;
+    }
     const storeId = this.ctx.id.name;
     if (!storeId) throw new Error("UserDO must be addressed by name (userId)");
     const env = this.env as UserDoEnv;
@@ -36,15 +43,18 @@ export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
       schema,
       storeId,
       clientId: "user-do",
-      sessionId: "user-do",
+      sessionId: `user-do-${Date.now()}`,
       durableObject: {
         ctx: this.ctx as never,
         env: this.env,
         bindingName: "USER_DO",
       },
-      syncBackendStub: env.SYNC_BACKEND_DO.get(env.SYNC_BACKEND_DO.idFromName(storeId)) as never,
+      syncBackendStub: env.USER_SYNC_BACKEND_DO.get(
+        env.USER_SYNC_BACKEND_DO.idFromName(storeId),
+      ) as never,
       livePull: true,
     });
+    this.#storeCreatedAt = Date.now();
     return this.#store;
   }
 

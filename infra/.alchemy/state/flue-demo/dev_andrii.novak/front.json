@@ -23,7 +23,7 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "05881d32cf105e3bd085e2a24074f7b9d9526fbaa3cebaf360b86d93c096a6e3",
+          "bundle": "283914e3a85de92ed44c68d8d066dbe309739eb328c4b179929a8f52690146a8",
           "metadata": "2b5350a14b9cd640a1642e31c0bb0042fd5410f25c33352d62f341c479844857"
         }
       },
@@ -40,28 +40,40 @@
         ],
         "durableObjectNamespaces": {
           "FlueHelloAgent": "a198bb78752a4029b6fd80fa712935d4",
-          "UserDO": "81a5aeb189fb44858cd23062bd137740"
+          "UserDO": "7523334cd695450c9b5f9b9cc4c07f3b"
         },
         "accountId": "7fef66cba56e993c82b71db654d57783",
         "routes": [],
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "2bbdddcd71eb3ce601599b8646ca42667bfa1b6a4218f983aa9fe8786d28e552",
-          "metadata": "664f5a497a87101ed429453cfeef761b83eed5e75b9e6bfe7abc0e923dcad497"
+          "bundle": "694ec5594152b91d5da95334f8f544b231b10b15a19d59f0a216b8736264a16d",
+          "metadata": "1fcd37a92f13c6bfa8e47f75fcb99a1983a3b025c20727f039b2eb6fe176ebf6"
         }
       },
-      "USER_DO": {
-        "kind": "Cloudflare.DurableObject",
-        "name": "UserDO",
-        "className": "UserDO",
-        "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
-      },
-      "SYNC_BACKEND_DO": {
-        "kind": "Cloudflare.DurableObject",
-        "name": "SyncBackendDO",
-        "className": "SyncBackendDO",
-        "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
+      "API": {
+        "workerId": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh",
+        "workerName": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh",
+        "logpush": false,
+        "urls": [],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:api",
+          "alchemy:dos:USER_DO=UserDO;USER_SYNC_BACKEND_DO=UserSyncBackendDO"
+        ],
+        "durableObjectNamespaces": {
+          "UserDO": "7523334cd695450c9b5f9b9cc4c07f3b",
+          "UserSyncBackendDO": "dbbe00c85eba4a20aa63979e01b68b28"
+        },
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "414739e5220e7ff2c8c6b0c5b993e269453b26ba2c23f26f4696abcb8bfcf4a5",
+          "metadata": "82486a0835c91aa646dd08fcd940347f93ccd56eb47b634c318e852d093303aa"
+        }
       }
     },
     "isExternal": true
@@ -75,17 +87,14 @@
       "https://flue-demo-front-dev-andrii-novak-hjztckkhiafdbhht.hello-andrii-novak.workers.dev"
     ],
     "tags": ["alchemy:stack:flue-demo", "alchemy:stage:dev_andrii.novak", "alchemy:id:front"],
-    "durableObjectNamespaces": {
-      "SyncBackendDO": "7124d8f325e44a6888441b2700c1f8c8",
-      "UserDO": "81a5aeb189fb44858cd23062bd137740"
-    },
+    "durableObjectNamespaces": {},
     "accountId": "7fef66cba56e993c82b71db654d57783",
     "routes": [],
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "a1eb4363a27ddb101042063d54c18dbe70a0c1e8dabd44e86161c80c8b9af6b0",
-      "metadata": "5df6e56c8eeeca31c0a21c1d3c8ca018d107d04e7b4b990c653aca676f0aa7e7"
+      "bundle": "b6d1ddc80a2f2bf1f3a45bff67d7a9ad60980b4e968a31b0cce22529fbb2dc61",
+      "metadata": "b957d5675454321460613ad11c9527cd2dff1e10b47bc8b2bd7c04ccf397b67c"
     }
   },
   "bindings": [
@@ -102,6 +111,18 @@
       }
     },
     {
+      "sid": "API",
+      "data": {
+        "bindings": [
+          {
+            "type": "service",
+            "name": "API",
+            "service": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh"
+          }
+        ]
+      }
+    },
+    {
       "sid": "AUTH",
       "data": {
         "bindings": [
@@ -109,32 +130,6 @@
             "type": "service",
             "name": "AUTH",
             "service": "flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz"
-          }
-        ]
-      }
-    },
-    {
-      "sid": "SYNC_BACKEND_DO",
-      "data": {
-        "bindings": [
-          {
-            "type": "durable_object_namespace",
-            "name": "SYNC_BACKEND_DO",
-            "className": "SyncBackendDO",
-            "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
-          }
-        ]
-      }
-    },
-    {
-      "sid": "USER_DO",
-      "data": {
-        "bindings": [
-          {
-            "type": "durable_object_namespace",
-            "name": "USER_DO",
-            "className": "UserDO",
-            "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
           }
         ]
       }

@@ -22,7 +22,7 @@
         "kind": "Cloudflare.DurableObject",
         "name": "UserDO",
         "className": "UserDO",
-        "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
+        "scriptName": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh"
       }
     },
     "isExternal": true
@@ -40,15 +40,15 @@
     ],
     "durableObjectNamespaces": {
       "FlueHelloAgent": "a198bb78752a4029b6fd80fa712935d4",
-      "UserDO": "81a5aeb189fb44858cd23062bd137740"
+      "UserDO": "7523334cd695450c9b5f9b9cc4c07f3b"
     },
     "accountId": "7fef66cba56e993c82b71db654d57783",
     "routes": [],
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "2bbdddcd71eb3ce601599b8646ca42667bfa1b6a4218f983aa9fe8786d28e552",
-      "metadata": "664f5a497a87101ed429453cfeef761b83eed5e75b9e6bfe7abc0e923dcad497"
+      "bundle": "694ec5594152b91d5da95334f8f544b231b10b15a19d59f0a216b8736264a16d",
+      "metadata": "1fcd37a92f13c6bfa8e47f75fcb99a1983a3b025c20727f039b2eb6fe176ebf6"
     }
   },
   "bindings": [
@@ -72,7 +72,7 @@
             "type": "durable_object_namespace",
             "name": "USER_DO",
             "className": "UserDO",
-            "scriptName": "flue-demo-api-dev-andrii-novak-k7dmaazwelz6euff"
+            "scriptName": "flue-demo-api-dev-andrii-novak-woos2u6obkwltevh"
           }
         ]
       }

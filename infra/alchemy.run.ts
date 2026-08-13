@@ -29,15 +29,14 @@ export default Alchemy.Stack(
       },
     });
 
-    // Data plane: hosts the per-user DOs. transferredFrom moves the
-    // namespaces (with stored data) off the flue agent script.
+    // Data plane: hosts the per-user DOs and owns all data-plane dispatch.
     const api = yield* Cloudflare.Worker("api", {
       main: "../src/api-worker/index.ts",
       workersDev: false,
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
       env: {
-        USER_DO: Cloudflare.DurableObject("UserDO", { transferredFrom: "agent" }),
-        SYNC_BACKEND_DO: Cloudflare.DurableObject("SyncBackendDO", { transferredFrom: "agent" }),
+        USER_DO: Cloudflare.DurableObject("UserDO"),
+        USER_SYNC_BACKEND_DO: Cloudflare.DurableObject("UserSyncBackendDO"),
       },
     });
 
@@ -54,17 +53,11 @@ export default Alchemy.Stack(
       },
     });
 
-    // The only public worker: assets + auth proxy + JWT gate. Dispatches
-    // the per-user DOs directly via cross-script bindings (no extra hop).
+    // The only public worker: a proxy with JWT validation + assets.
     const front = yield* Cloudflare.Worker("front", {
       main: "../src/front-worker/index.ts",
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
-      env: {
-        AUTH: auth,
-        AGENT: agent,
-        USER_DO: Cloudflare.DurableObject("UserDO", { scriptName: api.workerName }),
-        SYNC_BACKEND_DO: Cloudflare.DurableObject("SyncBackendDO", { scriptName: api.workerName }),
-      },
+      env: { AUTH: auth, AGENT: agent, API: api },
     });
 
     return { url: front.url, database: db.databaseName };
