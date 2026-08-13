@@ -11,7 +11,6 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "db:generate": "drizzle-kit generate",
-    "db:generate:do": "drizzle-kit generate --config drizzle-do.config.ts",
     "smoke": "bun scripts/realtime-smoke.ts",
     "deploy:cf": "cd infra && nub run deploy"
   },
