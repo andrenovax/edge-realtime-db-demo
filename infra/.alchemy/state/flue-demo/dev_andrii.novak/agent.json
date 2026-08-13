@@ -5,13 +5,11 @@
   "instanceId": "385c352cc5e690d105e71d274529f44e",
   "resourceType": "Cloudflare.Worker",
   "props": {
-    "main": "./dist/flue_alchemy_demo/index.js",
+    "main": "../dist/flue_alchemy_demo/index.js",
     "bundle": false,
     "compatibility": {
       "date": "2026-06-01",
-      "flags": [
-        "nodejs_compat"
-      ]
+      "flags": ["nodejs_compat"]
     },
     "env": {
       "AUTH": {
@@ -22,25 +20,26 @@
         "urls": [
           "https://flue-demo-auth-dev-andrii-novak-nwpisqbqcoftbdvz.hello-andrii-novak.workers.dev"
         ],
-        "tags": [
-          "alchemy:stack:flue-demo",
-          "alchemy:stage:dev_andrii.novak",
-          "alchemy:id:auth"
-        ],
+        "tags": ["alchemy:stack:flue-demo", "alchemy:stage:dev_andrii.novak", "alchemy:id:auth"],
         "durableObjectNamespaces": {},
         "accountId": "7fef66cba56e993c82b71db654d57783",
         "routes": [],
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "2562ff44c67986a0b93b852a1608dc586de424a7c3adf050751eb592e1406615",
-          "metadata": "0533c3722a13d7dda652dd36ff354b55057d50a8687960dbeefa86592984b54b"
+          "bundle": "c1caf23e44bff4799b1cb81f6a58325613700d7749705e950cd44ad06e587cb7",
+          "metadata": "3215e8eb4346aa879f49bca87ffceacad5b7623fcbf07962e804cb05e05e5a81"
         }
       },
       "USER_DO": {
         "kind": "Cloudflare.DurableObject",
         "name": "UserDO",
         "className": "UserDO"
+      },
+      "SYNC_BACKEND_DO": {
+        "kind": "Cloudflare.DurableObject",
+        "name": "SyncBackendDO",
+        "className": "SyncBackendDO"
       },
       "FLUE_HELLO_AGENT": {
         "kind": "Cloudflare.DurableObject",
@@ -62,10 +61,11 @@
       "alchemy:stack:flue-demo",
       "alchemy:stage:dev_andrii.novak",
       "alchemy:id:agent",
-      "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent;USER_DO=UserDO"
+      "alchemy:dos:FLUE_HELLO_AGENT=FlueHelloAgent;SYNC_BACKEND_DO=SyncBackendDO;USER_DO=UserDO"
     ],
     "durableObjectNamespaces": {
       "FlueHelloAgent": "7500985e1975442c805aab6c46c5a026",
+      "SyncBackendDO": "7124d8f325e44a6888441b2700c1f8c8",
       "UserDO": "81a5aeb189fb44858cd23062bd137740"
     },
     "accountId": "7fef66cba56e993c82b71db654d57783",
@@ -73,8 +73,8 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "2a0d0ea0f6daeb507083dfa918f332e6486dc319c0918e76db9fa926b98b9cb8",
-      "metadata": "31e6a22ce6a2d045a4cfb2b8338da19e63f32e81ab17a3daa719bcdadc33d0b4"
+      "bundle": "6671b09f4c4320112d414b5ff3d8f04b770dfa5d8b03805ac1f2c676f81ba7c6",
+      "metadata": "666bdab31cf3c9e245501706657dfa476985f12fddce0fdff0f883217bd143c6"
     }
   },
   "bindings": [
@@ -98,6 +98,18 @@
             "type": "durable_object_namespace",
             "name": "FLUE_HELLO_AGENT",
             "className": "FlueHelloAgent"
+          }
+        ]
+      }
+    },
+    {
+      "sid": "SYNC_BACKEND_DO",
+      "data": {
+        "bindings": [
+          {
+            "type": "durable_object_namespace",
+            "name": "SYNC_BACKEND_DO",
+            "className": "SyncBackendDO"
           }
         ]
       }

@@ -1,44 +1,44 @@
 {
-	"name": "flue-alchemy-demo",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"deploy": "vite build && wrangler deploy",
-		"check:types": "tsc --noEmit",
-		"lint": "oxlint",
-		"fmt": "oxfmt",
-		"fmt:check": "oxfmt --check",
-		"db:generate": "drizzle-kit generate",
-		"db:generate:do": "drizzle-kit generate --config drizzle-do.config.ts",
-		"smoke": "bun scripts/realtime-smoke.ts"
-	},
-	"dependencies": {
-		"@effect/platform-bun": ">=4.0.0-beta.105 || >=4.0.0",
-		"@effect/platform-node": ">=4.0.0-beta.105 || >=4.0.0",
-		"@flue/runtime": "^2.0.3",
-		"@modelcontextprotocol/sdk": "^1.30.0",
-		"alchemy": "^2.0.0-beta.72",
-		"better-auth": "^1.6.27",
-		"capnweb": "^0.10.0",
-		"drizzle-orm": "^0.45.2",
-		"effect": ">=4.0.0-beta.105 || >=4.0.0",
-		"hono": "4.13.1",
-		"jose": "^6.2.8"
-	},
-	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.39.2",
-		"@cloudflare/workers-types": "^5.20260812.1",
-		"@flue/cli": "^2.0.3",
-		"@flue/vite": "^2.0.3",
-		"@types/node": "^22.10.10",
-		"drizzle-kit": "^0.31.10",
-		"oxfmt": "^0.63.0",
-		"oxlint": "^1.78.0",
-		"typescript": "^7.0.2",
-		"vite": "^8.0.14",
-		"wrangler": "^4.113.0",
-		"alchemy": "2.0.0-beta.72"
-	}
+  "name": "flue-alchemy-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "deploy": "vite build && wrangler deploy",
+    "check:types": "tsc --noEmit",
+    "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "db:generate": "drizzle-kit generate",
+    "db:generate:do": "drizzle-kit generate --config drizzle-do.config.ts",
+    "smoke": "bun scripts/realtime-smoke.ts",
+    "deploy:cf": "cd infra && nub run deploy"
+  },
+  "dependencies": {
+    "@flue/runtime": "^2.0.3",
+    "@livestore/livestore": "^0.4.0",
+    "@livestore/sync-cf": "^0.4.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "better-auth": "^1.6.27",
+    "capnweb": "^0.10.0",
+    "drizzle-orm": "^0.45.2",
+    "effect": "^3.21.2",
+    "hono": "4.13.1",
+    "jose": "^6.2.8"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.39.2",
+    "@cloudflare/workers-types": "^5.20260812.1",
+    "@flue/cli": "^2.0.3",
+    "@flue/vite": "^2.0.3",
+    "@livestore/adapter-node": "^0.4.0",
+    "@types/node": "^22.10.10",
+    "drizzle-kit": "^0.31.10",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.0.14",
+    "wrangler": "^4.113.0"
+  }
 }

@@ -5,7 +5,7 @@
   "instanceId": "df4d6d2b71513ab2c3007fbf2d6cc6d4",
   "resourceType": "Cloudflare.D1Database",
   "props": {
-    "migrationsDir": "./db/migrations",
+    "migrationsDir": "../db/migrations",
     "migrationsTable": "drizzle_migrations"
   },
   "attr": {
@@ -13,7 +13,7 @@
     "databaseName": "flue-demo-db-dev-andrii-novak-35gw2k3rke5lfqya",
     "jurisdiction": "default",
     "accountId": "7fef66cba56e993c82b71db654d57783",
-    "migrationsDir": "./db/migrations",
+    "migrationsDir": "../db/migrations",
     "migrationsTable": "drizzle_migrations",
     "migrationsHashes": {
       "0000_strong_morgan_stark.sql": "66aa24c1650de43e3240f01805560e3401a34c9568958876cb3b5eaa42113f6a",
@@ -23,9 +23,7 @@
   },
   "bindings": [],
   "providerVersion": 0,
-  "downstream": [
-    "auth"
-  ],
+  "downstream": ["auth"],
   "removalPolicy": "destroy",
   "providerMode": "live"
 }

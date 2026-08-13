@@ -2,6 +2,7 @@ import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
 
 export type AgentEnv = {
   USER_DO: DurableObjectNamespace;
+  SYNC_BACKEND_DO: DurableObjectNamespace;
   AUTH: Fetcher;
 };
 
@@ -22,12 +23,8 @@ async function getJwks(env: AgentEnv) {
   return jwks;
 }
 
-// Returns userId, or null when the token is absent/invalid.
-export async function verifyUser(env: AgentEnv, request: Request) {
-  const url = new URL(request.url);
-  const token =
-    request.headers.get("authorization")?.replace(/^Bearer /, "") ?? url.searchParams.get("auth"); // browser WS can't set headers
-  if (!token) return null;
+// Returns userId, or null when the token is invalid.
+export async function verifyToken(env: AgentEnv, token: string) {
   try {
     const { payload } = await jwtVerify(token, await getJwks(env));
     return typeof payload.sub === "string" ? payload.sub : null;
@@ -41,4 +38,13 @@ export async function verifyUser(env: AgentEnv, request: Request) {
       return null;
     }
   }
+}
+
+// Returns userId, or null when the token is absent/invalid.
+export async function verifyUser(env: AgentEnv, request: Request) {
+  const url = new URL(request.url);
+  const token =
+    request.headers.get("authorization")?.replace(/^Bearer /, "") ?? url.searchParams.get("auth"); // browser WS can't set headers
+  if (!token) return null;
+  return verifyToken(env, token);
 }

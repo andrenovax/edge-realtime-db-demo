@@ -14,12 +14,12 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     // Cross-user directory: Better Auth tables + JWKS keys.
     const db = yield* Cloudflare.D1.Database("db", {
-      migrationsDir: "./db/migrations",
+      migrationsDir: "../db/migrations",
       migrationsTable: "drizzle_migrations",
     });
 
     const auth = yield* Cloudflare.Worker("auth", {
-      main: "./src/auth-worker/index.ts",
+      main: "../src/auth-worker/index.ts",
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
       env: {
         DB: db,
@@ -29,7 +29,7 @@ export default Alchemy.Stack(
     });
 
     const agent = yield* Cloudflare.Worker("agent", {
-      main: "./dist/flue_alchemy_demo/index.js",
+      main: "../dist/flue_alchemy_demo/index.js",
       bundle: false,
       // rpc_params_dup_stubs (workerd#5733, fixes capnweb#110) is default
       // since compat date 2026-01-20 — covered by 2026-06-01.
@@ -37,6 +37,7 @@ export default Alchemy.Stack(
       env: {
         AUTH: auth,
         USER_DO: Cloudflare.DurableObject("UserDO"),
+        SYNC_BACKEND_DO: Cloudflare.DurableObject("SyncBackendDO"),
         FLUE_HELLO_AGENT: Cloudflare.DurableObject("FlueHelloAgent"),
       },
     });

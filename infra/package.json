@@ -1,0 +1,15 @@
+{
+  "name": "flue-alchemy-demo-infra",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "alchemy deploy --yes",
+    "destroy": "alchemy destroy"
+  },
+  "devDependencies": {
+    "@effect/platform-bun": "4.0.0-beta.107",
+    "@effect/platform-node": "4.0.0-beta.107",
+    "alchemy": "2.0.0-beta.72",
+    "effect": "4.0.0-beta.107"
+  }
+}
