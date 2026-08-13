@@ -8,6 +8,13 @@
       "when": 1786540243197,
       "tag": "0000_late_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1786597624538,
+      "tag": "0001_sticky_the_hand",
+      "breakpoints": true
     }
   ]
 }
