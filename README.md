@@ -29,6 +29,10 @@ development loop, so agent edits retain Vite HMR while the gateway uses the
 same service binding in development and production. The gateway remains the
 only public entry at `http://localhost:8787`.
 
+The first run may ask to bootstrap Alchemy's Cloudflare-backed state store.
+State is shared for deploys but remains isolated by each developer's default
+Alchemy stage.
+
 D1 migrations and `db/seeds/local.sql` are applied automatically; the local
 database persists between runs and is separate from deployed D1 data.
 

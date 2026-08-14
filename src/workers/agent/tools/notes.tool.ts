@@ -1,7 +1,7 @@
 import { defineTool } from "@flue/runtime/tool";
 import { getCloudflareContext } from "@flue/runtime/cloudflare";
 import * as v from "valibot";
-import type { AgentEnv } from "../../../infra/alchemy.run.ts";
+import type { AgentEnv } from "../../../../infra/alchemy.run.ts";
 
 const noteId = v.pipe(v.string(), v.trim(), v.minLength(1, "note id required"));
 const noteText = v.pipe(

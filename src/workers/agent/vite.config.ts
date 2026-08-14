@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { flueAlchemyPlugins } from "./infra/flue-alchemy.ts";
+import { flueAlchemyPlugins } from "../../../infra/flue-alchemy.ts";
 
 export default defineConfig({
   // Alchemy injects the resource-aware Cloudflare runtime. This config only

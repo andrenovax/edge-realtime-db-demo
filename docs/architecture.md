@@ -22,7 +22,7 @@ The projection Queue is the one bridge between the planes.
 | `sync`    | protocol — LiveStore sync; hosts BOTH LiveStore DOs (`UserDO` client + `UserSyncBackendDO` event log)                                       | DO SQLite, LiveStore schema   |
 | `user`    | user plane — capnweb RPC (`/api/data`) over the caller's own DO, cross-script                                                               | — (DOs via binding)           |
 | `admin`   | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                           | D1 (`user_events` read model) |
-| `ai`      | agents — flue runtime (`/api/agents/*`); reaches `UserDO` cross-worker                                                                      | — (DOs via binding)           |
+| `agent`   | agents — flue runtime (`/api/agents/*`); reaches `UserDO` cross-worker                                                                      | — (DOs via binding)           |
 
 `src/web/` (when it exists): the SPA, served through the gateway worker's
 `ASSETS` binding. Runs its own LiveStore client store; talks to workers over

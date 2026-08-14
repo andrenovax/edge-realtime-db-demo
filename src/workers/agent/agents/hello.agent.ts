@@ -1,6 +1,6 @@
 "use agent";
 import { type AgentProps, useModel, useTool } from "@flue/runtime";
-import { notesTools } from "../notes.tool.ts";
+import { notesTools } from "../tools/notes.tool.ts";
 
 // Every exported capitalized function in a 'use agent' module is an agent,
 // and the function's name is its durable identity. The return value is the

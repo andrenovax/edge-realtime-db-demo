@@ -5,7 +5,7 @@
   "scripts": {
     "deploy": "alchemy deploy --yes --env-file ../.env",
     "destroy": "alchemy destroy",
-    "dev": "alchemy dev --stage local --env-file ../.env"
+    "dev": "alchemy dev --env-file ../.env"
   },
   "devDependencies": {
     "@effect/platform-node": "4.0.0-beta.107",
