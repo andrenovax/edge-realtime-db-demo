@@ -1,7 +1,6 @@
 import { createStoreDoPromise, type ClientDoWithRpcCallback } from "@livestore/adapter-cloudflare";
 import type { Store } from "@livestore/livestore";
 import { handleSyncUpdateRpc } from "@livestore/sync-cf/client";
-import { newWorkersRpcResponse, RpcTarget } from "capnweb";
 import { DurableObject } from "cloudflare:workers";
 import { events, schema, tables } from "../../db/livestore/schema.ts";
 
@@ -10,18 +9,14 @@ type UserDoEnv = {
 };
 
 // Per-user LiveStore client. One per userId. All state lives in the
-// event log (SyncBackendDO); this DO hosts a live materialized store, so
-// server-side writes (capnweb, agent tools via cross-worker binding) fan
-// out to every synced client — realtime comes from sync, not callbacks.
+// event log (UserSyncBackendDO); this DO hosts a live materialized
+// store, so server-side writes fan out to every synced client.
+// Public methods are the command lane, reached over Workers RPC —
+// callers get this DO as a capnweb capability (DataApi.user()) or a
+// cross-worker binding (flue agent tools).
 export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
   #store: Store<typeof schema> | undefined;
   #storeCreatedAt = 0;
-
-  // capnweb session (HTTP batch or WebSocket) terminates inside the DO:
-  // the slim command lane.
-  override fetch(request: Request) {
-    return newWorkersRpcResponse(request, new UserDoApi(this));
-  }
 
   // LiveStore live-pull callback (sync backend -> this client DO).
   async syncUpdateRpc(payload: Parameters<ClientDoWithRpcCallback["syncUpdateRpc"]>[0]) {
@@ -59,11 +54,12 @@ export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
   }
 
   async addItem(title: string) {
+    if (typeof title !== "string" || !title.trim()) throw new Error("title required");
     const store = await this.getStore();
     const id = crypto.randomUUID();
     const createdAt = Date.now();
-    store.commit(events.itemAdded({ id, title, createdAt }));
-    return { id, title, createdAt };
+    store.commit(events.itemAdded({ id, title: title.trim(), createdAt }));
+    return { id, title: title.trim(), createdAt };
   }
 
   async listItems() {
@@ -72,42 +68,16 @@ export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
   }
 
   async addNote(text: string) {
+    if (typeof text !== "string" || !text.trim()) throw new Error("text required");
     const store = await this.getStore();
     const id = crypto.randomUUID();
     const updatedAt = Date.now();
-    store.commit(events.noteCreated({ id, text, updatedAt }));
-    return { id, text, updatedAt };
+    store.commit(events.noteCreated({ id, text: text.trim(), updatedAt }));
+    return { id, text: text.trim(), updatedAt };
   }
 
   async listNotes() {
     const store = await this.getStore();
     return store.query(tables.notes.select());
-  }
-}
-
-class UserDoApi extends RpcTarget {
-  #owner: UserDO;
-
-  constructor(owner: UserDO) {
-    super();
-    this.#owner = owner;
-  }
-
-  addItem(title: unknown) {
-    if (typeof title !== "string" || !title.trim()) throw new Error("title required");
-    return this.#owner.addItem(title.trim());
-  }
-
-  listItems() {
-    return this.#owner.listItems();
-  }
-
-  addNote(text: unknown) {
-    if (typeof text !== "string" || !text.trim()) throw new Error("text required");
-    return this.#owner.addNote(text.trim());
-  }
-
-  listNotes() {
-    return this.#owner.listNotes();
   }
 }

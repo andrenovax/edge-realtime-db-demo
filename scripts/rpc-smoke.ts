@@ -1,7 +1,7 @@
 import { newHttpBatchRpcSession } from "capnweb";
-import type { UserApi } from "../src/api-worker/rpc.ts";
+import type { DataApi } from "../src/api-worker/data-api.ts";
 
-const url = `${process.env.RPC_ORIGIN ?? "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev"}/api/data/demo`;
+const url = `${process.env.RPC_ORIGIN ?? "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev"}/api/data`;
 
 // Count actual HTTP requests.
 let fetches = 0;
@@ -11,7 +11,7 @@ globalThis.fetch = ((...args: Parameters<typeof fetch>) => {
   return realFetch(...args);
 }) as typeof fetch;
 
-const api = newHttpBatchRpcSession<UserApi>(url);
+const api = newHttpBatchRpcSession<DataApi>(url);
 
 // 4 calls, 2 of them dependent on authenticate()'s unresolved stub.
 const greeting = api.greet("talk");
@@ -27,7 +27,7 @@ console.log("items:", JSON.stringify(i));
 console.log("HTTP requests for 4 calls:", fetches);
 
 // Error path: bad token rejects, transport stays healthy.
-const api2 = newHttpBatchRpcSession<UserApi>(url);
+const api2 = newHttpBatchRpcSession<DataApi>(url);
 const bad = api2.authenticate("nope").profile();
 const err = await bad.then(
   () => "UNEXPECTED SUCCESS",

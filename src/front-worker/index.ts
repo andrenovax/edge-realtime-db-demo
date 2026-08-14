@@ -7,7 +7,8 @@
  * worker.
  * - /api/auth/*   -> auth worker (Better Auth's own basePath)
  * - /api/agents/* -> flue agent worker
- * - /api/data/*   -> data-plane worker (DOs, sync, rpc, projection)
+ * - /api/sync     -> sync worker (LiveStore protocol)
+ * - /api/data     -> data-plane worker, single capnweb RPC endpoint
  * - else          -> static assets (SPA) once bound
  */
 import { verifyUser } from "./jwt.ts";
@@ -16,6 +17,7 @@ interface Env {
   AUTH: Fetcher;
   AGENT: Fetcher;
   API: Fetcher;
+  SYNC: Fetcher;
   ASSETS?: Fetcher;
 }
 
@@ -36,7 +38,8 @@ export default {
 
     if (url.pathname.startsWith("/api/auth/")) return env.AUTH.fetch(request);
     if (url.pathname.startsWith("/api/agents/")) return forwardAsUser(request, env, env.AGENT);
-    if (url.pathname.startsWith("/api/data/")) return forwardAsUser(request, env, env.API);
+    if (url.pathname === "/api/sync") return forwardAsUser(request, env, env.SYNC);
+    if (url.pathname === "/api/data") return forwardAsUser(request, env, env.API);
 
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return new Response("flue-alchemy-demo front worker (no SPA yet)", { status: 200 });

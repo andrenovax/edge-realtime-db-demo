@@ -8,6 +8,7 @@ import { makeAdapter } from "@livestore/adapter-node";
 import { createStorePromise } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { newHttpBatchRpcSession } from "capnweb";
+import type { DataApi } from "../src/api-worker/data-api.ts";
 import { schema, tables } from "../db/livestore/schema.ts";
 
 const front =
@@ -32,8 +33,16 @@ const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
 console.log("JWT for user:", sub);
 
 // 2. Gates.
-const noAuth = await fetch(`${front}/api/data/rpc`, { method: "POST", body: "[]" });
-console.log("no token -> /api/data/rpc:", noAuth.status);
+// Unauthenticated user() must reject (worker's own decision, over RPC).
+const anon = newHttpBatchRpcSession<DataApi>(`${front}/api/data`);
+const anonErr = await anon
+  .user()
+  .listItems()
+  .then(
+    () => "UNEXPECTED SUCCESS",
+    (e: Error) => e.message,
+  );
+console.log("no token -> user():", anonErr);
 const wrongConvo = await fetch(`${front}/api/agents/hello/someone-else`, {
   method: "POST",
   headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -49,26 +58,24 @@ console.log("own conversation:", ownConvo.status);
 
 // 3. Realtime via sync: the subscriber is a synced LiveStore store.
 type Item = { id: string; title: string; createdAt: number };
-interface UserDoApi {
-  addItem(title: string): Promise<Item>;
-  listItems(): Promise<Item[]>;
-}
 
 const localStore = await createStorePromise({
   schema,
   adapter: makeAdapter({
     storage: { type: "fs", baseDirectory: dataDir },
-    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/api/data/sync` }) },
+    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/api/sync` }) },
   }),
   storeId: sub,
   syncPayload: { authToken: token },
 });
 
-const rpcUrl = `${front}/api/data/rpc?auth=${encodeURIComponent(token)}`;
+const rpcUrl = `${front}/api/data?auth=${encodeURIComponent(token)}`;
 const sentAt = Date.now();
-const added = await newHttpBatchRpcSession<UserDoApi>(rpcUrl).addItem(
-  `realtime @ ${new Date().toISOString()}`,
-);
+// Method routing: session.user() returns the UserDO stub as a capability;
+// the addItem call pipelines onto it — still one HTTP request.
+const added = (await newHttpBatchRpcSession<DataApi>(rpcUrl)
+  .user()
+  .addItem(`realtime @ ${new Date().toISOString()}`)) as Item;
 console.log("capnweb addItem:", JSON.stringify(added));
 
 const deadline = Date.now() + 20_000;
@@ -81,7 +88,9 @@ for (;;) {
 console.log(`local store received item after ${Date.now() - sentAt}ms`);
 
 // 4. Command lane reads the same materialized state.
-const items = await newHttpBatchRpcSession<UserDoApi>(rpcUrl).listItems();
+const items = (await newHttpBatchRpcSession<DataApi>(rpcUrl)
+  .user()
+  .listItems()) as unknown as Item[];
 if (!items.some((i) => i.id === added.id)) throw new Error("listItems missing new item");
 console.log("item count:", items.length);
 console.log("PASS: gates + realtime via event-log sync");

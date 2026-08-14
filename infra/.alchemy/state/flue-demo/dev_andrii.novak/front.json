@@ -77,8 +77,30 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "64d69b81e33a88951c9ae4f94b8bf946fda9ffd6523fae9523bc0361e07e8063",
+          "bundle": "0102b60674a9eab383594299a09a82afff3daeb04169c354efe19df12cc8c5f5",
           "metadata": "1d47e3f535018f76bd79d241d4c0f0141b7c7413327c673d565cf09b35ba9637"
+        }
+      },
+      "SYNC": {
+        "workerId": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e",
+        "workerName": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e",
+        "logpush": false,
+        "urls": [],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:sync"
+        ],
+        "durableObjectNamespaces": {
+          "UserSyncBackendDO": "bb4a81c60d0e4ea6af98cf90f52ca829"
+        },
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "460860fb9f8214ebcece3b1b8c0ec48e363c69ecd2b4b1334bf5fb1548a3c277",
+          "metadata": "b990f2a790453e2806ca0a6f850421207705b6b7dda1383653217578963bad1e"
         }
       }
     },
@@ -103,8 +125,8 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "890744d85aabc151177202311ec1744d7dc5e59704cc31de33a473176b4da17a",
-      "metadata": "4a4edd8d1d851d5c3da3ea1bd1fd173ed49c440e1870df410e60bee19cd6783e"
+      "bundle": "aaeb4784c4253a734442daba99ba666e6225a98d339af42106d5adbdcd4b15be",
+      "metadata": "e6c94cfa15b9cba5466033990bc425fa2e3cd7e184a373134d24e7df0181fd8f"
     }
   },
   "bindings": [
@@ -140,6 +162,18 @@
             "type": "service",
             "name": "AUTH",
             "service": "flue-demo-auth-dev-andrii-novak-k3hl4zf3ajmtrmd4"
+          }
+        ]
+      }
+    },
+    {
+      "sid": "SYNC",
+      "data": {
+        "bindings": [
+          {
+            "type": "service",
+            "name": "SYNC",
+            "service": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e"
           }
         ]
       }

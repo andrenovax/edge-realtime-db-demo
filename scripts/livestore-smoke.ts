@@ -35,7 +35,7 @@ console.log("JWT for user:", sub);
 const syncedAdapter = (dir: string) =>
   makeAdapter({
     storage: { type: "fs", baseDirectory: `${dataDir}/${dir}` },
-    sync: { backend: makeWsSync({ url: `${wsUrl}/api/data/sync` }) },
+    sync: { backend: makeWsSync({ url: `${wsUrl}/api/sync` }) },
   });
 
 const makeStore = (dir: string) =>

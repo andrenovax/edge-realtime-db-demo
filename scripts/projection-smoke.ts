@@ -2,6 +2,7 @@
 // consumer -> D1 read model, queried back via /api/data/projection (drizzle).
 // Proves cross-user queries survive per-user event logs.
 import { newHttpBatchRpcSession } from "capnweb";
+import type { DataApi } from "../src/api-worker/data-api.ts";
 
 const front =
   process.env.FRONT_ORIGIN ??
@@ -24,21 +25,18 @@ console.log("JWT ok");
 type Item = { id: string; title: string; createdAt: number };
 type ProjectedEvent = { id: string; storeId: string; name: string; args: string; seqNum: number };
 
-const rpcUrl = `${front}/api/data/rpc?auth=${encodeURIComponent(token)}`;
+const rpcUrl = `${front}/api/data?auth=${encodeURIComponent(token)}`;
 const title = `projected @ ${new Date().toISOString()}`;
 const sentAt = Date.now();
-const added = await newHttpBatchRpcSession<{ addItem(t: string): Promise<Item> }>(rpcUrl).addItem(
-  title,
-);
+const added = (await newHttpBatchRpcSession<DataApi>(rpcUrl).user().addItem(title)) as Item;
 console.log("capnweb addItem:", added.id);
 
 const deadline = Date.now() + 30_000;
 for (;;) {
-  const res = await fetch(`${front}/api/data/projection`, {
-    headers: { authorization: `Bearer ${token}` },
-  });
-  if (res.ok) {
-    const { latest } = (await res.json()) as { latest: ProjectedEvent[] };
+  const { latest } = (await newHttpBatchRpcSession<DataApi>(rpcUrl).projection()) as {
+    latest: ProjectedEvent[];
+  };
+  {
     const hit = latest.find((e) => e.name === "v1.ItemAdded" && e.args.includes(added.id));
     if (hit) {
       console.log(

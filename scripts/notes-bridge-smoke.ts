@@ -1,5 +1,5 @@
 // Bridge test: UserDO is a LiveStore *client* (adapter-cloudflare).
-//  1. capnweb addNote via front /api/data/rpc -> UserDO commits into the event
+//  1. capnweb user().addNote via front /api/data -> UserDO commits into the event
 //     log -> synced Node LiveStore store observes it.
 //  2. Node store commits a note -> UserDO's live-pulled store sees it
 //     via capnweb listNotes.
@@ -8,6 +8,7 @@ import { makeAdapter } from "@livestore/adapter-node";
 import { createStorePromise, nanoid } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { newHttpBatchRpcSession } from "capnweb";
+import type { DataApi } from "../src/api-worker/data-api.ts";
 import { events, schema, tables } from "../db/livestore/schema.ts";
 
 const front =
@@ -29,20 +30,14 @@ const { token } = (await tokenRes.json()) as { token: string };
 const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
 console.log("JWT for user:", sub);
 
-type Note = { id: string; text: string; updatedAt: number };
-interface UserDoApi {
-  addNote(text: string): Promise<Note>;
-  listNotes(): Promise<Note[]>;
-}
-
-const rpcUrl = `${front}/api/data/rpc?auth=${encodeURIComponent(token)}`;
-const rpc = () => newHttpBatchRpcSession<UserDoApi>(rpcUrl);
+const rpcUrl = `${front}/api/data?auth=${encodeURIComponent(token)}`;
+const rpc = () => newHttpBatchRpcSession<DataApi>(rpcUrl);
 
 const localStore = await createStorePromise({
   schema,
   adapter: makeAdapter({
     storage: { type: "fs", baseDirectory: dataDir },
-    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/api/data/sync` }) },
+    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/api/sync` }) },
   }),
   storeId: sub,
   syncPayload: { authToken: token },
@@ -60,7 +55,7 @@ const poll = async <T>(label: string, fn: () => Promise<T | undefined>, timeoutM
 
 // 1. Server-side write -> local-first client.
 const sentAt = Date.now();
-const added = await rpc().addNote(`via capnweb @ ${new Date().toISOString()}`);
+const added = await rpc().user().addNote(`via capnweb @ ${new Date().toISOString()}`);
 console.log("capnweb addNote:", JSON.stringify(added));
 await poll("local store sees capnweb note", async () =>
   localStore.query(tables.notes.select()).find((n) => n.id === added.id),
@@ -74,7 +69,7 @@ localStore.commit(
   events.noteCreated({ id: localId, text: "from local store", updatedAt: Date.now() }),
 );
 await poll("UserDO sees local note via listNotes", async () => {
-  const notes = await rpc().listNotes();
+  const notes = await rpc().user().listNotes();
   return notes.find((n) => n.id === localId);
 });
 console.log(`PASS local commit -> UserDO listNotes (live pull): ${Date.now() - backAt}ms`);

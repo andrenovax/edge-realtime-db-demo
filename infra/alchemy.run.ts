@@ -53,6 +53,18 @@ export default Alchemy.Stack(
       settings: { batchSize: 25, maxWaitTimeMs: 2000 },
     });
 
+    // LiveStore sync protocol owner; binds the api-hosted sync DO.
+    const sync = yield* Cloudflare.Worker("sync", {
+      main: "../src/sync-worker/index.ts",
+      workersDev: false,
+      compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
+      env: {
+        USER_SYNC_BACKEND_DO: Cloudflare.DurableObject("UserSyncBackendDO", {
+          scriptName: api.workerName,
+        }),
+      },
+    });
+
     const agent = yield* Cloudflare.Worker("agent", {
       main: "../dist/flue_alchemy_demo/index.js",
       bundle: false,
@@ -70,7 +82,7 @@ export default Alchemy.Stack(
     const front = yield* Cloudflare.Worker("front", {
       main: "../src/front-worker/index.ts",
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
-      env: { AUTH: auth, AGENT: agent, API: api },
+      env: { AUTH: auth, AGENT: agent, API: api, SYNC: sync },
     });
 
     return { url: front.url, database: db.databaseName };
