@@ -14,8 +14,10 @@ nub install --cwd infra
 cp .env.example .env
 ```
 
-Add a model provider API key to `.env` (any
-[provider Pi supports](https://pi.dev/docs/latest/providers#api-keys)).
+Set `BETTER_AUTH_SECRET` in `.env` to a long random secret, then add a model
+provider API key (any
+[provider Pi supports](https://pi.dev/docs/latest/providers#api-keys)). Alchemy
+reads these inputs and injects each value only into the Worker that consumes it.
 
 ## Run the local stack
 
@@ -23,7 +25,7 @@ Add a model provider API key to `.env` (any
 nub run dev
 ```
 
-Alchemy runs the gateway, auth, sync, user, and admin Workers plus the Queue
+Alchemy runs the gateway, auth, LiveStore, user, and admin Workers plus the Queue
 and D1 database. The Flue agent is an Alchemy-managed Vite Worker in the same
 development loop, so agent edits retain Vite HMR while the gateway uses the
 same service binding in development and production. The gateway remains the

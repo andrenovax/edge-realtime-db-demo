@@ -3,7 +3,7 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import { resolveFlueAlchemyManifest, type FlueAlchemyManifest } from "./flue-alchemy.ts";
-import type { UserDoRpc } from "../src/workers/sync/user.contract.ts";
+import type { UserDoRpc } from "../src/workers/livestore/user.contract.ts";
 
 // Values come from Alchemy's --env-file (or the deploy process environment)
 // and are installed as encrypted Worker secret bindings. Keep these grouped
@@ -12,11 +12,14 @@ import type { UserDoRpc } from "../src/workers/sync/user.contract.ts";
 const agentProviderEnv = {
   ANTHROPIC_API_KEY: Config.redacted("ANTHROPIC_API_KEY"),
 };
+const authEnv = {
+  BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+};
 
 const WORKER_COMPATIBILITY_DATE = "2026-06-01";
 const FLUE_ALCHEMY_ROOT = "../src/workers/agent";
 const FLUE_ALCHEMY_ENTRY = "flue.alchemy.worker.ts";
-const LOCAL_SYNC_WORKER_NAME = "flue-demo-sync-local";
+const LOCAL_LIVESTORE_WORKER_NAME = "flue-demo-livestore-local";
 
 export const AuthWorker = (db: Cloudflare.D1.Database) =>
   Cloudflare.Worker("auth", {
@@ -25,44 +28,43 @@ export const AuthWorker = (db: Cloudflare.D1.Database) =>
     compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
     env: {
       DB: db,
-      // Demo-only literal; use a Secret resource for anything real.
-      BETTER_AUTH_SECRET: "flue-alchemy-demo-secret-0812",
+      ...authEnv,
     },
   });
 
 export type AuthEnv = Cloudflare.InferEnv<ReturnType<typeof AuthWorker>>;
 
-export const SyncWorker = (events: Cloudflare.Queues.Queue, name?: string) =>
-  Cloudflare.Worker("sync", {
+export const LiveStoreWorker = (events: Cloudflare.Queues.Queue, name?: string) =>
+  Cloudflare.Worker("livestore", {
     // The local provider currently pre-creates cross-script DO consumers
     // before resolving a nested workerName Output. A stable local name
     // keeps the binding explicit; live stacks retain Alchemy's generated
     // physical name and dependency Output.
     name,
-    main: "../src/workers/sync/sync.worker.ts",
+    main: "../src/workers/livestore/livestore.worker.ts",
     workersDev: false,
     compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
     env: {
       EVENTS_QUEUE: events,
       USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
-        transferredFrom: "api",
+        transferredFrom: ["api", "sync"],
       }),
       USER_SYNC_BACKEND_DO: Cloudflare.DurableObject<Record<never, never>>("UserSyncBackendDO", {
-        transferredFrom: "api",
+        transferredFrom: ["api", "sync"],
       }),
     },
   });
 
-export type SyncEnv = Cloudflare.InferEnv<ReturnType<typeof SyncWorker>>;
+export type LiveStoreEnv = Cloudflare.InferEnv<ReturnType<typeof LiveStoreWorker>>;
 
-export const UserWorker = (syncWorkerName: Alchemy.Input<string>) =>
+export const UserWorker = (liveStoreWorkerName: Alchemy.Input<string>) =>
   Cloudflare.Worker("user", {
     main: "../src/workers/user/user.worker.ts",
     workersDev: false,
     compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
     env: {
       USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
-        scriptName: syncWorkerName,
+        scriptName: liveStoreWorkerName,
       }),
     },
   });
@@ -80,7 +82,7 @@ export const AdminWorker = (db: Cloudflare.D1.Database) =>
 export type AdminEnv = Cloudflare.InferEnv<ReturnType<typeof AdminWorker>>;
 
 export const AgentWorker = (
-  syncWorkerName: Alchemy.Input<string>,
+  liveStoreWorkerName: Alchemy.Input<string>,
   flueManifest: FlueAlchemyManifest,
 ) =>
   Cloudflare.Website.Vite("agent", {
@@ -101,7 +103,7 @@ export const AgentWorker = (
         ]),
       ),
       USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
-        scriptName: syncWorkerName,
+        scriptName: liveStoreWorkerName,
       }),
     },
   });
@@ -113,26 +115,34 @@ type GatewayWorkerDependencies = {
   agent: Cloudflare.Worker;
   user: Cloudflare.Worker;
   admin: Cloudflare.Worker;
-  sync: Cloudflare.Worker;
+  livestore: Cloudflare.Worker;
 };
 
-export const GatewayWorker = ({ auth, agent, user, admin, sync }: GatewayWorkerDependencies) =>
-  Cloudflare.Worker("gateway", {
-    main: "../src/workers/gateway/gateway.worker.ts",
+// Gateway = the SPA's Vite build + the proxy worker in one deploy:
+// /api/* routes worker-first, everything else is served from the built
+// client assets with SPA fallback (src/web/user).
+export const GatewayWorker = ({ auth, agent, user, admin, livestore }: GatewayWorkerDependencies) =>
+  Cloudflare.Website.Vite("gateway", {
+    rootDir: "../src/web/user",
+    main: "../../workers/gateway/gateway.worker.ts",
     compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
     dev: { port: 8787, strictPort: true },
+    assets: {
+      runWorkerFirst: ["/api/*"],
+      notFoundHandling: "single-page-application",
+    },
     env: {
       AUTH: Cloudflare.WorkerEntrypoint(auth),
       AGENT: Cloudflare.WorkerEntrypoint(agent),
       USER: Cloudflare.WorkerEntrypoint(user),
       ADMIN: Cloudflare.WorkerEntrypoint(admin),
-      SYNC: Cloudflare.WorkerEntrypoint(sync),
+      LIVESTORE: Cloudflare.WorkerEntrypoint(livestore),
     },
   });
 
 export type GatewayEnv = Cloudflare.InferEnv<ReturnType<typeof GatewayWorker>>;
 
-// Six workers: gateway (public), auth (Better Auth + D1), sync (LiveStore
+// Six workers: gateway (public), auth (Better Auth + D1), livestore (LiveStore
 // DOs: UserDO + UserSyncBackendDO), user (capnweb + DO binding), admin
 // (projection consumer + D1 read model), agent (flue + UserDO binding).
 // Alchemy owns all six workers;
@@ -160,7 +170,7 @@ export default Alchemy.Stack(
 
     const auth = yield* AuthWorker(db);
 
-    // CQRS projection feed: sync DOs enqueue accepted event batches,
+    // CQRS projection feed: LiveStore DOs enqueue accepted event batches,
     // the admin worker's queue handler folds them into D1.
     const events = yield* Cloudflare.Queues.Queue("events");
 
@@ -169,12 +179,16 @@ export default Alchemy.Stack(
     // bindings acyclic: the backend's live-pull callback resolves USER_DO
     // in its own env, and UserDO's sync stub resolves
     // USER_SYNC_BACKEND_DO likewise. transferredFrom moves the
-    // namespaces (with data) off the api script.
-    const sync = yield* SyncWorker(events, isLocalDev ? LOCAL_SYNC_WORKER_NAME : undefined);
-    const syncWorkerName = isLocalDev ? LOCAL_SYNC_WORKER_NAME : sync.workerName;
+    // namespaces (with data) through their api -> sync -> livestore host
+    // history without changing the durable class identities.
+    const livestore = yield* LiveStoreWorker(
+      events,
+      isLocalDev ? LOCAL_LIVESTORE_WORKER_NAME : undefined,
+    );
+    const liveStoreWorkerName = isLocalDev ? LOCAL_LIVESTORE_WORKER_NAME : livestore.workerName;
 
     // User plane: capnweb command lane over the caller's per-user DO.
-    const user = yield* UserWorker(syncWorkerName);
+    const user = yield* UserWorker(liveStoreWorkerName);
 
     // System plane: admin entry + projection fold.
     const admin = yield* AdminWorker(db);
@@ -187,7 +201,7 @@ export default Alchemy.Stack(
 
     // Alchemy injects its Cloudflare Vite runtime, builds Flue's virtual
     // Worker entry for deploys, and serves the same module graph with HMR.
-    const agent = yield* AgentWorker(syncWorkerName, flueManifest);
+    const agent = yield* AgentWorker(liveStoreWorkerName, flueManifest);
 
     // The only public worker: a prefix-routing proxy with JWT validation.
     const gateway = yield* GatewayWorker({
@@ -195,7 +209,7 @@ export default Alchemy.Stack(
       agent,
       user,
       admin,
-      sync,
+      livestore,
     });
 
     return { url: gateway.url, database: db.databaseName };

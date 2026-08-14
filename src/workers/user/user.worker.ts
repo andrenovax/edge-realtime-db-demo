@@ -3,7 +3,7 @@
  * User-plane worker: a single capnweb RPC endpoint; methods are the
  * routing — no path dispatch, only the gateway reaches this worker
  * (service binding, /api/data). Regular users touch only their own DO
- * (hosted in the sync worker, reached cross-script) — never D1; the
+ * (hosted in the LiveStore worker, reached cross-script) — never D1; the
  * cross-user read model lives behind the admin worker. The gateway
  * verifies JWTs and stamps x-user-id — methods authorize against that
  * identity.

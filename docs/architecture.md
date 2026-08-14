@@ -1,6 +1,6 @@
 # flue-alchemy-demo architecture
 
-Structure of `src/`, organized by **actor plane** with worker encapsulation.
+Structure of `src/`, organized by **actor/runtime plane** with worker encapsulation.
 One deployable worker per `src/workers/<name>/` dir; the SPA lives in
 `src/web/`. Boundary rules are enforced by `nub run lint:boundaries`
 ([scripts/check-boundaries.ts](../scripts/check-boundaries.ts)); each hard rule
@@ -10,33 +10,53 @@ below carries the lint rule's name.
 
 ## Planes
 
-Each worker answers to exactly one actor (single-responsibility by actor).
-Data-store ownership follows the actor: regular users live in per-user DOs
-and **never touch D1**; system users live in D1 and **never touch the DOs**.
-The projection Queue is the one bridge between the planes.
+Actor-facing workers answer to exactly one actor. Infrastructure workers own
+one runtime concern: `livestore` is the durable state and synchronization
+plane. Regular users live in per-user DOs and **never touch D1**; system users
+live in D1 and **never touch the application DOs**. The projection Queue is
+the one bridge between those data planes.
 
-| Worker    | Actor / role                                                                                                                                | Stores                        |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `gateway` | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers | —                             |
-| `auth`    | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                | D1 (Better Auth tables)       |
-| `sync`    | protocol — LiveStore sync; hosts BOTH LiveStore DOs (`UserDO` client + `UserSyncBackendDO` event log)                                       | DO SQLite, LiveStore schema   |
-| `user`    | user plane — capnweb RPC (`/api/data`) over the caller's own DO, cross-script                                                               | — (DOs via binding)           |
-| `admin`   | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                           | D1 (`user_events` read model) |
-| `agent`   | agents — flue runtime (`/api/agents/*`); reaches `UserDO` cross-worker                                                                      | — (DOs via binding)           |
+| Worker      | Actor / role                                                                                                                                | Stores                        |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `gateway`   | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers | —                             |
+| `auth`      | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                | D1 (Better Auth tables)       |
+| `livestore` | durable state — LiveStore sync plus all application DOs (`UserDO` client + `UserSyncBackendDO` event log)                                   | DO SQLite, LiveStore schema   |
+| `user`      | user plane — capnweb RPC (`/api/data`) over the caller's own DO, cross-script                                                               | — (DOs via binding)           |
+| `admin`     | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                           | D1 (`user_events` read model) |
+| `agent`     | agents — flue runtime (`/api/agents/*`); reaches `UserDO` cross-worker                                                                      | — (DOs via binding)           |
 
-`src/web/` (when it exists): the SPA, served through the gateway worker's
-`ASSETS` binding. Runs its own LiveStore client store; talks to workers over
-HTTP only.
+## Public ingress
+
+`gateway` is the application's **only public entry point**. It is the only
+Worker that may own a public URL, route, custom domain, or user-facing static
+assets. `auth`, `livestore`, `user`, `admin`, and `agent` are private Workers:
+they set `workersDev: false`, receive requests only through Cloudflare service
+bindings from `gateway`, and must never be exposed directly.
+
+The gateway authenticates public API requests, removes any caller-supplied
+identity headers, stamps the verified `x-user-*` identity, and dispatches by
+path to the private Worker bindings. Browser and external API clients always
+use the gateway origin; Worker-to-Worker and Worker-to-DO calls use bindings,
+never public URLs.
+
+`src/web/<app>/`: one SPA per audience, each its own Vite root deployed
+with a worker. `web/user` (the notes app) ships as the gateway deploy's
+static assets — `/api/*` routes worker-first, everything else serves the
+SPA with client-side-routing fallback (see `GatewayWorker` in
+`infra/alchemy.run.ts`). `web/admin` (future) will pair with the admin
+surface the same way. Each app runs its own LiveStore client store from
+`db/livestore/` and talks to workers over HTTP only.
 
 ## Layout
 
 ```
 src/
   workers/<name>/     one worker per dir; entry is <name>.worker.ts
-  web/                SPA (future)
+  web/user/           user-facing SPA (Vite root; deployed with gateway)
+  web/admin/          admin SPA (future)
 db/
   schema/             Drizzle source — user canonical + auth/admin D1 planes
-  livestore/          derived LiveStore schema/materializers — sync + web client
+  livestore/          derived LiveStore schema/materializers — LiveStore worker + web client
   migrations/         D1 migrations (applied by alchemy on deploy)
 infra/alchemy.run.ts  the stack: workers, bindings, queue, consumer
 scripts/              smoke tests + boundary lint (external consumers)
@@ -50,10 +70,10 @@ worker needs them.
 | Kind            | Role                                                                                                       |
 | --------------- | ---------------------------------------------------------------------------------------------------------- |
 | `<w>.worker.ts` | the entry: default export (fetch/queue), DO re-exports — wiring, no business logic                         |
-| `<w>.env.ts`    | the binding manifest — everything `alchemy.run.ts` wires in; type-only for support files                   |
+| `<w>.env.ts`    | optional type-only helpers derived from Alchemy's inferred Worker environment; never a binding source      |
 | `<w>.rpc.ts`    | the capnweb `RpcTarget` surface; also the type surface external consumers (scripts, web) may `import type` |
 | `<w>.queue.ts`  | queue consumer                                                                                             |
-| `<name>.do.ts`  | a Durable Object class, named by subject (`user.do.ts`, `user.sync.do.ts`)                                 |
+| `<name>.do.ts`  | an application Durable Object in `livestore/`, named by subject (`user.do.ts`, `user-sync-backend.do.ts`)  |
 | `*.contract.ts` | a cross-worker type seam — the only file another worker may import                                         |
 | `*.util.ts`     | worker-private helper (`jwt.util.ts`)                                                                      |
 
@@ -63,8 +83,8 @@ worker needs them.
   only cross-worker edge is a type-only `.contract.ts`. Ownership follows the
   xenguide command rule — a contract is **receiver-owned**: the queue consumer
   owns `ProjectionMessage` ([admin.contract.ts](../src/workers/admin/admin.contract.ts),
-  imported by the sync producer), the DO's home worker owns `UserDoRpc`
-  ([user.contract.ts](../src/workers/sync/user.contract.ts), imported by callers).
+  imported by the LiveStore producer), the DO's home worker owns `UserDoRpc`
+  ([user.contract.ts](../src/workers/livestore/user.contract.ts), imported by callers).
 - **`contracts-type-only`** — importing a `.contract.ts` is `import type`;
   no runtime code crosses a worker boundary.
 - **`db-schema-planes`** — [user.ts](../db/schema/user.ts) is the canonical
@@ -72,30 +92,49 @@ worker needs them.
   alongside its own [admin.ts](../db/schema/admin.ts) D1 read model; `auth` sees
   only [auth.ts](../db/schema/better-auth.ts). [index.ts](../db/schema/index.ts) exports
   only D1 tables for drizzle-kit and is never imported from `src/`.
-- **`livestore-schema-sync-only`** — only `sync` imports `db/livestore/`
+- **`application-dos-livestore-only`** — every application-owned `*.do.ts`
+  lives in `src/workers/livestore/` and is exported by `livestore.worker.ts`.
+  Framework-generated DOs are the sole exception and stay with their framework
+  worker; Flue's generated agent DOs therefore remain hosted by `agent`.
+- **`livestore-schema-owner-only`** — only `livestore` imports `db/livestore/`
   (the web client will run its own store from the same schema).
 - **`web-imports-types-only`** — `src/web/` may `import type` from
   `.contract.ts`/`.rpc.ts` only; it reaches workers over HTTP, never by import.
 - **`workers-never-import-web`** — the SPA is a consumer, not a dependency.
 - **`no-circular`** — no import cycles; break one with a type seam
-  (`Env` lives in `<w>.env.ts` for exactly this reason).
+  (`.contract.ts` for cross-worker capabilities; Alchemy-inferred environment
+  types cross into Worker modules with `import type`).
 
 Not lintable but held by convention: request-identity trust flows one way —
 only `gateway` verifies JWTs; downstream workers authorize against the stamped
 `x-user-*` headers and never re-verify. Local smoke tests sign in through Better
 Auth as users from `db/seeds/local.sql`.
 
+## Runtime environment
+
+`infra/alchemy.run.ts` is the sole source of every Worker runtime environment
+binding. Each `env` entry must come from an Alchemy resource, an Alchemy
+resource output, or Effect `Config` resolved by Alchemy; Worker modules never
+read `process.env` and never provide hardcoded runtime configuration fallbacks.
+
+Sensitive scalar values use `Config.redacted("NAME")`. Non-sensitive scalar
+values use the appropriate Effect `Config` decoder. `.env` and deploy-process
+environment variables are inputs to Alchemy only; `.env.example` documents
+their names with empty values. Worker environment types are inferred from the
+Alchemy Worker resource with `Cloudflare.InferEnv`, so binding declarations and
+types cannot drift apart.
+
 ## Naming
 
-| Thing           | Form                                 | Example                                  |
-| --------------- | ------------------------------------ | ---------------------------------------- |
-| worker dir      | actor, dash-case, no suffix          | `src/workers/admin/`                     |
-| file            | `<stem>.<kind>.ts`                   | `admin.queue.ts`, `user.sync.do.ts`      |
-| RPC surface     | PascalCase actor + `Api`             | `UserApi`, `AdminApi`                    |
-| DO class        | PascalCase subject + `DO`            | `UserDO`, `UserSyncBackendDO`            |
-| service binding | SCREAMING actor                      | `USER`, `ADMIN`, `AUTH`, `SYNC`, `AGENT` |
-| DO binding      | SCREAMING subject + `_DO`            | `USER_DO`, `USER_SYNC_BACKEND_DO`        |
-| route           | `/api/<surface>` (gateway routes it) | `/api/data`, `/api/admin`, `/api/sync`   |
+| Thing           | Form                                 | Example                                       |
+| --------------- | ------------------------------------ | --------------------------------------------- |
+| worker dir      | actor, dash-case, no suffix          | `src/workers/admin/`                          |
+| file            | `<stem>.<kind>.ts`; dash-case stem   | `admin.queue.ts`, `user-sync-backend.do.ts`   |
+| RPC surface     | PascalCase actor + `Api`             | `UserApi`, `AdminApi`                         |
+| DO class        | PascalCase subject + `DO`            | `UserDO`, `UserSyncBackendDO`                 |
+| service binding | SCREAMING worker                     | `USER`, `ADMIN`, `AUTH`, `LIVESTORE`, `AGENT` |
+| DO binding      | SCREAMING subject + `_DO`            | `USER_DO`, `USER_SYNC_BACKEND_DO`             |
+| route           | `/api/<surface>` (gateway routes it) | `/api/data`, `/api/admin`, `/api/sync`        |
 
 ## Where does my code go?
 
@@ -108,6 +147,10 @@ Auth as users from `db/seeds/local.sql`.
   `db/livestore/schema.ts`.
 - A type another worker needs? → the receiver's `.contract.ts`, imported
   `import type`.
-- A new Cloudflare binding? → the worker's `<w>.env.ts` +
-  `infra/alchemy.run.ts`.
-- Frontend code? → `src/web/`.
+- A new Cloudflare binding or scalar runtime value? → declare it only in
+  `infra/alchemy.run.ts`; use Effect `Config` for external scalar inputs and
+  let `Cloudflare.InferEnv` derive its type.
+- A new public endpoint? → add the gateway route and forward it to a private
+  Worker binding; never expose the target Worker directly.
+- Frontend code? → `src/web/user/` — `lib/` for clients (auth, RPC,
+  LiveStore), `features/<name>/` for UI slices.

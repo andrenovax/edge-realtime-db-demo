@@ -1,11 +1,11 @@
 import { makeDurableObject } from "@livestore/sync-cf/cf-worker";
-import type { SyncEnv } from "../../../infra/alchemy.run.ts";
+import type { LiveStoreEnv } from "../../../infra/alchemy.run.ts";
 import type { ProjectionMessage } from "../admin/admin.contract.ts";
 
 // onPush is defined at class-creation time and receives no env; the
 // constructor captures it. One env object per worker, so a module slot
 // is safe.
-let doEnv: SyncEnv | undefined;
+let doEnv: LiveStoreEnv | undefined;
 
 // Event-log store, one per storeId (= userId). Events persist in this
 // DO's own SQLite (sync-cf default). All transports enabled: ws/http for
@@ -34,7 +34,7 @@ export class UserSyncBackendDO extends makeDurableObject({
     }
   },
 }) {
-  constructor(ctx: DurableObjectState, env: SyncEnv) {
+  constructor(ctx: DurableObjectState, env: LiveStoreEnv) {
     super(ctx as never, env as never);
     doEnv = env;
   }

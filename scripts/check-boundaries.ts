@@ -6,7 +6,8 @@
 //   workers-encapsulated        cross-worker imports only via .contract.ts
 //   contracts-type-only         importing a .contract.ts is `import type`
 //   db-schema-planes            auth sees auth.ts; admin sees admin.ts + canonical user.ts
-//   livestore-schema-sync-only  db/livestore only from the sync worker
+//   application-dos-livestore-only application *.do.ts files live in and export from livestore
+//   livestore-schema-owner-only db/livestore only from the livestore worker
 //   web-imports-types-only      src/web -> workers: .contract/.rpc, type-only
 //   workers-never-import-web    workers never import src/web
 //   no-circular                 no import cycles under src/
@@ -28,8 +29,9 @@ const IMPORT_RE = /(?:^|\n)\s*(?:import|export)\s+(type\s+)?[^'"]*?from\s+["']([
 
 type Edge = { from: string; to: string; typeOnly: boolean };
 
+const sourceFiles = tsFiles(SRC);
 const edges: Edge[] = [];
-for (const file of tsFiles(SRC)) {
+for (const file of sourceFiles) {
   const source = readFileSync(file, "utf8");
   for (const match of source.matchAll(IMPORT_RE)) {
     const [, typeOnly, spec] = match;
@@ -54,6 +56,30 @@ const DB_PLANES: Record<string, string[]> = {
 const violations: string[] = [];
 const fail = (rule: string, edge: Edge, why: string) =>
   violations.push(`${rule}: ${edge.from} -> ${edge.to}\n    ${why}`);
+
+const liveStoreDir = join(SRC, "workers", "livestore");
+const liveStoreEntry = join(liveStoreDir, "livestore.worker.ts");
+const liveStoreEntrySource = readFileSync(liveStoreEntry, "utf8");
+for (const file of sourceFiles) {
+  const path = relative(ROOT, file);
+  if (!path.endsWith(".do.ts")) continue;
+  if (workerOf(path) !== "livestore") {
+    violations.push(
+      `application-dos-livestore-only: ${path}\n    application Durable Objects live in the livestore worker; framework-generated virtual DOs are exempt`,
+    );
+    continue;
+  }
+
+  const specifier = `./${relative(liveStoreDir, file)}`;
+  if (
+    !liveStoreEntrySource.includes(`from "${specifier}"`) &&
+    !liveStoreEntrySource.includes(`from '${specifier}'`)
+  ) {
+    violations.push(
+      `application-dos-livestore-only: ${path}\n    ${specifier} must be re-exported by src/workers/livestore/livestore.worker.ts`,
+    );
+  }
+}
 
 for (const edge of edges) {
   const fromWorker = workerOf(edge.from);
@@ -83,11 +109,11 @@ for (const edge of edges) {
       }. db/schema/index.ts is the drizzle-kit migration barrel — never import it from src/`,
     );
   }
-  if (fromWorker && fromWorker !== "sync" && edge.to.startsWith("db/livestore/")) {
+  if (fromWorker && fromWorker !== "livestore" && edge.to.startsWith("db/livestore/")) {
     fail(
-      "livestore-schema-sync-only",
+      "livestore-schema-owner-only",
       edge,
-      "the LiveStore schema belongs to the sync worker (and the web client's own store)",
+      "the LiveStore schema belongs to the livestore worker (and the web client's own store)",
     );
   }
   if (edge.from.startsWith("src/web/") && toWorker) {

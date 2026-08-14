@@ -3,7 +3,7 @@ import type { Store } from "@livestore/livestore";
 import { handleSyncUpdateRpc } from "@livestore/sync-cf/client";
 import { DurableObject } from "cloudflare:workers";
 import { events, schema, tables } from "../../../db/livestore/schema.ts";
-import type { SyncEnv } from "../../../infra/alchemy.run.ts";
+import type { LiveStoreEnv } from "../../../infra/alchemy.run.ts";
 
 // Per-user LiveStore client. One per userId. All state lives in the
 // event log (UserSyncBackendDO); this DO hosts a live materialized
@@ -30,7 +30,7 @@ export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
     }
     const storeId = this.ctx.id.name;
     if (!storeId) throw new Error("UserDO must be addressed by name (userId)");
-    const env = this.env as SyncEnv;
+    const env = this.env as LiveStoreEnv;
     this.#store = await createStoreDoPromise({
       schema,
       storeId,

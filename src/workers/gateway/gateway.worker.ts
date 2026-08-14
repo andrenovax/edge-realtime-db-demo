@@ -7,10 +7,13 @@
  * worker.
  * - /api/auth/*   -> auth worker (Better Auth's own basePath)
  * - /api/agents/* -> flue agent worker
- * - /api/sync     -> sync worker (LiveStore protocol)
+ * - /api/sync     -> LiveStore worker (sync protocol)
  * - /api/data     -> user-plane worker, single capnweb RPC endpoint
  * - /api/admin    -> system-plane worker (admin membership checked there)
- * - else          -> placeholder response until the SPA is bound
+ * - else          -> unreachable in deploys: only /api/* routes
+ *                    worker-first; everything else is served from the
+ *                    SPA's static assets (see GatewayWorker in
+ *                    infra/alchemy.run.ts)
  */
 import type { GatewayEnv } from "../../../infra/alchemy.run.ts";
 import { verifyUser } from "./jwt.util.ts";
@@ -46,10 +49,10 @@ export default {
     if (url.pathname.startsWith("/api/agents/")) {
       return forwardAsUser(request, env, env.AGENT);
     }
-    if (url.pathname === "/api/sync") return forwardAsUser(request, env, env.SYNC);
+    if (url.pathname === "/api/sync") return forwardAsUser(request, env, env.LIVESTORE);
     if (url.pathname === "/api/data") return forwardAsUser(request, env, env.USER);
     if (url.pathname === "/api/admin") return forwardAsUser(request, env, env.ADMIN);
 
-    return new Response("flue-alchemy-demo gateway worker (no SPA yet)", { status: 200 });
+    return new Response("not found", { status: 404 });
   },
 };
