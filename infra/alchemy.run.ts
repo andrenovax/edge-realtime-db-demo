@@ -5,6 +5,36 @@ import * as Effect from "effect/Effect";
 import { resolveFlueAlchemyManifest, type FlueAlchemyManifest } from "./flue-alchemy.ts";
 import type { UserDoRpc } from "../src/workers/livestore/user.contract.ts";
 
+const deploymentConfig = {
+  compatibility: {
+    date: "2026-06-01",
+    flags: ["nodejs_compat"],
+  },
+  paths: {
+    authWorker: "../src/workers/auth/auth.worker.ts",
+    livestoreWorker: "../src/workers/livestore/livestore.worker.ts",
+    userWorker: "../src/workers/user/user.worker.ts",
+    adminWorker: "../src/workers/admin/admin.worker.ts",
+    agentRoot: "../src/workers/agent",
+    agentEntry: "flue.alchemy.worker.ts",
+    gatewayRoot: "../src/web/user",
+    gatewayWorker: "../../workers/gateway/gateway.worker.ts",
+    databaseMigrations: "../db/migrations",
+    localDatabaseSeed: "../db/seeds/local.sql",
+  },
+  local: {
+    gatewayPort: 8787,
+    livestoreWorkerName: "flue-demo-livestore-local",
+  },
+  gateway: {
+    workerFirstRoutes: ["/api/*"],
+  },
+  eventsConsumer: {
+    batchSize: 25,
+    maxWaitTimeMs: 2000,
+  },
+};
+
 // Values come from Alchemy's --env-file (or the deploy process environment)
 // and are installed as encrypted Worker secret bindings. Keep these grouped
 // by consumer so credentials are declared once without leaking into Workers
@@ -16,16 +46,11 @@ const authEnv = {
   BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
 };
 
-const WORKER_COMPATIBILITY_DATE = "2026-06-01";
-const FLUE_ALCHEMY_ROOT = "../src/workers/agent";
-const FLUE_ALCHEMY_ENTRY = "flue.alchemy.worker.ts";
-const LOCAL_LIVESTORE_WORKER_NAME = "flue-demo-livestore-local";
-
 export const AuthWorker = (db: Cloudflare.D1.Database) =>
   Cloudflare.Worker("auth", {
-    main: "../src/workers/auth/auth.worker.ts",
+    main: deploymentConfig.paths.authWorker,
     workersDev: false,
-    compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
+    compatibility: deploymentConfig.compatibility,
     env: {
       DB: db,
       ...authEnv,
@@ -41,9 +66,9 @@ export const LiveStoreWorker = (events: Cloudflare.Queues.Queue, name?: string) 
     // keeps the binding explicit; live stacks retain Alchemy's generated
     // physical name and dependency Output.
     name,
-    main: "../src/workers/livestore/livestore.worker.ts",
+    main: deploymentConfig.paths.livestoreWorker,
     workersDev: false,
-    compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
+    compatibility: deploymentConfig.compatibility,
     env: {
       EVENTS_QUEUE: events,
       USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
@@ -59,9 +84,9 @@ export type LiveStoreEnv = Cloudflare.InferEnv<ReturnType<typeof LiveStoreWorker
 
 export const UserWorker = (liveStoreWorkerName: Alchemy.Input<string>) =>
   Cloudflare.Worker("user", {
-    main: "../src/workers/user/user.worker.ts",
+    main: deploymentConfig.paths.userWorker,
     workersDev: false,
-    compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
+    compatibility: deploymentConfig.compatibility,
     env: {
       USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
         scriptName: liveStoreWorkerName,
@@ -73,9 +98,9 @@ export type UserEnv = Cloudflare.InferEnv<ReturnType<typeof UserWorker>>;
 
 export const AdminWorker = (db: Cloudflare.D1.Database) =>
   Cloudflare.Worker("admin", {
-    main: "../src/workers/admin/admin.worker.ts",
+    main: deploymentConfig.paths.adminWorker,
     workersDev: false,
-    compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
+    compatibility: deploymentConfig.compatibility,
     env: { DB: db },
   });
 
@@ -86,7 +111,7 @@ export const AgentWorker = (
   flueManifest: FlueAlchemyManifest,
 ) =>
   Cloudflare.Website.Vite("agent", {
-    rootDir: FLUE_ALCHEMY_ROOT,
+    rootDir: deploymentConfig.paths.agentRoot,
     main: flueManifest.main,
     workersDev: false,
     observability: { enabled: true, traces: { enabled: true } },
@@ -123,12 +148,12 @@ type GatewayWorkerDependencies = {
 // client assets with SPA fallback (src/web/user).
 export const GatewayWorker = ({ auth, agent, user, admin, livestore }: GatewayWorkerDependencies) =>
   Cloudflare.Website.Vite("gateway", {
-    rootDir: "../src/web/user",
-    main: "../../workers/gateway/gateway.worker.ts",
-    compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
-    dev: { port: 8787, strictPort: true },
+    rootDir: deploymentConfig.paths.gatewayRoot,
+    main: deploymentConfig.paths.gatewayWorker,
+    compatibility: deploymentConfig.compatibility,
+    dev: { port: deploymentConfig.local.gatewayPort, strictPort: true },
     assets: {
-      runWorkerFirst: ["/api/*"],
+      runWorkerFirst: deploymentConfig.gateway.workerFirstRoutes,
       notFoundHandling: "single-page-application",
     },
     env: {
@@ -156,16 +181,20 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const isLocalDev = yield* Alchemy.ALCHEMY_DEV;
     const flueManifest = yield* Effect.promise(() =>
-      resolveFlueAlchemyManifest(FLUE_ALCHEMY_ROOT, WORKER_COMPATIBILITY_DATE, FLUE_ALCHEMY_ENTRY),
+      resolveFlueAlchemyManifest(
+        deploymentConfig.paths.agentRoot,
+        deploymentConfig.compatibility.date,
+        deploymentConfig.paths.agentEntry,
+      ),
     );
 
     // Cross-user directory: Better Auth tables, JWKS keys, and projections.
     const db = yield* Cloudflare.D1.Database("db", {
-      migrationsDir: "../db/migrations",
+      migrationsDir: deploymentConfig.paths.databaseMigrations,
       migrationsTable: "drizzle_migrations",
       // Alchemy applies local seed data after migrations. Live deploys
       // intentionally never import demo identities.
-      importFiles: isLocalDev ? ["../db/seeds/local.sql"] : undefined,
+      importFiles: isLocalDev ? [deploymentConfig.paths.localDatabaseSeed] : undefined,
     });
 
     const auth = yield* AuthWorker(db);
@@ -183,9 +212,11 @@ export default Alchemy.Stack(
     // history without changing the durable class identities.
     const livestore = yield* LiveStoreWorker(
       events,
-      isLocalDev ? LOCAL_LIVESTORE_WORKER_NAME : undefined,
+      isLocalDev ? deploymentConfig.local.livestoreWorkerName : undefined,
     );
-    const liveStoreWorkerName = isLocalDev ? LOCAL_LIVESTORE_WORKER_NAME : livestore.workerName;
+    const liveStoreWorkerName = isLocalDev
+      ? deploymentConfig.local.livestoreWorkerName
+      : livestore.workerName;
 
     // User plane: capnweb command lane over the caller's per-user DO.
     const user = yield* UserWorker(liveStoreWorkerName);
@@ -196,7 +227,7 @@ export default Alchemy.Stack(
     yield* Cloudflare.Queues.Consumer("events-consumer", {
       queueId: events.queueId,
       scriptName: admin.workerName,
-      settings: { batchSize: 25, maxWaitTimeMs: 2000 },
+      settings: deploymentConfig.eventsConsumer,
     });
 
     // Alchemy injects its Cloudflare Vite runtime, builds Flue's virtual
