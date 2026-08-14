@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "CLOUDFLARE_ENV=local vite dev",
+    "dev": "cd infra && nub run dev",
     "build": "vite build",
-    "deploy": "vite build && wrangler deploy",
+    "deploy": "cd infra && nub run deploy",
     "check:types": "tsc --noEmit",
     "lint": "oxlint",
     "lint:boundaries": "nub scripts/check-boundaries.ts",
@@ -14,10 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "smoke": "nub scripts/realtime-smoke.ts",
     "demo:setup": "nub scripts/setup-demo.ts",
-    "deploy:cf": "cd infra && nub run deploy",
-    "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/notes-bridge-smoke.ts && nub scripts/projection-smoke.ts",
-    "dev:stack": "cd infra && nub run dev",
-    "dev:agent": "CLOUDFLARE_ENV=local vite dev"
+    "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/notes-bridge-smoke.ts && nub scripts/projection-smoke.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.0-rc.5",

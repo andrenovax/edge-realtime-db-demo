@@ -44,6 +44,6 @@ try {
       : `Created ${writes.length} per-user seed records.`,
   );
 } catch (error) {
-  console.error(`Could not seed ${origin}. Start \`nub run dev:stack\` first.`);
+  console.error(`Could not seed ${origin}. Start \`nub run dev\` first.`);
   throw error;
 }

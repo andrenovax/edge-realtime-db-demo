@@ -20,19 +20,14 @@ Add a model provider API key to `.env` (any
 ## Run the local stack
 
 ```sh
-nub run dev:stack
-```
-
-In a second terminal, start the Flue worker with Vite:
-
-```sh
-nub run dev:agent
+nub run dev
 ```
 
 Alchemy runs the gateway, auth, sync, user, and admin Workers plus the Queue
-and D1 database. Vite runs the Flue worker on `http://localhost:5173` with hot
-reload; the gateway proxies `/api/agents/*` to it while remaining the only
-public entry at `http://localhost:8787`.
+and D1 database. The Flue agent is an Alchemy-managed Vite Worker in the same
+development loop, so agent edits retain Vite HMR while the gateway uses the
+same service binding in development and production. The gateway remains the
+only public entry at `http://localhost:8787`.
 
 D1 migrations and `db/seeds/local.sql` are applied automatically; the local
 database persists between runs and is separate from deployed D1 data.
@@ -63,8 +58,13 @@ nub scripts/rpc-smoke.ts
 ## Deploy
 
 ```sh
-nub run deploy:cf
+nub run deploy
 ```
+
+Alchemy builds Flue's virtual Worker entry through Vite and deploys the
+complete Worker topology in one plan. A standalone `nub run build` remains
+available for checking Flue's regular Cloudflare Vite path; it is not an input
+to the Alchemy deployment.
 
 ## Learn more
 

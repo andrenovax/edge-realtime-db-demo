@@ -2,6 +2,7 @@ import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import { resolveFlueAlchemyManifest, type FlueAlchemyManifest } from "./flue-alchemy.ts";
 import type { UserDoRpc } from "../src/workers/sync/user.contract.ts";
 
 // Values come from Alchemy's --env-file (or the deploy process environment)
@@ -11,6 +12,9 @@ import type { UserDoRpc } from "../src/workers/sync/user.contract.ts";
 const agentProviderEnv = {
   ANTHROPIC_API_KEY: Config.redacted("ANTHROPIC_API_KEY"),
 };
+
+const WORKER_COMPATIBILITY_DATE = "2026-06-01";
+const FLUE_ALCHEMY_ENTRY = "src/workers/ai/flue.alchemy.worker.ts";
 
 export const AuthWorker = (db: Cloudflare.D1.Database) =>
   Cloudflare.Worker("auth", {
@@ -50,9 +54,38 @@ export const AdminWorker = (db: Cloudflare.D1.Database) =>
 
 export type AdminEnv = Cloudflare.InferEnv<ReturnType<typeof AdminWorker>>;
 
+export const AgentWorker = (
+  syncWorkerName: Alchemy.Input<string>,
+  flueManifest: FlueAlchemyManifest,
+) =>
+  Cloudflare.Website.Vite("agent", {
+    rootDir: "..",
+    main: flueManifest.main,
+    workersDev: false,
+    observability: { enabled: true, traces: { enabled: true } },
+    compatibility: {
+      date: flueManifest.compatibilityDate,
+      flags: flueManifest.compatibilityFlags,
+    },
+    env: {
+      ...agentProviderEnv,
+      ...Object.fromEntries(
+        flueManifest.durableObjects.map(({ bindingName, className }) => [
+          bindingName,
+          Cloudflare.DurableObject(className),
+        ]),
+      ),
+      USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
+        scriptName: syncWorkerName,
+      }),
+    },
+  });
+
+export type AgentEnv = Cloudflare.InferEnv<ReturnType<typeof AgentWorker>>;
+
 type GatewayWorkerDependencies = {
   auth: Cloudflare.Worker;
-  agent?: Cloudflare.Worker;
+  agent: Cloudflare.Worker;
   user: Cloudflare.Worker;
   admin: Cloudflare.Worker;
   sync: Cloudflare.Worker;
@@ -65,10 +98,7 @@ export const GatewayWorker = ({ auth, agent, user, admin, sync }: GatewayWorkerD
     dev: { port: 8787, strictPort: true },
     env: {
       AUTH: Cloudflare.WorkerEntrypoint(auth),
-      // Vite owns the agent in local development, giving it module-level
-      // hot reload. Production retains the zero-network-hop service binding.
-      AGENT_ORIGIN: "http://127.0.0.1:5173",
-      ...(agent ? { AGENT: Cloudflare.WorkerEntrypoint(agent) } : {}),
+      AGENT: Cloudflare.WorkerEntrypoint(agent),
       USER: Cloudflare.WorkerEntrypoint(user),
       ADMIN: Cloudflare.WorkerEntrypoint(admin),
       SYNC: Cloudflare.WorkerEntrypoint(sync),
@@ -80,9 +110,8 @@ export type GatewayEnv = Cloudflare.InferEnv<ReturnType<typeof GatewayWorker>>;
 // Six workers: gateway (public), auth (Better Auth + D1), sync (LiveStore
 // DOs: UserDO + UserSyncBackendDO), user (user plane: capnweb + DOs, no
 // D1), admin (system plane: projection consumer + D1 read model, no
-// DOs), agent (flue only, reaches UserDO cross-worker). Local development
-// runs the agent separately under Vite so edits hot-reload; production
-// deploys all six workers through Alchemy.
+// DOs), agent (flue only, reaches UserDO cross-worker). Alchemy owns all
+// six workers and gives the Flue worker module-level Vite HMR in dev.
 export default Alchemy.Stack(
   "flue-demo",
   {
@@ -91,6 +120,9 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const isLocalDev = yield* Alchemy.ALCHEMY_DEV;
+    const flueManifest = yield* Effect.promise(() =>
+      resolveFlueAlchemyManifest("..", WORKER_COMPATIBILITY_DATE, FLUE_ALCHEMY_ENTRY),
+    );
 
     // Cross-user directory: Better Auth tables + JWKS keys.
     const db = yield* Cloudflare.D1.Database("db", {
@@ -147,21 +179,9 @@ export default Alchemy.Stack(
       settings: { batchSize: 25, maxWaitTimeMs: 2000 },
     });
 
-    const agent = isLocalDev
-      ? undefined
-      : yield* Cloudflare.Worker("agent", {
-          main: "../dist/flue_alchemy_demo/index.js",
-          bundle: false,
-          workersDev: false,
-          compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
-          env: {
-            ...agentProviderEnv,
-            FLUE_HELLO_AGENT: Cloudflare.DurableObject("FlueHelloAgent"),
-            // Cross-worker binding into the sync worker's UserDO — agent
-            // tools read/write user data without owning the namespace.
-            USER_DO: Cloudflare.DurableObject("UserDO", { scriptName: syncWorkerName }),
-          },
-        });
+    // Alchemy injects its Cloudflare Vite runtime, builds Flue's virtual
+    // Worker entry for deploys, and serves the same module graph with HMR.
+    const agent = yield* AgentWorker(syncWorkerName, flueManifest);
 
     // The only public worker: a prefix-routing proxy with JWT validation.
     const gateway = yield* GatewayWorker({ auth, agent, user, admin, sync });

@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "db", "scripts", "drizzle.config.ts", "drizzle-do.config.ts"]
+  "include": ["src", "db", "scripts", "drizzle.config.ts", "drizzle-do.config.ts", "vite.config.ts"]
 }
