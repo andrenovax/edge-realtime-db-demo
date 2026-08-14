@@ -1,8 +1,8 @@
 import { RpcTarget } from "capnweb";
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { adminItems, adminNotes, userEvents } from "../../../db/schema/admin.ts";
-import type { AdminEnv } from "../../../infra/alchemy.run.ts";
+import { adminAgentConversations, adminItems, adminNotes, userEvents } from "@db/schema/admin";
+import type { AdminEnv } from "@infra/env";
 
 // The /api/admin RPC surface: system-side reads over the cross-user D1
 // read model. Membership is already checked at the worker boundary, so
@@ -53,5 +53,14 @@ export class AdminApi extends RpcTarget {
       .orderBy(desc(adminItems.createdAt))
       .limit(limit);
     return { count: rows.length, items: rows };
+  }
+
+  // Conversation catalog projected from each user's LiveStore event log.
+  async agentConversations(storeId?: string, limit = 50) {
+    const base = drizzle(this.#env.DB).select().from(adminAgentConversations);
+    const rows = await (storeId ? base.where(eq(adminAgentConversations.storeId, storeId)) : base)
+      .orderBy(desc(adminAgentConversations.updatedAt))
+      .limit(limit);
+    return { count: rows.length, conversations: rows };
   }
 }

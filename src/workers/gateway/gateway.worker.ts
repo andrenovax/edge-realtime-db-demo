@@ -15,7 +15,7 @@
  *                    SPA's static assets (see GatewayWorker in
  *                    infra/alchemy.run.ts)
  */
-import type { GatewayEnv } from "../../../infra/alchemy.run.ts";
+import type { GatewayEnv } from "@infra/env";
 import { verifyUser } from "./jwt.util.ts";
 
 type CloudflareRequest = Request<unknown, CfProperties<unknown>>;

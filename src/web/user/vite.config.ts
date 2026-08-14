@@ -7,4 +7,5 @@ import { defineConfig } from "vite";
 // (infra/alchemy.run.ts GatewayWorker).
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: { tsconfigPaths: true },
 });

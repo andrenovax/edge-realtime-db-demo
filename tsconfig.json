@@ -1,4 +1,5 @@
 {
+  "extends": "./tsconfig.paths.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -11,6 +12,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "db", "scripts", "drizzle.config.ts", "drizzle-do.config.ts"],
+  "include": ["src", "db", "scripts"],
   "exclude": ["src/web"]
 }

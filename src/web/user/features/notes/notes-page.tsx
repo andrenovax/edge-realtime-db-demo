@@ -2,6 +2,7 @@ import { Button, Card, TextArea } from "@heroui/react";
 import { nanoid } from "@livestore/livestore";
 import { useStore } from "@livestore/react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useState } from "react";
 import { events, tables, userStoreOptions } from "../../lib/store.ts";
 import { AgentPanel } from "../agent/agent-panel.tsx";
 import { ServerCheck } from "./server-check.tsx";
@@ -12,17 +13,64 @@ import { ServerCheck } from "./server-check.tsx";
 export function NotesPage({ userId, token }: { userId: string; token: string }) {
   const store = useStore(userStoreOptions(userId, token));
   const notes = store.useQuery(tables.notes.orderBy("updatedAt", "desc"));
-  const { note: selectedId } = useSearch({ from: "/" });
+  const syncedConversations = store.useQuery(
+    tables.agentConversations.orderBy("updatedAt", "desc"),
+  );
+  const conversations = syncedConversations.filter(
+    (conversation) => conversation.status === "active",
+  );
+  const [isNewConversation, setIsNewConversation] = useState(false);
+  const [admittedConversationId, setAdmittedConversationId] = useState<string>();
+  const { note: selectedId, chat: selectedChatId } = useSearch({ from: "/" });
   const navigate = useNavigate();
   const selected = notes.find((n) => n.id === selectedId);
+  const selectedConversationId = isNewConversation
+    ? undefined
+    : selectedChatId &&
+        (selectedChatId === admittedConversationId ||
+          conversations.some(({ id }) => id === selectedChatId))
+      ? selectedChatId
+      : conversations[0]?.id;
 
-  const select = (id: string | undefined) =>
-    void navigate({ to: "/", search: id ? { note: id } : {} });
+  const selectNote = (id: string | undefined) =>
+    void navigate({
+      to: "/",
+      search: {
+        ...(id ? { note: id } : {}),
+        ...(selectedConversationId ? { chat: selectedConversationId } : {}),
+      },
+    });
+
+  const navigateToConversation = (id: string | undefined) =>
+    void navigate({
+      to: "/",
+      search: {
+        ...(selectedId ? { note: selectedId } : {}),
+        ...(id ? { chat: id } : {}),
+      },
+    });
 
   const createNote = () => {
     const id = nanoid();
     store.commit(events.noteCreated({ id, text: "", updatedAt: Date.now() }));
-    select(id);
+    selectNote(id);
+  };
+
+  const selectConversation = (id: string) => {
+    setIsNewConversation(false);
+    navigateToConversation(id);
+  };
+
+  const startConversation = () => {
+    setIsNewConversation(true);
+    setAdmittedConversationId(undefined);
+    navigateToConversation(undefined);
+  };
+
+  const conversationCreated = (id: string) => {
+    setAdmittedConversationId(id);
+    setIsNewConversation(false);
+    navigateToConversation(id);
   };
 
   return (
@@ -40,7 +88,7 @@ export function NotesPage({ userId, token }: { userId: string; token: string }) 
             <button
               key={note.id}
               type="button"
-              onClick={() => select(note.id)}
+              onClick={() => selectNote(note.id)}
               className={`block w-full truncate rounded-md px-2 py-1.5 text-left text-sm ${
                 note.id === selectedId ? "bg-blue-500/15" : "hover:bg-neutral-500/10"
               }`}
@@ -79,7 +127,14 @@ export function NotesPage({ userId, token }: { userId: string; token: string }) 
         </Card.Content>
       </Card>
 
-      <AgentPanel userId={userId} token={token} />
+      <AgentPanel
+        token={token}
+        conversationId={selectedConversationId}
+        conversations={conversations}
+        onSelectConversation={selectConversation}
+        onStartConversation={startConversation}
+        onConversationCreated={conversationCreated}
+      />
     </div>
   );
 }

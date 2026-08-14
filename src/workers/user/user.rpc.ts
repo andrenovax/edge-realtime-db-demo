@@ -1,5 +1,4 @@
 import { RpcTarget } from "capnweb";
-import type { UserEnv } from "../../../infra/alchemy.run.ts";
 
 export type Viewer = {
   id: string;
@@ -7,15 +6,13 @@ export type Viewer = {
   role: string | null;
 };
 
-// The /api/data RPC surface. Methods are the routing: identity plus a
-// capability for the caller's own data.
+// The /api/data RPC surface exposes authenticated viewer identity. All
+// user-owned application data flows through LiveStore.
 export class UserApi extends RpcTarget {
-  #env: UserEnv;
   #viewer: Viewer | null;
 
-  constructor(env: UserEnv, viewer: Viewer | null) {
+  constructor(viewer: Viewer | null) {
     super();
-    this.#env = env;
     this.#viewer = viewer;
   }
 
@@ -26,12 +23,5 @@ export class UserApi extends RpcTarget {
 
   viewer() {
     return this.#requireViewer();
-  }
-
-  // The caller's UserDO as a capability: the DO stub travels over
-  // capnweb and later calls proxy straight into the DO — so
-  // api.user().addNote(...) pipelines in one request.
-  user() {
-    return this.#env.USER_DO.getByName(this.#requireViewer().id);
   }
 }

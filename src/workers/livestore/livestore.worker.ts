@@ -9,7 +9,7 @@
  * a binding plus a branch here, not a new URL).
  */
 import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sync-cf/cf-worker";
-import type { LiveStoreEnv } from "../../../infra/alchemy.run.ts";
+import type { LiveStoreEnv } from "@infra/env";
 
 // Hosting both LiveStore DOs here keeps the bindings acyclic: the sync
 // backend's live-pull callback needs USER_DO in ITS env, and UserDO's

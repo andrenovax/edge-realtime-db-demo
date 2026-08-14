@@ -2,9 +2,7 @@ import { Button } from "@heroui/react";
 import { useState } from "react";
 import { rpc } from "../../lib/rpc.ts";
 
-// The talk beat: three dependent calls — viewer(), the user() capability,
-// and listNotes() on that unresolved capability — pipeline into ONE HTTP
-// round trip via capnweb promise pipelining.
+// Lightweight check that the authenticated user RPC is reachable.
 export function ServerCheck({ token }: { token: string }) {
   const [result, setResult] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -12,11 +10,8 @@ export function ServerCheck({ token }: { token: string }) {
   const check = async () => {
     setBusy(true);
     try {
-      const api = rpc(token);
-      const viewer = api.viewer();
-      const notes = api.user().listNotes();
-      const [v, n] = await Promise.all([viewer, notes]);
-      setResult(`${v.email ?? v.id}: ${n.length} notes server-side (1 request)`);
+      const viewer = await rpc(token).viewer();
+      setResult(`${viewer.email ?? viewer.id}: authenticated`);
     } catch (error) {
       setResult(error instanceof Error ? error.message : String(error));
     } finally {

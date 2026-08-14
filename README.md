@@ -38,6 +38,11 @@ Alchemy stage.
 D1 migrations and `db/seeds/local.sql` are applied automatically; the local
 database persists between runs and is separate from deployed D1 data.
 
+Notes, items, and the per-user conversation catalog are LiveStore tables backed
+by each user's event log. Accepted events flow through one projection queue into
+the admin D1 read model. After changing a D1 projection or auth schema, run
+`nub run db:generate`; Alchemy applies the generated D1 migrations.
+
 The local seed creates two real Better Auth credential users:
 
 | Role  | Email                   | Password            |
@@ -45,8 +50,8 @@ The local seed creates two real Better Auth credential users:
 | admin | `demo-admin@local.test` | `demo-password-123` |
 | user  | `demo-user@local.test`  | `demo-password-123` |
 
-In another terminal, seed the `demo-admin` per-user Durable Object through the
-same Cap'n Web API used by the app:
+In another terminal, seed the `demo-admin` per-user store through the same
+LiveStore sync path used by the app:
 
 ```sh
 nub run demo:setup
@@ -55,7 +60,8 @@ nub run demo:setup
 The setup command is idempotent. Override the default gateway with
 `DEMO_ORIGIN=http://localhost:PORT` when necessary.
 
-To verify Cap'n Web capability pipelining against the local stack:
+To verify Cap'n Web batching on the authenticated viewer surface against the
+local stack:
 
 ```sh
 nub scripts/rpc-smoke.ts
@@ -64,23 +70,36 @@ nub scripts/rpc-smoke.ts
 ## Notes agent API
 
 The gateway exposes the Flue agent at
-`/api/agents/hello/:userId`. Every request requires the Better Auth bearer
-token for that same user; the gateway verifies it and the agent worker rejects
-conversation ids that do not match the token's `sub` claim.
+`/api/agents/hello/:conversationId`. Every request requires a Better Auth
+bearer token. The web app generates an opaque ID locally, but no conversation
+exists yet: clicking **New** only opens a draft. The first message is sent with
+Flue's create-only condition; after Flue durably admits it, the agent worker
+adds the active conversation to the user's LiveStore catalog with a title
+derived from that message. Failed or abandoned drafts therefore leave no empty
+conversations.
+
+The official `@flue/react` client sends later messages and reads the streamed
+conversation state. A single user can own many IDs for the same agent while
+each ID retains an independent Flue transcript. The catalog fixes ownership
+and the model variant when the first message is admitted; callers cannot
+switch either with later prompt data.
 
 Send a message with Flue's asynchronous conversation protocol:
 
 ```sh
-curl -i http://localhost:8787/api/agents/hello/USER_ID \
+curl -i http://localhost:8787/api/agents/hello/CONVERSATION_ID \
   -H 'Authorization: Bearer JWT' \
   -H 'Content-Type: application/json' \
-  --data '{"kind":"user","body":"List my notes, then add one called Pack for Tokyo."}'
+  --data '{"kind":"user","body":"List my notes, then add one called Pack for Tokyo.","uid":null,"idempotencyKey":"first-message"}'
 ```
 
 The `POST` returns `202` after durable admission. Read the streamed conversation
-state from the same authenticated URL with `GET`. The agent can call
+state from the same authenticated URL with `GET`. For an ID already in the
+catalog, omit `uid` and `idempotencyKey` on later messages. The agent can call
 `list_notes`, `create_note`, and `update_note`; each tool reaches only the
-caller's per-user `UserDO` through its cross-worker binding.
+caller’s per-user `UserDO` through its cross-worker binding. Before Flue admits
+the prompt, the agent worker injects the gateway-stamped owner and the
+conversation's catalogued model as server-owned creation data.
 
 ## Deploy
 

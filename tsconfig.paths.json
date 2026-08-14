@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@infra/env": ["./infra/alchemy.run.ts"],
+      "@db/livestore": ["./db/livestore/schema.ts"],
+      "@db/schema/*": ["./db/schema/*.ts"],
+      "@workers/livestore/user-contract": ["./src/workers/livestore/user.contract.ts"],
+      "@workers/livestore/user-schema": ["./src/workers/livestore/user.schema.ts"],
+      "@workers/admin/contract": ["./src/workers/admin/admin.contract.ts"]
+    }
+  }
+}

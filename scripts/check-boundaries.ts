@@ -3,7 +3,7 @@
 // (tsgo) environment yet — swap back to it when its TS7 support lands.
 //
 // Rules (each mirrors a named rule in architecture.md):
-//   workers-encapsulated        cross-worker imports only via .contract.ts
+//   workers-encapsulated        cross-worker imports only via .contract.ts/.schema.ts
 //   contracts-type-only         importing a .contract.ts is `import type`
 //   db-schema-planes            auth sees auth.ts; admin sees admin.ts + canonical user.ts
 //   application-dos-livestore-only application *.do.ts files live in and export from livestore
@@ -21,7 +21,7 @@ const tsFiles = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) return tsFiles(full);
-    return entry.name.endsWith(".ts") ? [full] : [];
+    return entry.name.endsWith(".ts") || entry.name.endsWith(".tsx") ? [full] : [];
   });
 
 // import/export-from statements; group 1 = "type" for type-only, group 2 = specifier.
@@ -29,16 +29,35 @@ const IMPORT_RE = /(?:^|\n)\s*(?:import|export)\s+(type\s+)?[^'"]*?from\s+["']([
 
 type Edge = { from: string; to: string; typeOnly: boolean };
 
+const EXACT_ALIASES: Record<string, string> = {
+  "@infra/env": "infra/alchemy.run.ts",
+  "@db/livestore": "db/livestore/schema.ts",
+  "@workers/livestore/user-contract": "src/workers/livestore/user.contract.ts",
+  "@workers/livestore/user-schema": "src/workers/livestore/user.schema.ts",
+  "@workers/admin/contract": "src/workers/admin/admin.contract.ts",
+};
+
+const resolveInternalImport = (file: string, specifier: string) => {
+  if (specifier.startsWith(".")) {
+    return relative(ROOT, resolve(file, "..", specifier));
+  }
+  if (specifier.startsWith("@db/schema/")) {
+    return `db/schema/${specifier.slice("@db/schema/".length)}.ts`;
+  }
+  return EXACT_ALIASES[specifier] ?? null;
+};
+
 const sourceFiles = tsFiles(SRC);
 const edges: Edge[] = [];
 for (const file of sourceFiles) {
   const source = readFileSync(file, "utf8");
   for (const match of source.matchAll(IMPORT_RE)) {
     const [, typeOnly, spec] = match;
-    if (!spec.startsWith(".")) continue; // packages are out of scope
+    const target = resolveInternalImport(file, spec);
+    if (!target) continue; // external packages are out of scope
     edges.push({
       from: relative(ROOT, file),
-      to: relative(ROOT, resolve(file, "..", spec)),
+      to: target,
       typeOnly: Boolean(typeOnly),
     });
   }
@@ -47,11 +66,13 @@ for (const file of sourceFiles) {
 const workerOf = (path: string) => /^src\/workers\/([^/]+)\//.exec(path)?.[1] ?? null;
 
 // Which Drizzle schema slices each worker may import. auth owns its D1
-// tables; admin owns its D1 read model and consumes the canonical user row
-// schema. Anything unlisted (including index.ts) is a failure.
+// tables; admin and livestore consume the canonical user row schema for their
+// respective D1 and per-user projections. Anything unlisted (including
+// index.ts) is a failure.
 const DB_PLANES: Record<string, string[]> = {
   auth: ["db/schema/better-auth.ts"],
   admin: ["db/schema/admin.ts", "db/schema/user.ts"],
+  livestore: ["db/schema/user.ts"],
 };
 const violations: string[] = [];
 const fail = (rule: string, edge: Edge, why: string) =>
@@ -85,12 +106,13 @@ for (const edge of edges) {
   const fromWorker = workerOf(edge.from);
   const toWorker = workerOf(edge.to);
   const toContract = edge.to.endsWith(".contract.ts");
+  const toSharedSchema = edge.to.endsWith(".schema.ts");
 
-  if (fromWorker && toWorker && fromWorker !== toWorker && !toContract) {
+  if (fromWorker && toWorker && fromWorker !== toWorker && !toContract && !toSharedSchema) {
     fail(
       "workers-encapsulated",
       edge,
-      "workers never import each other's logic; the only cross-worker edge is a type-only .contract.ts seam",
+      "workers never import each other's logic; cross-worker seams are type-only .contract.ts modules or declarative .schema.ts validators",
     );
   }
   if (toContract && !edge.typeOnly) {

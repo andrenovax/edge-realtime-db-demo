@@ -3,21 +3,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cd infra && nub run dev",
-    "deploy": "cd infra && nub run deploy",
+    "dev": "varlock run -- nub --cwd infra run dev",
+    "deploy": "varlock run -- nub --cwd infra run deploy",
+    "env:check": "varlock load --agent",
+    "env:audit": "varlock audit src scripts infra db --ignore infra/.alchemy",
+    "env:scan": "varlock scan",
     "check:types": "tsc --noEmit && tsc -p src/web/user --noEmit",
     "lint": "oxlint",
     "lint:boundaries": "nub scripts/check-boundaries.ts",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "drizzle-kit generate --config db/drizzle.config.ts",
     "smoke": "nub scripts/realtime-smoke.ts",
     "demo:setup": "nub scripts/setup-demo.ts",
-    "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/notes-bridge-smoke.ts && nub scripts/projection-smoke.ts"
+    "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/projection-smoke.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.0-rc.5",
+    "@flue/react": "^2.0.3",
     "@flue/runtime": "^2.0.3",
+    "@flue/sdk": "^2.0.3",
     "@heroui/react": "^3.2.4",
     "@livestore/adapter-cloudflare": "^0.4.0",
     "@livestore/adapter-web": "^0.4.0",
@@ -30,6 +35,7 @@
     "@react-aria/utils": "^3.34.1",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-router": "^1.170.27",
+    "@varlock/1password-plugin": "^2.0.3",
     "better-auth": "1.7.0-rc.5",
     "capnweb": "^0.10.0",
     "drizzle-orm": "1.0.0-rc.4",
@@ -40,7 +46,8 @@
     "react-aria": "^3.51.0",
     "react-aria-components": "^1.20.0",
     "react-dom": "^19.2.8",
-    "valibot": "^1.4.2"
+    "valibot": "^1.4.2",
+    "varlock": "^1.16.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260812.1",

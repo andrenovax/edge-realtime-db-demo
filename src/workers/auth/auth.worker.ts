@@ -2,8 +2,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { admin, jwt } from "better-auth/plugins";
 import { drizzle } from "drizzle-orm/d1";
-import * as schema from "../../../db/schema/better-auth.ts";
-import type { AuthEnv } from "../../../infra/alchemy.run.ts";
+import * as schema from "@db/schema/better-auth";
+import type { AuthEnv } from "@infra/env";
 
 // Issues sessions + JWTs (GET /api/auth/token), serves JWKS
 // (GET /api/auth/jwks). Owns the Better Auth tables in D1.

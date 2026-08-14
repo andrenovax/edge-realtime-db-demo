@@ -2,8 +2,8 @@ import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import type { UserDoRpc } from "@workers/livestore/user-contract";
 import { resolveFlueAlchemyManifest, type FlueAlchemyManifest } from "./flue-alchemy.ts";
-import type { UserDoRpc } from "../src/workers/livestore/user.contract.ts";
 
 const deploymentConfig = {
   compatibility: {
@@ -27,7 +27,10 @@ const deploymentConfig = {
     livestoreWorkerName: "flue-demo-livestore-local",
   },
   gateway: {
-    workerFirstRoutes: ["/api/*"],
+    // Alchemy's Vite runtime opens this internal WebSocket before the public
+    // server starts. Without a worker-first rule, the SPA asset fallback turns
+    // the upgrade into an HTTP 200 response and the gateway cannot boot.
+    workerFirstRoutes: ["/api/*", "/__vite_module_runner/*"],
   },
   eventsConsumer: {
     batchSize: 25,
@@ -35,13 +38,8 @@ const deploymentConfig = {
   },
 };
 
-// Values come from Alchemy's --env-file (or the deploy process environment)
-// and are installed as encrypted Worker secret bindings. Keep these grouped
-// by consumer so credentials are declared once without leaking into Workers
-// that do not need them.
-const agentProviderEnv = {
-  ANTHROPIC_API_KEY: Config.redacted("ANTHROPIC_API_KEY"),
-};
+// Values come from the deploy process environment and are installed as
+// encrypted Worker secret bindings only on the Worker that consumes them.
 const authEnv = {
   BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
 };
@@ -82,19 +80,12 @@ export const LiveStoreWorker = (events: Cloudflare.Queues.Queue, name?: string) 
 
 export type LiveStoreEnv = Cloudflare.InferEnv<ReturnType<typeof LiveStoreWorker>>;
 
-export const UserWorker = (liveStoreWorkerName: Alchemy.Input<string>) =>
+export const UserWorker = () =>
   Cloudflare.Worker("user", {
     main: deploymentConfig.paths.userWorker,
     workersDev: false,
     compatibility: deploymentConfig.compatibility,
-    env: {
-      USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
-        scriptName: liveStoreWorkerName,
-      }),
-    },
   });
-
-export type UserEnv = Cloudflare.InferEnv<ReturnType<typeof UserWorker>>;
 
 export const AdminWorker = (db: Cloudflare.D1.Database) =>
   Cloudflare.Worker("admin", {
@@ -120,7 +111,7 @@ export const AgentWorker = (
       flags: flueManifest.compatibilityFlags,
     },
     env: {
-      ...agentProviderEnv,
+      AI: Cloudflare.Workers.AI(),
       ...Object.fromEntries(
         flueManifest.durableObjects.map(({ bindingName, className }) => [
           bindingName,
@@ -218,8 +209,8 @@ export default Alchemy.Stack(
       ? deploymentConfig.local.livestoreWorkerName
       : livestore.workerName;
 
-    // User plane: capnweb command lane over the caller's per-user DO.
-    const user = yield* UserWorker(liveStoreWorkerName);
+    // User plane: the small authenticated-viewer capnweb surface.
+    const user = yield* UserWorker();
 
     // System plane: admin entry + projection fold.
     const admin = yield* AdminWorker(db);

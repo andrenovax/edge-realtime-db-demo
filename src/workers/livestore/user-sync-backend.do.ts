@@ -1,6 +1,6 @@
 import { makeDurableObject } from "@livestore/sync-cf/cf-worker";
-import type { LiveStoreEnv } from "../../../infra/alchemy.run.ts";
-import type { ProjectionMessage } from "../admin/admin.contract.ts";
+import type { LiveStoreEnv } from "@infra/env";
+import type { ProjectionMessage } from "@workers/admin/contract";
 
 // onPush is defined at class-creation time and receives no env; the
 // constructor captures it. One env object per worker, so a module slot

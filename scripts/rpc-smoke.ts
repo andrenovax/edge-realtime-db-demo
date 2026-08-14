@@ -2,7 +2,7 @@ import { newHttpBatchRpcSession } from "capnweb";
 import type { UserApi } from "../src/workers/user/user.rpc.ts";
 import { signInDemoUser } from "./test-auth.ts";
 
-const origin = process.env.RPC_ORIGIN ?? "http://localhost:8787";
+const origin = "http://localhost:8787";
 const { token } = await signInDemoUser(origin);
 const url = `${origin}/api/data?auth=${encodeURIComponent(token)}`;
 
@@ -16,15 +16,12 @@ globalThis.fetch = ((...args: Parameters<typeof fetch>) => {
 
 const api = newHttpBatchRpcSession<UserApi>(url);
 
-// 4 RPC calls, with both reads dependent on user()'s unresolved capability.
-const viewer = api.viewer();
-const user = api.user();
-const notes = user.listNotes();
-const items = user.listItems();
+// Independent calls made before the first await share one capnweb batch.
+const firstViewer = api.viewer();
+const secondViewer = api.viewer();
 
-const [v, notesResult, itemsResult] = await Promise.all([viewer, notes, items]);
+const [viewer, repeatedViewer] = await Promise.all([firstViewer, secondViewer]);
 
-console.log("viewer:", JSON.stringify(v));
-console.log("notes:", notesResult.length);
-console.log("items:", itemsResult.length);
-console.log("HTTP requests for 4 calls:", fetches);
+console.log("viewer:", JSON.stringify(viewer));
+console.log("repeated viewer:", JSON.stringify(repeatedViewer));
+console.log("HTTP requests for 2 calls:", fetches);

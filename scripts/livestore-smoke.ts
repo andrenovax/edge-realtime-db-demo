@@ -9,19 +9,15 @@ import { makeWsSync } from "@livestore/sync-cf/client";
 import { events, schema, tables } from "../db/livestore/schema.ts";
 import { signInDemoUser } from "./test-auth.ts";
 
-const agentOrigin =
-  process.env.RPC_ORIGIN ??
+const gateway =
   "https://flue-demo-gateway-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
-const authOrigin =
-  process.env.AUTH_ORIGIN ??
-  "https://flue-demo-gateway-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
-const wsUrl = agentOrigin.replace("https://", "wss://");
+const wsUrl = gateway.replace("https://", "wss://");
 const dataDir = ".livestore-smoke";
 
 rmSync(dataDir, { recursive: true, force: true });
 
 // JWT
-const { token, userId: sub } = await signInDemoUser(authOrigin);
+const { token, userId: sub } = await signInDemoUser(gateway);
 console.log("JWT for user:", sub);
 
 const syncedAdapter = (dir: string) =>
