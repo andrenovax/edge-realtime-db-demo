@@ -1,48 +1,43 @@
-// CQRS projection: UserSyncBackendDO.onPush -> Queue -> api worker
-// consumer -> D1 read model, queried back via /api/data/projection (drizzle).
-// Proves cross-user queries survive per-user event logs.
+// CQRS projection: UserSyncBackendDO.onPush -> Queue -> admin worker
+// consumer -> D1 read model, queried back via /api/admin (drizzle).
+// Proves cross-user queries survive per-user event logs, and that the
+// planes split cleanly: the write lands via the user plane (/api/data,
+// DO only), the read comes back via the system plane (/api/admin, D1
+// only). The seeded demo admin's JWT role claim opens both doors.
 import { newHttpBatchRpcSession } from "capnweb";
-import type { DataApi } from "../src/api-worker/data-api.ts";
+import type { AdminApi } from "../src/workers/admin/admin.rpc.ts";
+import type { UserApi } from "../src/workers/user/user.rpc.ts";
+import { signInDemoUser } from "./test-auth.ts";
 
-const front =
-  process.env.FRONT_ORIGIN ??
-  "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
+const gateway =
+  process.env.GATEWAY_ORIGIN ??
+  "https://flue-demo-gateway-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
 
-const login = await fetch(`${front}/api/auth/sign-in/email`, {
-  method: "POST",
-  headers: { "content-type": "application/json", origin: front },
-  body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
-});
-if (!login.ok) throw new Error(`login failed: ${login.status}`);
-const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-const { token } = (await (
-  await fetch(`${front}/api/auth/token`, { headers: { cookie } })
-).json()) as {
-  token: string;
-};
+const { token } = await signInDemoUser(gateway);
 console.log("JWT ok");
 
 type Item = { id: string; title: string; createdAt: number };
 type ProjectedEvent = { id: string; storeId: string; name: string; args: string; seqNum: number };
 
-const rpcUrl = `${front}/api/data?auth=${encodeURIComponent(token)}`;
+const dataUrl = `${gateway}/api/data?auth=${encodeURIComponent(token)}`;
+const adminUrl = `${gateway}/api/admin?auth=${encodeURIComponent(token)}`;
 const title = `projected @ ${new Date().toISOString()}`;
 const sentAt = Date.now();
-const added = (await newHttpBatchRpcSession<DataApi>(rpcUrl).user().addItem(title)) as Item;
+const added = (await newHttpBatchRpcSession<UserApi>(dataUrl).user().addItem(title)) as Item;
 console.log("capnweb addItem:", added.id);
 
 const deadline = Date.now() + 30_000;
 for (;;) {
-  const { latest } = (await newHttpBatchRpcSession<DataApi>(rpcUrl).projection()) as {
-    latest: ProjectedEvent[];
+  const { events } = (await newHttpBatchRpcSession<AdminApi>(adminUrl).recentEvents(25)) as {
+    events: ProjectedEvent[];
   };
   {
-    const hit = latest.find((e) => e.name === "v1.ItemAdded" && e.args.includes(added.id));
+    const hit = events.find((e) => e.name === "v1.ItemAdded" && e.args.includes(added.id));
     if (hit) {
       console.log(
         `PASS: event ${hit.id} in D1 read model after ${Date.now() - sentAt}ms (seq ${hit.seqNum})`,
       );
-      console.log("PASS: DO event log -> Queue -> D1 projection, queryable via drizzle");
+      console.log("PASS: DO event log -> Queue -> D1 projection, queryable via /api/admin");
       process.exit(0);
     }
   }

@@ -1,7 +1,10 @@
 import { newHttpBatchRpcSession } from "capnweb";
-import type { DataApi } from "../src/api-worker/data-api.ts";
+import type { UserApi } from "../src/workers/user/user.rpc.ts";
+import { signInDemoUser } from "./test-auth.ts";
 
-const url = `${process.env.RPC_ORIGIN ?? "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev"}/api/data`;
+const origin = process.env.RPC_ORIGIN ?? "http://localhost:8787";
+const { token } = await signInDemoUser(origin);
+const url = `${origin}/api/data?auth=${encodeURIComponent(token)}`;
 
 // Count actual HTTP requests.
 let fetches = 0;
@@ -11,27 +14,17 @@ globalThis.fetch = ((...args: Parameters<typeof fetch>) => {
   return realFetch(...args);
 }) as typeof fetch;
 
-const api = newHttpBatchRpcSession<DataApi>(url);
+const api = newHttpBatchRpcSession<UserApi>(url);
 
-// 4 calls, 2 of them dependent on authenticate()'s unresolved stub.
-const greeting = api.greet("talk");
-const authed = api.authenticate("tok-user-1");
-const profile = authed.profile();
-const items = authed.items(3);
+// 4 RPC calls, with both reads dependent on user()'s unresolved capability.
+const viewer = api.viewer();
+const user = api.user();
+const notes = user.listNotes();
+const items = user.listItems();
 
-const [g, p, i] = await Promise.all([greeting, profile, items]);
+const [v, notesResult, itemsResult] = await Promise.all([viewer, notes, items]);
 
-console.log("greeting:", g);
-console.log("profile:", JSON.stringify(p));
-console.log("items:", JSON.stringify(i));
+console.log("viewer:", JSON.stringify(v));
+console.log("notes:", notesResult.length);
+console.log("items:", itemsResult.length);
 console.log("HTTP requests for 4 calls:", fetches);
-
-// Error path: bad token rejects, transport stays healthy.
-const api2 = newHttpBatchRpcSession<DataApi>(url);
-const bad = api2.authenticate("nope").profile();
-const err = await bad.then(
-  () => "UNEXPECTED SUCCESS",
-  (e: Error) => `rejected: ${e.message}`,
-);
-console.log("bad token:", err);
-console.log("total HTTP requests:", fetches);

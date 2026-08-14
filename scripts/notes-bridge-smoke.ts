@@ -1,5 +1,5 @@
 // Bridge test: UserDO is a LiveStore *client* (adapter-cloudflare).
-//  1. capnweb user().addNote via front /api/data -> UserDO commits into the event
+//  1. capnweb user().addNote via gateway /api/data -> UserDO commits into the event
 //     log -> synced Node LiveStore store observes it.
 //  2. Node store commits a note -> UserDO's live-pulled store sees it
 //     via capnweb listNotes.
@@ -8,36 +8,28 @@ import { makeAdapter } from "@livestore/adapter-node";
 import { createStorePromise, nanoid } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { newHttpBatchRpcSession } from "capnweb";
-import type { DataApi } from "../src/api-worker/data-api.ts";
+import type { UserApi } from "../src/workers/user/user.rpc.ts";
 import { events, schema, tables } from "../db/livestore/schema.ts";
+import { signInDemoUser } from "./test-auth.ts";
 
-const front =
-  process.env.FRONT_ORIGIN ??
-  "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
+const gateway =
+  process.env.GATEWAY_ORIGIN ??
+  "https://flue-demo-gateway-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
 const dataDir = ".notes-bridge-smoke";
 rmSync(dataDir, { recursive: true, force: true });
 
 // JWT
-const login = await fetch(`${front}/api/auth/sign-in/email`, {
-  method: "POST",
-  headers: { "content-type": "application/json", origin: front },
-  body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
-});
-if (!login.ok) throw new Error(`login failed: ${login.status}`);
-const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-const tokenRes = await fetch(`${front}/api/auth/token`, { headers: { cookie } });
-const { token } = (await tokenRes.json()) as { token: string };
-const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
+const { token, userId: sub } = await signInDemoUser(gateway);
 console.log("JWT for user:", sub);
 
-const rpcUrl = `${front}/api/data?auth=${encodeURIComponent(token)}`;
-const rpc = () => newHttpBatchRpcSession<DataApi>(rpcUrl);
+const rpcUrl = `${gateway}/api/data?auth=${encodeURIComponent(token)}`;
+const rpc = () => newHttpBatchRpcSession<UserApi>(rpcUrl);
 
 const localStore = await createStorePromise({
   schema,
   adapter: makeAdapter({
     storage: { type: "fs", baseDirectory: dataDir },
-    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/api/sync` }) },
+    sync: { backend: makeWsSync({ url: `${gateway.replace("https://", "wss://")}/api/sync` }) },
   }),
   storeId: sub,
   syncPayload: { authToken: token },

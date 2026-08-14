@@ -1,37 +1,63 @@
 # flue-alchemy-demo
 
-A [Flue](https://flueframework.com) agent project.
+A local-first, per-user database demo built with Cloudflare Workers,
+SQLite-backed Durable Objects, LiveStore, Cap'n Web, Better Auth, Flue, and
+Alchemy.
 
 ## Setup
 
-```sh
-bun install
-```
-
-Then add a model provider API key to `.env` (any [provider Pi supports](https://pi.dev/docs/latest/providers#api-keys)).
-
-## Talk to your agent
+Install [Nub](https://nubjs.com/docs) first, then:
 
 ```sh
-bunx flue run src/agents/hello.ts --message "Say hello!"
+nub install
+nub install --cwd infra
+cp .env.example .env
 ```
 
-Conversations are durable — pass `--id <id>` to continue one.
+Add a model provider API key to `.env` (any
+[provider Pi supports](https://pi.dev/docs/latest/providers#api-keys)).
 
-## Develop
+## Run the local stack
 
 ```sh
-bun run dev
+nub run build
+nub run dev:stack
 ```
 
-The Hello agent is served at `http://localhost:5173/agents/hello` — see `src/app.ts` for the route map and an example request.
+Alchemy runs the Workers, Durable Objects, Queue, and D1 database locally. D1
+migrations and `db/seeds/local.sql` are applied automatically; the local
+database persists between runs and is separate from deployed D1 data. The
+gateway uses `http://localhost:8787`.
+
+The local seed creates two real Better Auth credential users:
+
+| Role  | Email                   | Password            |
+| ----- | ----------------------- | ------------------- |
+| admin | `demo-admin@local.test` | `demo-password-123` |
+| user  | `demo-user@local.test`  | `demo-password-123` |
+
+In another terminal, seed the `demo-admin` per-user Durable Object through the
+same Cap'n Web API used by the app:
+
+```sh
+nub run demo:setup
+```
+
+The setup command is idempotent. Override the default gateway with
+`DEMO_ORIGIN=http://localhost:PORT` when necessary.
+
+To verify Cap'n Web capability pipelining against the local stack:
+
+```sh
+nub scripts/rpc-smoke.ts
+```
 
 ## Deploy
 
 ```sh
-bun run deploy
+nub run deploy:cf
 ```
 
 ## Learn more
 
-- [Flue docs](https://flueframework.com/docs/) — or `bunx flue docs` from the terminal.
+- [Flue docs](https://flueframework.com/docs/) — or `nubx flue docs` from the terminal.

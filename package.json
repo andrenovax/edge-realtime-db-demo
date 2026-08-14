@@ -8,10 +8,12 @@
     "deploy": "vite build && wrangler deploy",
     "check:types": "tsc --noEmit",
     "lint": "oxlint",
+    "lint:boundaries": "nub scripts/check-boundaries.ts",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "db:generate": "drizzle-kit generate",
     "smoke": "nub scripts/realtime-smoke.ts",
+    "demo:setup": "nub scripts/setup-demo.ts",
     "deploy:cf": "cd infra && nub run deploy",
     "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/notes-bridge-smoke.ts && nub scripts/projection-smoke.ts",
     "dev:stack": "cd infra && nub run dev",
@@ -25,7 +27,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "better-auth": "^1.6.27",
     "capnweb": "^0.10.0",
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "1.0.0-rc.4",
     "effect": "^3.21.2",
     "hono": "4.13.1",
     "jose": "^6.2.8"
@@ -37,11 +39,27 @@
     "@flue/vite": "^2.0.3",
     "@livestore/adapter-node": "^0.4.0",
     "@types/node": "^22.10.10",
-    "drizzle-kit": "^0.31.10",
+    "drizzle-kit": "1.0.0-rc.4",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
     "typescript": "^7.0.2",
     "vite": "^8.0.14",
     "wrangler": "^4.113.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "nub",
+      "version": "^0.7.5",
+      "onFail": "ignore"
+    }
+  },
+  "allowBuilds": {
+    "@google/genai": false,
+    "@parcel/watcher": true,
+    "core-js-pure": false,
+    "esbuild": true,
+    "msgpackr-extract": false,
+    "protobufjs": false,
+    "workerd": true
   }
 }

@@ -7,29 +7,21 @@ import { makeAdapter } from "@livestore/adapter-node";
 import { createStorePromise, nanoid } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { events, schema, tables } from "../db/livestore/schema.ts";
+import { signInDemoUser } from "./test-auth.ts";
 
 const agentOrigin =
   process.env.RPC_ORIGIN ??
-  "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
+  "https://flue-demo-gateway-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
 const authOrigin =
   process.env.AUTH_ORIGIN ??
-  "https://flue-demo-front-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
+  "https://flue-demo-gateway-dev-andrii-novak-vtekpmw4j2x5nzx7.hello-andrii-novak.workers.dev";
 const wsUrl = agentOrigin.replace("https://", "wss://");
 const dataDir = ".livestore-smoke";
 
 rmSync(dataDir, { recursive: true, force: true });
 
 // JWT
-const login = await fetch(`${authOrigin}/api/auth/sign-in/email`, {
-  method: "POST",
-  headers: { "content-type": "application/json", origin: authOrigin },
-  body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
-});
-if (!login.ok) throw new Error(`login failed: ${login.status}`);
-const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-const tokenRes = await fetch(`${authOrigin}/api/auth/token`, { headers: { cookie } });
-const { token } = (await tokenRes.json()) as { token: string };
-const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
+const { token, userId: sub } = await signInDemoUser(authOrigin);
 console.log("JWT for user:", sub);
 
 const syncedAdapter = (dir: string) =>
