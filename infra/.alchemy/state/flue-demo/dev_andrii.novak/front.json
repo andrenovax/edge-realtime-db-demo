@@ -53,7 +53,7 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "16649c5b6533a1e91e5095070a686e80093b2f4259ad01d56c5d581886d0972f",
+          "bundle": "68ce25cfdbec7b5581148cf693c6de2bdca5c16645666b802254623718aa0836",
           "metadata": "6a11dbf1890cdd1e30f4436ceeb2b763237bd99facbace0567a4cf89842e9370"
         }
       },
@@ -126,7 +126,7 @@
     "tailConsumers": [],
     "hash": {
       "bundle": "aaeb4784c4253a734442daba99ba666e6225a98d339af42106d5adbdcd4b15be",
-      "metadata": "e6c94cfa15b9cba5466033990bc425fa2e3cd7e184a373134d24e7df0181fd8f"
+      "metadata": "ae4742d5f4994d83cdce851d1752f5ef2301845b13ce840227faf0ded28bc3d3"
     }
   },
   "bindings": [
