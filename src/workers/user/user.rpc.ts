@@ -1,6 +1,5 @@
 import { RpcTarget } from "capnweb";
 import type { UserEnv } from "../../../infra/alchemy.run.ts";
-import type { UserDoRpc } from "../sync/user.contract.ts";
 
 export type Viewer = {
   id: string;
@@ -31,9 +30,8 @@ export class UserApi extends RpcTarget {
 
   // The caller's UserDO as a capability: the DO stub travels over
   // capnweb and later calls proxy straight into the DO — so
-  // api.user().addNote(...) pipelines in one request. The cast names
-  // the DO's public RPC surface (the untyped namespace stub has none).
+  // api.user().addNote(...) pipelines in one request.
   user() {
-    return this.#env.USER_DO.getByName(this.#requireViewer().id) as unknown as UserDoRpc;
+    return this.#env.USER_DO.getByName(this.#requireViewer().id);
   }
 }

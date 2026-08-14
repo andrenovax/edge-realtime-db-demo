@@ -1,9 +1,10 @@
 import { createAgentRouter } from "@flue/runtime/routing";
+import type { AgentEnv } from "../../../infra/alchemy.run.ts";
 import { Hello } from "./agents/hello.agent.ts";
 
 // Agent worker: flue only. No public route; identity arrives as x-user-id,
-// verified and stamped by the gateway worker. Data access goes through the
-// cross-worker USER_DO binding (Alchemy in production, wrangler.jsonc in dev).
+// verified and stamped by the gateway worker. Data tools use the cross-worker
+// USER_DO binding directly.
 const PREFIX = "/api/agents/hello";
 
 // Flue agent router: routes are /:id, /:id/abort, /:id/attachments/:aid,
@@ -11,7 +12,7 @@ const PREFIX = "/api/agents/hello";
 const hello = createAgentRouter(Hello);
 
 export default {
-  fetch(request: Request, env: unknown, ctx: ExecutionContext): Response | Promise<Response> {
+  fetch(request: Request, env: AgentEnv, ctx: ExecutionContext): Response | Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname !== PREFIX && !url.pathname.startsWith(`${PREFIX}/`)) {
       return Response.json({ error: "not found" }, { status: 404 });

@@ -55,6 +55,27 @@ To verify Cap'n Web capability pipelining against the local stack:
 nub scripts/rpc-smoke.ts
 ```
 
+## Notes agent API
+
+The gateway exposes the Flue agent at
+`/api/agents/hello/:userId`. Every request requires the Better Auth bearer
+token for that same user; the gateway verifies it and the agent worker rejects
+conversation ids that do not match the token's `sub` claim.
+
+Send a message with Flue's asynchronous conversation protocol:
+
+```sh
+curl -i http://localhost:8787/api/agents/hello/USER_ID \
+  -H 'Authorization: Bearer JWT' \
+  -H 'Content-Type: application/json' \
+  --data '{"kind":"user","body":"List my notes, then add one called Pack for Tokyo."}'
+```
+
+The `POST` returns `202` after durable admission. Read the streamed conversation
+state from the same authenticated URL with `GET`. The agent can call
+`list_notes`, `create_note`, and `update_note`; each tool reaches only the
+caller's per-user `UserDO` through its cross-worker binding.
+
 ## Deploy
 
 ```sh

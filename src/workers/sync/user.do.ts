@@ -76,6 +76,20 @@ export class UserDO extends DurableObject implements ClientDoWithRpcCallback {
     return { id, text: text.trim(), updatedAt };
   }
 
+  async updateNote(id: string, text: string) {
+    if (typeof id !== "string" || !id.trim()) throw new Error("note id required");
+    if (typeof text !== "string" || !text.trim()) throw new Error("text required");
+    const store = await this.getStore();
+    const noteId = id.trim();
+    const existing = store.query(tables.notes.select()).find((note) => note.id === noteId);
+    if (!existing) throw new Error("note not found");
+
+    const updatedAt = Date.now();
+    const updatedText = text.trim();
+    store.commit(events.noteUpdated({ id: noteId, text: updatedText, updatedAt }));
+    return { id: noteId, text: updatedText, updatedAt };
+  }
+
   async listNotes() {
     const store = await this.getStore();
     return store.query(tables.notes.select());
