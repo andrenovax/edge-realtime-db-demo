@@ -1,8 +1,9 @@
 /// <reference types="@cloudflare/workers-types" />
 /**
  * Data-plane worker: a single capnweb endpoint at /api/data. RPC methods
- * are the routing — no path dispatch. Hosts the per-user DOs and the
- * projection queue consumer. No public route; the front verifies JWTs
+ * are the routing — no path dispatch. Owns the projection queue consumer
+ * and the D1 read model; the per-user DOs live in the sync worker and
+ * are reached cross-script. No public route; the front verifies JWTs
  * and stamps x-user-id — methods authorize against that identity.
  */
 import { newWorkersRpcResponse } from "capnweb";
@@ -11,12 +12,8 @@ import { userEvents } from "../../db/schema/projection.ts";
 import type { ProjectionMessage } from "../do/sync-backend.ts";
 import { DataApi } from "./data-api.ts";
 
-export { UserSyncBackendDO } from "../do/sync-backend.ts";
-export { UserDO } from "../do/user-do.ts";
-
 export interface Env {
   USER_DO: DurableObjectNamespace;
-  USER_SYNC_BACKEND_DO: DurableObjectNamespace;
   DB: D1Database;
 }
 

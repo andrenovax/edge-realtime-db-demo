@@ -10,6 +10,12 @@
  */
 import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sync-cf/cf-worker";
 
+// Hosting both LiveStore DOs here keeps the bindings acyclic: the sync
+// backend's live-pull callback needs USER_DO in ITS env, and UserDO's
+// sync stub needs USER_SYNC_BACKEND_DO — self-hosting satisfies both.
+export { UserSyncBackendDO } from "../do/sync-backend.ts";
+export { UserDO } from "../do/user-do.ts";
+
 interface Env {
   USER_SYNC_BACKEND_DO: DurableObjectNamespace;
 }

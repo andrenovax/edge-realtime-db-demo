@@ -33,17 +33,33 @@ export default Alchemy.Stack(
     // the api worker's queue handler folds them into D1.
     const events = yield* Cloudflare.Queues.Queue("events");
 
-    // Data plane: hosts the per-user DOs and owns all data-plane dispatch.
+    // LiveStore worker — the stateful core: sync protocol + BOTH LiveStore
+    // DOs (event-log backend + UserDO client). Self-hosting keeps the
+    // bindings acyclic: the backend's live-pull callback resolves USER_DO
+    // in its own env, and UserDO's sync stub resolves
+    // USER_SYNC_BACKEND_DO likewise. transferredFrom moves the
+    // namespaces (with data) off the api script.
+    const sync = yield* Cloudflare.Worker("sync", {
+      main: "../src/sync-worker/index.ts",
+      workersDev: false,
+      compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
+      env: {
+        EVENTS_QUEUE: events,
+        USER_DO: Cloudflare.DurableObject("UserDO", { transferredFrom: "api" }),
+        USER_SYNC_BACKEND_DO: Cloudflare.DurableObject("UserSyncBackendDO", {
+          transferredFrom: "api",
+        }),
+      },
+    });
+
+    // Application layer: capnweb command lane + D1 read model.
     const api = yield* Cloudflare.Worker("api", {
       main: "../src/api-worker/index.ts",
       workersDev: false,
       compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
       env: {
-        AUTH: auth,
         DB: db,
-        EVENTS_QUEUE: events,
-        USER_DO: Cloudflare.DurableObject("UserDO"),
-        USER_SYNC_BACKEND_DO: Cloudflare.DurableObject("UserSyncBackendDO"),
+        USER_DO: Cloudflare.DurableObject("UserDO", { scriptName: sync.workerName }),
       },
     });
 
@@ -51,18 +67,6 @@ export default Alchemy.Stack(
       queueId: events.queueId,
       scriptName: api.workerName,
       settings: { batchSize: 25, maxWaitTimeMs: 2000 },
-    });
-
-    // LiveStore sync protocol owner; binds the api-hosted sync DO.
-    const sync = yield* Cloudflare.Worker("sync", {
-      main: "../src/sync-worker/index.ts",
-      workersDev: false,
-      compatibility: { date: "2026-06-01", flags: ["nodejs_compat"] },
-      env: {
-        USER_SYNC_BACKEND_DO: Cloudflare.DurableObject("UserSyncBackendDO", {
-          scriptName: api.workerName,
-        }),
-      },
     });
 
     const agent = yield* Cloudflare.Worker("agent", {
@@ -74,7 +78,7 @@ export default Alchemy.Stack(
         FLUE_HELLO_AGENT: Cloudflare.DurableObject("FlueHelloAgent"),
         // Cross-worker binding into the api worker's UserDO — agent tools
         // read/write user data without owning the namespace.
-        USER_DO: Cloudflare.DurableObject("UserDO", { scriptName: api.workerName }),
+        USER_DO: Cloudflare.DurableObject("UserDO", { scriptName: sync.workerName }),
       },
     });
 

@@ -14,26 +14,6 @@
       ]
     },
     "env": {
-      "AUTH": {
-        "workerId": "flue-demo-auth-dev-andrii-novak-k3hl4zf3ajmtrmd4",
-        "workerName": "flue-demo-auth-dev-andrii-novak-k3hl4zf3ajmtrmd4",
-        "logpush": false,
-        "urls": [],
-        "tags": [
-          "alchemy:stack:flue-demo",
-          "alchemy:stage:dev_andrii.novak",
-          "alchemy:id:auth"
-        ],
-        "durableObjectNamespaces": {},
-        "accountId": "7fef66cba56e993c82b71db654d57783",
-        "routes": [],
-        "crons": [],
-        "tailConsumers": [],
-        "hash": {
-          "bundle": "1b917acbb3ee0814ddf8e635b6e3db1cb3fb8dba779e615e50ba1c38d4ca8c4e",
-          "metadata": "03eacc86f95203814da625a44e50f5d68a8425114fec20ceb0cc256207c32902"
-        }
-      },
       "DB": {
         "databaseId": "abede511-913e-4e5d-9bbe-47475d95e476",
         "databaseName": "flue-demo-db-dev-andrii-novak-dzhbyrb4iontc3xd",
@@ -48,20 +28,11 @@
         },
         "importHashes": {}
       },
-      "EVENTS_QUEUE": {
-        "queueId": "8d7e082d6b2f4fb78ad0a0a30472f388",
-        "queueName": "flue-demo-events-dev-andrii-novak-nlykey6wglmsvsvr",
-        "accountId": "7fef66cba56e993c82b71db654d57783"
-      },
       "USER_DO": {
         "kind": "Cloudflare.DurableObject",
         "name": "UserDO",
-        "className": "UserDO"
-      },
-      "USER_SYNC_BACKEND_DO": {
-        "kind": "Cloudflare.DurableObject",
-        "name": "UserSyncBackendDO",
-        "className": "UserSyncBackendDO"
+        "className": "UserDO",
+        "scriptName": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e"
       }
     },
     "isExternal": true
@@ -74,35 +45,21 @@
     "tags": [
       "alchemy:stack:flue-demo",
       "alchemy:stage:dev_andrii.novak",
-      "alchemy:id:api",
-      "alchemy:dos:USER_DO=UserDO;USER_SYNC_BACKEND_DO=UserSyncBackendDO"
+      "alchemy:id:api"
     ],
     "durableObjectNamespaces": {
-      "UserDO": "571950ed94fe40468a6ef0cbc0a326e4",
-      "UserSyncBackendDO": "bb4a81c60d0e4ea6af98cf90f52ca829"
+      "UserDO": "571950ed94fe40468a6ef0cbc0a326e4"
     },
     "accountId": "7fef66cba56e993c82b71db654d57783",
     "routes": [],
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "0102b60674a9eab383594299a09a82afff3daeb04169c354efe19df12cc8c5f5",
-      "metadata": "1d47e3f535018f76bd79d241d4c0f0141b7c7413327c673d565cf09b35ba9637"
+      "bundle": "6f57d5cbe1624d183f8cf901671114afa7ca605072315ed67c999511c30fe1b3",
+      "metadata": "3715b56f34faebffa7dcdcb6579d9ba1d4ea7d10cc93945dfa5773fc1c5646f7"
     }
   },
   "bindings": [
-    {
-      "sid": "AUTH",
-      "data": {
-        "bindings": [
-          {
-            "type": "service",
-            "name": "AUTH",
-            "service": "flue-demo-auth-dev-andrii-novak-k3hl4zf3ajmtrmd4"
-          }
-        ]
-      }
-    },
     {
       "sid": "DB",
       "data": {
@@ -116,38 +73,14 @@
       }
     },
     {
-      "sid": "EVENTS_QUEUE",
-      "data": {
-        "bindings": [
-          {
-            "type": "queue",
-            "name": "EVENTS_QUEUE",
-            "queueName": "flue-demo-events-dev-andrii-novak-nlykey6wglmsvsvr",
-            "queueId": "8d7e082d6b2f4fb78ad0a0a30472f388"
-          }
-        ]
-      }
-    },
-    {
       "sid": "USER_DO",
       "data": {
         "bindings": [
           {
             "type": "durable_object_namespace",
             "name": "USER_DO",
-            "className": "UserDO"
-          }
-        ]
-      }
-    },
-    {
-      "sid": "USER_SYNC_BACKEND_DO",
-      "data": {
-        "bindings": [
-          {
-            "type": "durable_object_namespace",
-            "name": "USER_SYNC_BACKEND_DO",
-            "className": "UserSyncBackendDO"
+            "className": "UserDO",
+            "scriptName": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e"
           }
         ]
       }
@@ -156,8 +89,6 @@
   "providerVersion": 0,
   "downstream": [
     "events-consumer",
-    "sync",
-    "agent",
     "front"
   ],
   "removalPolicy": "destroy",

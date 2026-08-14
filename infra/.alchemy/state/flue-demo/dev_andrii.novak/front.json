@@ -54,7 +54,7 @@
         "tailConsumers": [],
         "hash": {
           "bundle": "68ce25cfdbec7b5581148cf693c6de2bdca5c16645666b802254623718aa0836",
-          "metadata": "6a11dbf1890cdd1e30f4436ceeb2b763237bd99facbace0567a4cf89842e9370"
+          "metadata": "e01bc6350a78ed097e5e24250a97fdd86f9746d89940c152406a89b974dda442"
         }
       },
       "API": {
@@ -65,7 +65,29 @@
         "tags": [
           "alchemy:stack:flue-demo",
           "alchemy:stage:dev_andrii.novak",
-          "alchemy:id:api",
+          "alchemy:id:api"
+        ],
+        "durableObjectNamespaces": {
+          "UserDO": "571950ed94fe40468a6ef0cbc0a326e4"
+        },
+        "accountId": "7fef66cba56e993c82b71db654d57783",
+        "routes": [],
+        "crons": [],
+        "tailConsumers": [],
+        "hash": {
+          "bundle": "6f57d5cbe1624d183f8cf901671114afa7ca605072315ed67c999511c30fe1b3",
+          "metadata": "3715b56f34faebffa7dcdcb6579d9ba1d4ea7d10cc93945dfa5773fc1c5646f7"
+        }
+      },
+      "SYNC": {
+        "workerId": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e",
+        "workerName": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e",
+        "logpush": false,
+        "urls": [],
+        "tags": [
+          "alchemy:stack:flue-demo",
+          "alchemy:stage:dev_andrii.novak",
+          "alchemy:id:sync",
           "alchemy:dos:USER_DO=UserDO;USER_SYNC_BACKEND_DO=UserSyncBackendDO"
         ],
         "durableObjectNamespaces": {
@@ -77,30 +99,8 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "0102b60674a9eab383594299a09a82afff3daeb04169c354efe19df12cc8c5f5",
-          "metadata": "1d47e3f535018f76bd79d241d4c0f0141b7c7413327c673d565cf09b35ba9637"
-        }
-      },
-      "SYNC": {
-        "workerId": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e",
-        "workerName": "flue-demo-sync-dev-andrii-novak-kfwndgrvuvaods4e",
-        "logpush": false,
-        "urls": [],
-        "tags": [
-          "alchemy:stack:flue-demo",
-          "alchemy:stage:dev_andrii.novak",
-          "alchemy:id:sync"
-        ],
-        "durableObjectNamespaces": {
-          "UserSyncBackendDO": "bb4a81c60d0e4ea6af98cf90f52ca829"
-        },
-        "accountId": "7fef66cba56e993c82b71db654d57783",
-        "routes": [],
-        "crons": [],
-        "tailConsumers": [],
-        "hash": {
-          "bundle": "460860fb9f8214ebcece3b1b8c0ec48e363c69ecd2b4b1334bf5fb1548a3c277",
-          "metadata": "b990f2a790453e2806ca0a6f850421207705b6b7dda1383653217578963bad1e"
+          "bundle": "1e8d149b54c8970dfc69048f177b792cd5480753081a2681e53d80597ad47d2f",
+          "metadata": "b1f9bcc6929221098a357b90eaa08e656ba934025edb1ef951e689f967ac3577"
         }
       }
     },
@@ -126,7 +126,7 @@
     "tailConsumers": [],
     "hash": {
       "bundle": "aaeb4784c4253a734442daba99ba666e6225a98d339af42106d5adbdcd4b15be",
-      "metadata": "ae4742d5f4994d83cdce851d1752f5ef2301845b13ce840227faf0ded28bc3d3"
+      "metadata": "173941cc82c03017177e09571539ea4237884df405ca243032d082a6793b356a"
     }
   },
   "bindings": [
