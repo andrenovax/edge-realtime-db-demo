@@ -108,6 +108,6 @@ Auth as users from `db/seeds/local.sql`.
   `db/livestore/schema.ts`.
 - A type another worker needs? → the receiver's `.contract.ts`, imported
   `import type`.
-- A new wrangler/alchemy binding? → the worker's `<w>.env.ts` +
+- A new Cloudflare binding? → the worker's `<w>.env.ts` +
   `infra/alchemy.run.ts`.
 - Frontend code? → `src/web/`.

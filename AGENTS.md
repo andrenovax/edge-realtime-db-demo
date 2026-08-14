@@ -6,8 +6,7 @@ This is a [Flue](https://flueframework.com) project: agents are TypeScript funct
 
 - `src/workers/ai/agents/` — agent modules. A module whose first line is the `'use agent'` directive exports agents: every exported capitalized function is one, and the function name is its durable identity.
 - `src/workers/` — one directory per Worker; each `*.worker.ts` file is its entry point.
-- `infra/alchemy.run.ts` — the full-stack route and resource map.
-- `wrangler.jsonc` — the Flue Worker config; every agent needs a Durable Object migration entry.
+- `infra/alchemy.run.ts` — the full-stack route, resource map, and sole Cloudflare deployment configuration.
 
 ## Commands
 

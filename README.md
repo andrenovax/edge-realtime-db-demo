@@ -83,9 +83,7 @@ nub run deploy
 ```
 
 Alchemy builds Flue's virtual Worker entry through Vite and deploys the
-complete Worker topology in one plan. A standalone `nub run build` remains
-available for checking Flue's regular Cloudflare Vite path; it is not an input
-to the Alchemy deployment.
+complete Worker topology in one plan.
 
 ## Learn more
 
