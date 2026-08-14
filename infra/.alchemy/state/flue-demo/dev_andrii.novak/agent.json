@@ -1,5 +1,5 @@
 {
-  "status": "created",
+  "status": "updated",
   "fqn": "agent",
   "logicalId": "agent",
   "instanceId": "3a62c57995dc1357e7a748722fa82456",
@@ -10,7 +10,9 @@
     "workersDev": false,
     "compatibility": {
       "date": "2026-06-01",
-      "flags": ["nodejs_compat"]
+      "flags": [
+        "nodejs_compat"
+      ]
     },
     "env": {
       "FLUE_HELLO_AGENT": {
@@ -47,12 +49,10 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "694ec5594152b91d5da95334f8f544b231b10b15a19d59f0a216b8736264a16d",
+      "bundle": "16649c5b6533a1e91e5095070a686e80093b2f4259ad01d56c5d581886d0972f",
       "metadata": "6a11dbf1890cdd1e30f4436ceeb2b763237bd99facbace0567a4cf89842e9370"
     }
   },
-  "providerVersion": 0,
-  "downstream": ["front"],
   "bindings": [
     {
       "sid": "FLUE_HELLO_AGENT",
@@ -79,6 +79,10 @@
         ]
       }
     }
+  ],
+  "providerVersion": 0,
+  "downstream": [
+    "front"
   ],
   "removalPolicy": "destroy",
   "providerMode": "live"

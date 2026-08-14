@@ -1,5 +1,5 @@
 // Bridge test: UserDO is a LiveStore *client* (adapter-cloudflare).
-//  1. capnweb addNote via front /do/rpc -> UserDO commits into the event
+//  1. capnweb addNote via front /api/data/rpc -> UserDO commits into the event
 //     log -> synced Node LiveStore store observes it.
 //  2. Node store commits a note -> UserDO's live-pulled store sees it
 //     via capnweb listNotes.
@@ -17,14 +17,14 @@ const dataDir = ".notes-bridge-smoke";
 rmSync(dataDir, { recursive: true, force: true });
 
 // JWT
-const login = await fetch(`${front}/auth/sign-in/email`, {
+const login = await fetch(`${front}/api/auth/sign-in/email`, {
   method: "POST",
   headers: { "content-type": "application/json", origin: front },
   body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
 });
 if (!login.ok) throw new Error(`login failed: ${login.status}`);
 const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-const tokenRes = await fetch(`${front}/auth/token`, { headers: { cookie } });
+const tokenRes = await fetch(`${front}/api/auth/token`, { headers: { cookie } });
 const { token } = (await tokenRes.json()) as { token: string };
 const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
 console.log("JWT for user:", sub);
@@ -35,14 +35,14 @@ interface UserDoApi {
   listNotes(): Promise<Note[]>;
 }
 
-const rpcUrl = `${front}/do/rpc?auth=${encodeURIComponent(token)}`;
+const rpcUrl = `${front}/api/data/rpc?auth=${encodeURIComponent(token)}`;
 const rpc = () => newHttpBatchRpcSession<UserDoApi>(rpcUrl);
 
 const localStore = await createStorePromise({
   schema,
   adapter: makeAdapter({
     storage: { type: "fs", baseDirectory: dataDir },
-    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/sync` }) },
+    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/api/data/sync` }) },
   }),
   storeId: sub,
   syncPayload: { authToken: token },

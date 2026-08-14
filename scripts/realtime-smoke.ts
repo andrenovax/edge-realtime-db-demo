@@ -17,7 +17,7 @@ const dataDir = ".realtime-smoke";
 rmSync(dataDir, { recursive: true, force: true });
 
 // 1. Session + JWT via the auth worker (through the front).
-const login = await fetch(`${front}/auth/sign-in/email`, {
+const login = await fetch(`${front}/api/auth/sign-in/email`, {
   method: "POST",
   headers: { "content-type": "application/json", origin: front },
   body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
@@ -25,22 +25,22 @@ const login = await fetch(`${front}/auth/sign-in/email`, {
 if (!login.ok) throw new Error(`login failed: ${login.status} ${await login.text()}`);
 const cookie = login.headers.get("set-cookie")?.split(";")[0];
 if (!cookie) throw new Error("no session cookie");
-const tokenRes = await fetch(`${front}/auth/token`, { headers: { cookie } });
+const tokenRes = await fetch(`${front}/api/auth/token`, { headers: { cookie } });
 if (!tokenRes.ok) throw new Error(`token failed: ${tokenRes.status}`);
 const { token } = (await tokenRes.json()) as { token: string };
 const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
 console.log("JWT for user:", sub);
 
 // 2. Gates.
-const noAuth = await fetch(`${front}/do/rpc`, { method: "POST", body: "[]" });
-console.log("no token -> /do/rpc:", noAuth.status);
-const wrongConvo = await fetch(`${front}/agents/hello/someone-else`, {
+const noAuth = await fetch(`${front}/api/data/rpc`, { method: "POST", body: "[]" });
+console.log("no token -> /api/data/rpc:", noAuth.status);
+const wrongConvo = await fetch(`${front}/api/agents/hello/someone-else`, {
   method: "POST",
   headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
   body: JSON.stringify({ kind: "user", body: "hi" }),
 });
 console.log("other user's conversation:", wrongConvo.status);
-const ownConvo = await fetch(`${front}/agents/hello/${sub}`, {
+const ownConvo = await fetch(`${front}/api/agents/hello/${sub}`, {
   method: "POST",
   headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
   body: JSON.stringify({ kind: "user", body: "hi" }),
@@ -58,13 +58,13 @@ const localStore = await createStorePromise({
   schema,
   adapter: makeAdapter({
     storage: { type: "fs", baseDirectory: dataDir },
-    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/sync` }) },
+    sync: { backend: makeWsSync({ url: `${front.replace("https://", "wss://")}/api/data/sync` }) },
   }),
   storeId: sub,
   syncPayload: { authToken: token },
 });
 
-const rpcUrl = `${front}/do/rpc?auth=${encodeURIComponent(token)}`;
+const rpcUrl = `${front}/api/data/rpc?auth=${encodeURIComponent(token)}`;
 const sentAt = Date.now();
 const added = await newHttpBatchRpcSession<UserDoApi>(rpcUrl).addItem(
   `realtime @ ${new Date().toISOString()}`,

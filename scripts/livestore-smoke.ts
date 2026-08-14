@@ -20,14 +20,14 @@ const dataDir = ".livestore-smoke";
 rmSync(dataDir, { recursive: true, force: true });
 
 // JWT
-const login = await fetch(`${authOrigin}/auth/sign-in/email`, {
+const login = await fetch(`${authOrigin}/api/auth/sign-in/email`, {
   method: "POST",
   headers: { "content-type": "application/json", origin: authOrigin },
   body: JSON.stringify({ email: "alice@example.com", password: "jxt-wuc1rmj8rqy8-WGU" }),
 });
 if (!login.ok) throw new Error(`login failed: ${login.status}`);
 const cookie = login.headers.get("set-cookie")?.split(";")[0] ?? "";
-const tokenRes = await fetch(`${authOrigin}/auth/token`, { headers: { cookie } });
+const tokenRes = await fetch(`${authOrigin}/api/auth/token`, { headers: { cookie } });
 const { token } = (await tokenRes.json()) as { token: string };
 const sub = JSON.parse(atob(token.split(".")[1])).sub as string;
 console.log("JWT for user:", sub);
@@ -35,7 +35,7 @@ console.log("JWT for user:", sub);
 const syncedAdapter = (dir: string) =>
   makeAdapter({
     storage: { type: "fs", baseDirectory: `${dataDir}/${dir}` },
-    sync: { backend: makeWsSync({ url: `${wsUrl}/sync` }) },
+    sync: { backend: makeWsSync({ url: `${wsUrl}/api/data/sync` }) },
   });
 
 const makeStore = (dir: string) =>

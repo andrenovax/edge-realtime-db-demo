@@ -53,7 +53,7 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "694ec5594152b91d5da95334f8f544b231b10b15a19d59f0a216b8736264a16d",
+          "bundle": "16649c5b6533a1e91e5095070a686e80093b2f4259ad01d56c5d581886d0972f",
           "metadata": "6a11dbf1890cdd1e30f4436ceeb2b763237bd99facbace0567a4cf89842e9370"
         }
       },
@@ -77,7 +77,7 @@
         "crons": [],
         "tailConsumers": [],
         "hash": {
-          "bundle": "28722e5e57b3b98fcf625208869fd85a0839cb19426286e2f4ba387e3dbcab68",
+          "bundle": "64d69b81e33a88951c9ae4f94b8bf946fda9ffd6523fae9523bc0361e07e8063",
           "metadata": "1d47e3f535018f76bd79d241d4c0f0141b7c7413327c673d565cf09b35ba9637"
         }
       }
@@ -103,8 +103,8 @@
     "crons": [],
     "tailConsumers": [],
     "hash": {
-      "bundle": "38d2d8b5a1c8d422d2af4d8aa547e64fed1d35a5d1809c0c434bcaf75586136e",
-      "metadata": "d2677330c3ac548506e69685b7f96ce0bd79844552c6a219e35e39b1d01d82c9"
+      "bundle": "890744d85aabc151177202311ec1744d7dc5e59704cc31de33a473176b4da17a",
+      "metadata": "4a4edd8d1d851d5c3da3ea1bd1fd173ed49c440e1870df410e60bee19cd6783e"
     }
   },
   "bindings": [

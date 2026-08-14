@@ -7,16 +7,16 @@ import { Hello } from "./agents/hello.ts";
 // cross-worker USER_DO binding (see alchemy.run.ts).
 const app = new Hono();
 
-app.use("/agents/hello/*", async (c, next) => {
+app.use("/api/agents/hello/*", async (c, next) => {
   const userId = c.req.header("x-user-id");
   if (!userId) return c.json({ error: "unauthorized" }, 401);
   // Conversation id is caller-chosen: only your own.
-  const conversationId = c.req.path.split("/")[3];
+  const conversationId = c.req.path.split("/")[4];
   if (conversationId !== userId) return c.json({ error: "forbidden" }, 403);
   await next();
 });
 
 // Flue agent; one conversation per user, enforced above.
-app.route("/agents/hello", createAgentRouter(Hello));
+app.route("/api/agents/hello", createAgentRouter(Hello));
 
 export default app;
