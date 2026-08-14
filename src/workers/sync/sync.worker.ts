@@ -9,6 +9,7 @@
  * a binding plus a branch here, not a new URL).
  */
 import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sync-cf/cf-worker";
+import type { SyncEnv } from "../../../infra/alchemy.run.ts";
 
 // Hosting both LiveStore DOs here keeps the bindings acyclic: the sync
 // backend's live-pull callback needs USER_DO in ITS env, and UserDO's
@@ -16,12 +17,8 @@ import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sy
 export { UserSyncBackendDO } from "./user.sync.do.ts";
 export { UserDO } from "./user.do.ts";
 
-interface Env {
-  USER_SYNC_BACKEND_DO: DurableObjectNamespace;
-}
-
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: SyncEnv, ctx: ExecutionContext): Promise<Response> {
     const searchParams = matchSyncRequest(request as unknown as CfTypes.Request);
     if (searchParams === undefined) return new Response("not found", { status: 404 });
 

@@ -1,12 +1,11 @@
 import { makeDurableObject } from "@livestore/sync-cf/cf-worker";
+import type { SyncEnv } from "../../../infra/alchemy.run.ts";
 import type { ProjectionMessage } from "../admin/admin.contract.ts";
-
-type QueueEnv = { EVENTS_QUEUE?: Queue<ProjectionMessage> };
 
 // onPush is defined at class-creation time and receives no env; the
 // constructor captures it. One env object per worker, so a module slot
 // is safe.
-let doEnv: QueueEnv | undefined;
+let doEnv: SyncEnv | undefined;
 
 // Event-log store, one per storeId (= userId). Events persist in this
 // DO's own SQLite (sync-cf default). All transports enabled: ws/http for
@@ -19,7 +18,7 @@ export class UserSyncBackendDO extends makeDurableObject({
     const queue = doEnv?.EVENTS_QUEUE;
     if (!queue || message.batch.length === 0) return;
     try {
-      await queue.send({
+      const projection = {
         storeId,
         events: message.batch.map((event) => ({
           id: `${storeId}:${event.seqNum}`,
@@ -28,14 +27,15 @@ export class UserSyncBackendDO extends makeDurableObject({
           seqNum: event.seqNum,
           clientId: event.clientId,
         })),
-      });
+      } satisfies ProjectionMessage;
+      await queue.send(projection);
     } catch (error) {
       console.error("projection enqueue failed", error);
     }
   },
 }) {
-  constructor(ctx: DurableObjectState, env: unknown) {
+  constructor(ctx: DurableObjectState, env: SyncEnv) {
     super(ctx as never, env as never);
-    doEnv = env as QueueEnv;
+    doEnv = env;
   }
 }
