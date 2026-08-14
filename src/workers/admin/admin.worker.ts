@@ -9,7 +9,7 @@
  * admin access is authorized here against that role.
  */
 import { newWorkersRpcResponse } from "capnweb";
-import type { Env } from "./admin.env.ts";
+import type { AdminEnv } from "../../../infra/alchemy.run.ts";
 import { queue } from "./admin.queue.ts";
 import { AdminApi } from "./admin.rpc.ts";
 
@@ -17,7 +17,7 @@ import { AdminApi } from "./admin.rpc.ts";
 const isAdmin = (roles: string | null) => roles?.split(",").includes("admin") ?? false;
 
 export default {
-  fetch(request: Request, env: Env): Response | Promise<Response> {
+  fetch(request: Request, env: AdminEnv): Response | Promise<Response> {
     if (!isAdmin(request.headers.get("x-user-role"))) {
       return new Response("forbidden", { status: 403 });
     }

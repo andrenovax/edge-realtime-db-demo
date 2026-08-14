@@ -1,7 +1,8 @@
 import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
+import type { GatewayEnv } from "../../../infra/alchemy.run.ts";
 
 // Any worker holding a service binding to the auth worker can verify.
-export type AuthEnv = { AUTH: Fetcher };
+export type AuthEnv = Pick<GatewayEnv, "AUTH">;
 
 // The verified facts the gateway stamps onto forwarded requests. Role
 // rides along so system-plane workers can authorize admin access.

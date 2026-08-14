@@ -3,8 +3,8 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { adminItems, adminNotes, userEvents } from "../../../db/schema/admin.ts";
 import { eventNames, type ItemEventArgs, type NoteEventArgs } from "../../../db/schema/user.ts";
+import type { AdminEnv } from "../../../infra/alchemy.run.ts";
 import type { ProjectionMessage } from "./admin.contract.ts";
-import type { Env } from "./admin.env.ts";
 
 // Queue consumer: fold event batches into the D1 read model — the raw
 // event log plus current-state note/item tables (server-side mirror of
@@ -15,7 +15,7 @@ import type { Env } from "./admin.env.ts";
 // Arg shapes and event names come from the shared Drizzle model — renaming
 // an event or changing its payload there breaks this fold at compile time.
 
-export async function queue(batch: MessageBatch<ProjectionMessage>, env: Env) {
+export async function queue(batch: MessageBatch<ProjectionMessage>, env: AdminEnv) {
   const db = drizzle(env.DB);
   const projectedAt = Date.now();
   const events = batch.messages.flatMap((message) =>

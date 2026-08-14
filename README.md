@@ -20,14 +20,22 @@ Add a model provider API key to `.env` (any
 ## Run the local stack
 
 ```sh
-nub run build
 nub run dev:stack
 ```
 
-Alchemy runs the Workers, Durable Objects, Queue, and D1 database locally. D1
-migrations and `db/seeds/local.sql` are applied automatically; the local
-database persists between runs and is separate from deployed D1 data. The
-gateway uses `http://localhost:8787`.
+In a second terminal, start the Flue worker with Vite:
+
+```sh
+nub run dev:agent
+```
+
+Alchemy runs the gateway, auth, sync, user, and admin Workers plus the Queue
+and D1 database. Vite runs the Flue worker on `http://localhost:5173` with hot
+reload; the gateway proxies `/api/agents/*` to it while remaining the only
+public entry at `http://localhost:8787`.
+
+D1 migrations and `db/seeds/local.sql` are applied automatically; the local
+database persists between runs and is separate from deployed D1 data.
 
 The local seed creates two real Better Auth credential users:
 

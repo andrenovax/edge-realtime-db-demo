@@ -3,7 +3,7 @@ import { Hello } from "./agents/hello.agent.ts";
 
 // Agent worker: flue only. No public route; identity arrives as x-user-id,
 // verified and stamped by the gateway worker. Data access goes through the
-// cross-worker USER_DO binding (see alchemy.run.ts).
+// cross-worker USER_DO binding (Alchemy in production, wrangler.jsonc in dev).
 const PREFIX = "/api/agents/hello";
 
 // Flue agent router: routes are /:id, /:id/abort, /:id/attachments/:aid,

@@ -10,23 +10,18 @@
  * - /api/sync     -> sync worker (LiveStore protocol)
  * - /api/data     -> user-plane worker, single capnweb RPC endpoint
  * - /api/admin    -> system-plane worker (admin membership checked there)
- * - else          -> static assets (SPA) once bound
+ * - else          -> placeholder response until the SPA is bound
  */
+import type { GatewayEnv } from "../../../infra/alchemy.run.ts";
 import { verifyUser } from "./jwt.util.ts";
 
-interface Env {
-  AUTH: Fetcher;
-  AGENT: Fetcher;
-  USER: Fetcher;
-  ADMIN: Fetcher;
-  SYNC: Fetcher;
-  ASSETS?: Fetcher;
-}
+type ForwardTarget = Fetcher | string;
+type CloudflareRequest = Request<unknown, CfProperties<unknown>>;
 
 // Authenticate and forward. The identity headers are stripped from the
 // incoming request (public callers must not smuggle them) and set only
 // when the JWT verifies; the target decides what "no user" means.
-const forwardAsUser = async (request: Request, env: Env, target: Fetcher) => {
+const forwardAsUser = async (request: Request, env: GatewayEnv, target: ForwardTarget) => {
   const user = await verifyUser(env, request);
   const headers = new Headers(request.headers);
   headers.delete("x-user-id");
@@ -37,20 +32,33 @@ const forwardAsUser = async (request: Request, env: Env, target: Fetcher) => {
     if (user.email) headers.set("x-user-email", user.email);
     if (user.role) headers.set("x-user-role", user.role);
   }
-  return target.fetch(new Request(request.url, new Request(request, { headers })));
+  const forwarded = new Request(
+    request.url,
+    new Request(request, { headers }),
+  ) as CloudflareRequest;
+  if (typeof target !== "string") return target.fetch(forwarded);
+
+  const upstreamUrl = new URL(request.url);
+  const upstreamOrigin = new URL(target);
+  upstreamUrl.protocol = upstreamOrigin.protocol;
+  upstreamUrl.host = upstreamOrigin.host;
+  return fetch(new Request(upstreamUrl, forwarded) as CloudflareRequest);
 };
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: GatewayEnv): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname.startsWith("/api/auth/")) return env.AUTH.fetch(request);
-    if (url.pathname.startsWith("/api/agents/")) return forwardAsUser(request, env, env.AGENT);
+    if (url.pathname.startsWith("/api/agents/")) {
+      const agent = env.AGENT ?? env.AGENT_ORIGIN;
+      if (!agent) return Response.json({ error: "agent unavailable" }, { status: 503 });
+      return forwardAsUser(request, env, agent);
+    }
     if (url.pathname === "/api/sync") return forwardAsUser(request, env, env.SYNC);
     if (url.pathname === "/api/data") return forwardAsUser(request, env, env.USER);
     if (url.pathname === "/api/admin") return forwardAsUser(request, env, env.ADMIN);
 
-    if (env.ASSETS) return env.ASSETS.fetch(request);
     return new Response("flue-alchemy-demo gateway worker (no SPA yet)", { status: 200 });
   },
 };

@@ -1,6 +1,6 @@
 import { RpcTarget } from "capnweb";
+import type { UserEnv } from "../../../infra/alchemy.run.ts";
 import type { UserDoRpc } from "../sync/user.contract.ts";
-import type { Env } from "./user.env.ts";
 
 export type Viewer = {
   id: string;
@@ -11,10 +11,10 @@ export type Viewer = {
 // The /api/data RPC surface. Methods are the routing: identity plus a
 // capability for the caller's own data.
 export class UserApi extends RpcTarget {
-  #env: Env;
+  #env: UserEnv;
   #viewer: Viewer | null;
 
-  constructor(env: Env, viewer: Viewer | null) {
+  constructor(env: UserEnv, viewer: Viewer | null) {
     super();
     this.#env = env;
     this.#viewer = viewer;

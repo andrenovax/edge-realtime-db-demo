@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "CLOUDFLARE_ENV=local vite dev",
     "build": "vite build",
     "deploy": "vite build && wrangler deploy",
     "check:types": "tsc --noEmit",
@@ -17,15 +17,16 @@
     "deploy:cf": "cd infra && nub run deploy",
     "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/notes-bridge-smoke.ts && nub scripts/projection-smoke.ts",
     "dev:stack": "cd infra && nub run dev",
-    "dev:agent": "vite dev"
+    "dev:agent": "CLOUDFLARE_ENV=local vite dev"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.0-rc.5",
     "@flue/runtime": "^2.0.3",
     "@livestore/adapter-cloudflare": "^0.4.0",
     "@livestore/livestore": "^0.4.0",
     "@livestore/sync-cf": "^0.4.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "better-auth": "^1.6.27",
+    "better-auth": "1.7.0-rc.5",
     "capnweb": "^0.10.0",
     "drizzle-orm": "1.0.0-rc.4",
     "effect": "^3.21.2",

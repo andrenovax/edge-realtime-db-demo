@@ -11,4 +11,20 @@
   // for each one. Append a new tag when you add an agent:
   // https://flueframework.com/docs/guide/cloudflare-target/#managing-migrations
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FlueHelloAgent"] }],
+  "env": {
+    // `nub run dev:agent` selects this environment. The sync worker is
+    // hosted by the parallel Alchemy dev stack under this stable name.
+    "local": {
+      "name": "flue-demo-agent-local",
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "USER_DO",
+            "class_name": "UserDO",
+            "script_name": "flue-demo-sync-local",
+          },
+        ],
+      },
+    },
+  },
 }

@@ -30,30 +30,32 @@ ON CONFLICT(`id`) DO UPDATE SET
   `updated_at` = excluded.`updated_at`;
 
 INSERT INTO `account` (
-  `id`, `account_id`, `provider_id`, `user_id`, `password`, `created_at`, `updated_at`
+  `id`, `account_id`, `issuer`, `provider_id`, `user_id`, `password`, `created_at`, `updated_at`
 ) VALUES (
-  'demo-admin-credential', 'demo-admin', 'credential', 'demo-admin',
+  'demo-admin-credential', 'demo-admin', 'local:credential', 'credential', 'demo-admin',
   'c93e3efd3ec94f6600ffa67151effb85:47a3b0fee0bdf35430550cf4961ecb16f196dc7916aeef392fe12acc1c8ceaa5632dbca5431c4ce465b8e0144acf97309b05694d90f044f138c09d0924f5486e',
   cast(unixepoch('subsecond') * 1000 as integer),
   cast(unixepoch('subsecond') * 1000 as integer)
 )
 ON CONFLICT(`id`) DO UPDATE SET
   `account_id` = excluded.`account_id`,
+  `issuer` = excluded.`issuer`,
   `provider_id` = excluded.`provider_id`,
   `user_id` = excluded.`user_id`,
   `password` = excluded.`password`,
   `updated_at` = excluded.`updated_at`;
 
 INSERT INTO `account` (
-  `id`, `account_id`, `provider_id`, `user_id`, `password`, `created_at`, `updated_at`
+  `id`, `account_id`, `issuer`, `provider_id`, `user_id`, `password`, `created_at`, `updated_at`
 ) VALUES (
-  'demo-user-credential', 'demo-user', 'credential', 'demo-user',
+  'demo-user-credential', 'demo-user', 'local:credential', 'credential', 'demo-user',
   'c93e3efd3ec94f6600ffa67151effb85:47a3b0fee0bdf35430550cf4961ecb16f196dc7916aeef392fe12acc1c8ceaa5632dbca5431c4ce465b8e0144acf97309b05694d90f044f138c09d0924f5486e',
   cast(unixepoch('subsecond') * 1000 as integer),
   cast(unixepoch('subsecond') * 1000 as integer)
 )
 ON CONFLICT(`id`) DO UPDATE SET
   `account_id` = excluded.`account_id`,
+  `issuer` = excluded.`issuer`,
   `provider_id` = excluded.`provider_id`,
   `user_id` = excluded.`user_id`,
   `password` = excluded.`password`,

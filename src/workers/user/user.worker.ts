@@ -9,11 +9,11 @@
  * identity.
  */
 import { newWorkersRpcResponse } from "capnweb";
-import type { Env } from "./user.env.ts";
+import type { UserEnv } from "../../../infra/alchemy.run.ts";
 import { UserApi } from "./user.rpc.ts";
 
 export default {
-  fetch(request: Request, env: Env): Response | Promise<Response> {
+  fetch(request: Request, env: UserEnv): Response | Promise<Response> {
     const userId = request.headers.get("x-user-id");
     const viewer = userId
       ? {

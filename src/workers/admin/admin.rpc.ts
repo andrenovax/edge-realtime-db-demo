@@ -2,15 +2,15 @@ import { RpcTarget } from "capnweb";
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { adminItems, adminNotes, userEvents } from "../../../db/schema/admin.ts";
-import type { Env } from "./admin.env.ts";
+import type { AdminEnv } from "../../../infra/alchemy.run.ts";
 
 // The /api/admin RPC surface: system-side reads over the cross-user D1
 // read model. Membership is already checked at the worker boundary, so
 // methods here see only admins.
 export class AdminApi extends RpcTarget {
-  #env: Env;
+  #env: AdminEnv;
 
-  constructor(env: Env) {
+  constructor(env: AdminEnv) {
     super();
     this.#env = env;
   }
