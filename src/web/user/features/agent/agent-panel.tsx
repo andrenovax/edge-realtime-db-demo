@@ -13,7 +13,18 @@ import {
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import { useFlueAgent, type FlueConversationMessage } from "@flue/react";
 import { createFlueClient } from "@flue/sdk";
-import { ArrowUp, AudioLines, Check, Copy, LoaderCircle, Mic, Plus, Square } from "lucide-react";
+import {
+  ArrowUp,
+  AudioLines,
+  Check,
+  Cloud,
+  Copy,
+  LoaderCircle,
+  Mic,
+  Plus,
+  Square,
+  WifiOff,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import remarkGfm from "remark-gfm";
 import styles from "./agent-panel.module.css";
@@ -160,25 +171,48 @@ function AssistantMessage() {
   );
 }
 
-function ChatComposer({ error }: { error?: string }) {
+export function OfflineIllustration() {
+  return (
+    <div
+      role="img"
+      aria-label="Offline"
+      className="relative mx-auto flex size-24 items-center justify-center rounded-[2rem] bg-[#f4f4f4] text-[#5d5d5d]"
+    >
+      <Cloud className="size-12 stroke-[1.35]" />
+      <span className="absolute bottom-4 right-3 flex size-9 items-center justify-center rounded-full border-4 border-[#f4f4f4] bg-white text-red-500">
+        <WifiOff className="size-5 stroke-[2.2]" />
+      </span>
+    </div>
+  );
+}
+
+function ChatComposer({ error, isOffline }: { error?: string; isOffline: boolean }) {
   return (
     <div className="w-full">
       {error && <p className="mb-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>}
-      <ComposerPrimitive.Root className="group/composer flex w-full flex-col rounded-[28px] border border-[#e5e5e5] bg-white px-2 py-2 shadow-[0_2px_6px_-2px_rgba(0,0,0,0.05)] focus-within:border-[#d0d0d0]">
+      <ComposerPrimitive.Root
+        className={`group/composer flex w-full flex-col rounded-[28px] border px-2 py-2 shadow-[0_2px_6px_-2px_rgba(0,0,0,0.05)] ${
+          isOffline
+            ? "border-[#e7e7e7] bg-[#f7f7f7]"
+            : "border-[#e5e5e5] bg-white focus-within:border-[#d0d0d0]"
+        }`}
+      >
         <div className="flex items-end gap-1">
           <button
             type="button"
             aria-label="Add attachment"
             title="Add photos & files"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#5d5d5d] transition-colors hover:bg-black/[0.07]"
+            disabled={isOffline}
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#5d5d5d] transition-colors hover:bg-black/[0.07] disabled:cursor-not-allowed disabled:opacity-35"
           >
             <Plus className="size-5" />
           </button>
           <ComposerPrimitive.Input
-            autoFocus
+            autoFocus={!isOffline}
             aria-label="Message the note assistant"
-            className="max-h-52 min-h-9 flex-1 resize-none bg-transparent py-1.5 pl-1 pr-2 text-base text-[#0d0d0d] outline-none placeholder:text-[#8e8e8e]"
-            placeholder="Ask anything"
+            disabled={isOffline}
+            className="max-h-52 min-h-9 flex-1 resize-none bg-transparent py-1.5 pl-1 pr-2 text-base text-[#0d0d0d] outline-none placeholder:text-[#8e8e8e] disabled:cursor-not-allowed disabled:text-[#8e8e8e]"
+            placeholder={isOffline ? "Chat is unavailable while you're offline" : "Ask anything"}
             rows={1}
           />
           <div className="flex shrink-0 items-center gap-1">
@@ -195,7 +229,8 @@ function ChatComposer({ error }: { error?: string }) {
               <ComposerPrimitive.Send
                 aria-label="Send"
                 title="Send"
-                className="flex size-9 items-center justify-center rounded-full bg-[#0d0d0d] text-white transition-opacity disabled:opacity-30"
+                disabled={isOffline}
+                className="flex size-9 items-center justify-center rounded-full bg-[#0d0d0d] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <ArrowUp className="size-6" />
               </ComposerPrimitive.Send>
@@ -206,7 +241,8 @@ function ChatComposer({ error }: { error?: string }) {
                   type="button"
                   aria-label="Dictate"
                   title="Dictate"
-                  className="flex size-9 items-center justify-center rounded-full text-[#5d5d5d] transition-colors hover:bg-black/[0.07] disabled:opacity-100"
+                  disabled={isOffline}
+                  className="flex size-9 items-center justify-center rounded-full text-[#5d5d5d] transition-colors hover:bg-black/[0.07] disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <Mic className="size-5" />
                 </button>
@@ -215,7 +251,8 @@ function ChatComposer({ error }: { error?: string }) {
                 type="button"
                 aria-label="Use voice mode"
                 title="Use voice mode"
-                className="flex size-9 items-center justify-center rounded-full bg-[#0d0d0d] text-white"
+                disabled={isOffline}
+                className="flex size-9 items-center justify-center rounded-full bg-[#0d0d0d] text-white disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <AudioLines className="size-5" />
               </button>
@@ -252,9 +289,10 @@ type AgentPanelProps = {
   token: string;
   noteId: string;
   conversationExists: boolean;
+  isOffline: boolean;
 };
 
-export function AgentPanel({ token, noteId, conversationExists }: AgentPanelProps) {
+export function AgentPanel({ token, noteId, conversationExists, isOffline }: AgentPanelProps) {
   const [locallyAdmittedId, setLocallyAdmittedId] = useState<string>();
   const [sendingFirst, setSendingFirst] = useState(false);
   const [actionError, setActionError] = useState<string>();
@@ -309,6 +347,7 @@ export function AgentPanel({ token, noteId, conversationExists }: AgentPanelProp
   }, [pendingIsSynced]);
 
   const onNew = async (message: AppendMessage) => {
+    if (isOffline) return;
     const body = messageText(message);
     if (!body) return;
     setActionError(undefined);
@@ -352,16 +391,32 @@ export function AgentPanel({ token, noteId, conversationExists }: AgentPanelProp
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <ThreadPrimitive.Root className="flex h-full min-h-0 flex-col items-stretch bg-white px-4 text-[#0d0d0d]">
-        <AuiIf condition={(state) => state.thread.isEmpty && !state.thread.isLoading}>
+        <AuiIf
+          condition={(state) => state.thread.isEmpty && (!state.thread.isLoading || isOffline)}
+        >
           <div className="flex grow flex-col items-center justify-center px-4 pb-[16vh]">
             <div className="mx-auto flex w-full max-w-3xl flex-col items-stretch gap-6">
-              <h1 className="text-center text-2xl font-normal leading-7">Where should we begin?</h1>
-              <ChatComposer error={error} />
+              {isOffline ? (
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <OfflineIllustration />
+                  <div>
+                    <h1 className="text-2xl font-normal leading-7">You're offline</h1>
+                    <p className="mt-2 text-sm leading-5 text-[#6f6f6f]">
+                      You can keep writing your note. Chat will be ready when you're back online.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <h1 className="text-center text-2xl font-normal leading-7">
+                  Where should we begin?
+                </h1>
+              )}
+              <ChatComposer error={error} isOffline={isOffline} />
             </div>
           </div>
         </AuiIf>
 
-        <AuiIf condition={(state) => state.thread.isLoading && state.thread.isEmpty}>
+        <AuiIf condition={(state) => state.thread.isLoading && state.thread.isEmpty && !isOffline}>
           <div className="flex grow items-center justify-center text-sm text-[#8e8e8e]">
             Loading conversation…
           </div>
@@ -372,7 +427,7 @@ export function AgentPanel({ token, noteId, conversationExists }: AgentPanelProp
             <ThreadPrimitive.Messages components={{ UserMessage, AssistantMessage }} />
             {isWorking && <WorkingIndicator />}
             <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mx-auto mt-auto flex w-full max-w-3xl flex-col gap-2 overflow-visible rounded-t-3xl bg-white pb-2 pt-3">
-              <ChatComposer error={error} />
+              <ChatComposer error={error} isOffline={isOffline} />
               <p className="text-center text-xs text-[#5d5d5d]">
                 AI can make mistakes. Check important info.
               </p>

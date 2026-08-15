@@ -2,6 +2,16 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.workspace.offline.panelsReversed .chat {
+  display: none;
+}
+
+.workspace.offline.panelsReversed .editor {
+  display: block;
+  grid-column: 1;
+  grid-row: 1;
+}
+
 @media (min-width: 48rem) {
   .workspace {
     grid-template-columns:
@@ -22,6 +32,10 @@
   .chat {
     grid-column: 3;
     grid-row: 1;
+  }
+
+  .workspace.offline.panelsReversed .editor {
+    grid-column: 3;
   }
 }
 
@@ -60,5 +74,9 @@
     grid-template-columns:
       var(--notes-nav-width) var(--notes-nav-resizer-width) minmax(420px, 1fr)
       0 3rem;
+  }
+
+  .workspace.offline.panelsReversed .chat {
+    display: block;
   }
 }

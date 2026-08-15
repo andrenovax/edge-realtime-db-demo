@@ -3,8 +3,12 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   Archive,
   ArrowLeftRight,
+  ArrowUp,
+  Check,
+  Circle,
   Ellipsis,
   LogOut,
+  LoaderCircle,
   PanelLeft,
   PanelRightClose,
   PanelRightOpen,
@@ -15,8 +19,69 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { events, tables, userStoreOptions } from "../../lib/store.ts";
-import { AgentPanel } from "../agent/agent-panel.tsx";
+import { AgentPanel, OfflineIllustration } from "../agent/agent-panel.tsx";
 import styles from "./notes-page.module.css";
+
+const OFFLINE_GRACE_MS = 3_500;
+
+type TrackableEvent = ReturnType<(typeof events)[keyof typeof events]>;
+
+function eventSignature(event: TrackableEvent) {
+  const canonicalize = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonicalize);
+    if (value === null || typeof value !== "object") return value;
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, canonicalize(entry)]),
+    );
+  };
+
+  return JSON.stringify([event.name, canonicalize(event.args)]);
+}
+
+function useDebouncedOffline() {
+  const [isOffline, setIsOffline] = useState(false);
+  const [isBrowserOnline, setIsBrowserOnline] = useState(() => navigator.onLine);
+  const [onlineTransition, setOnlineTransition] = useState(0);
+  const offlineShown = useRef(false);
+
+  useEffect(() => {
+    let offlineTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const clearOfflineTimer = () => {
+      if (offlineTimer) clearTimeout(offlineTimer);
+      offlineTimer = undefined;
+    };
+    const handleOffline = () => {
+      clearOfflineTimer();
+      setIsBrowserOnline(false);
+      offlineTimer = setTimeout(() => {
+        if (navigator.onLine) return;
+        offlineShown.current = true;
+        setIsOffline(true);
+      }, OFFLINE_GRACE_MS);
+    };
+    const handleOnline = () => {
+      clearOfflineTimer();
+      setIsBrowserOnline(true);
+      if (offlineShown.current) setOnlineTransition((transition) => transition + 1);
+      offlineShown.current = false;
+      setIsOffline(false);
+    };
+
+    if (!navigator.onLine) handleOffline();
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      clearOfflineTimer();
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
+
+  return { isOffline, isBrowserOnline, onlineTransition };
+}
 
 const NoteEditor = lazy(() =>
   import("./note-editor.tsx").then((module) => ({ default: module.NoteEditor })),
@@ -107,6 +172,11 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
   const conversations = syncedConversations.filter(
     (conversation) => conversation.status === "active",
   );
+  const { isOffline, isBrowserOnline, onlineTransition } = useDebouncedOffline();
+  const pendingChanges = useRef(new Map<string, number>());
+  const [pendingChangeCount, setPendingChangeCount] = useState(0);
+  const [completedReconnectTransition, setCompletedReconnectTransition] = useState(0);
+  const [lastSyncedAt, setLastSyncedAt] = useState(() => Date.now());
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -135,6 +205,70 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       ? activeNotes.filter((note) => noteTitle(note).toLocaleLowerCase().includes(query))
       : activeNotes;
   }, [activeNotes, search]);
+  const unsavedChangeCount = pendingChangeCount;
+  const isReconnectSyncing =
+    isBrowserOnline && onlineTransition > completedReconnectTransition && pendingChangeCount > 0;
+  const lastSyncedLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(lastSyncedAt),
+    [lastSyncedAt],
+  );
+  const syncTooltip = isOffline
+    ? unsavedChangeCount > 0
+      ? `Offline — ${unsavedChangeCount} unsaved ${unsavedChangeCount === 1 ? "change" : "changes"}`
+      : "Offline — everything is saved locally"
+    : isReconnectSyncing
+      ? "Syncing changes"
+      : "Everything is synced";
+
+  useEffect(() => {
+    if (onlineTransition > completedReconnectTransition && pendingChangeCount === 0) {
+      setCompletedReconnectTransition(onlineTransition);
+    }
+  }, [completedReconnectTransition, onlineTransition, pendingChangeCount]);
+
+  useEffect(() => {
+    let active = true;
+    let iterator: AsyncIterator<TrackableEvent> | undefined;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+
+    // This stream only yields events after the sync backend confirms them.
+    // Matching the original commit keeps the UI honest across reconnects.
+    const listenForConfirmations = async () => {
+      while (active) {
+        iterator = store.events()[Symbol.asyncIterator]() as AsyncIterator<TrackableEvent>;
+        try {
+          while (active) {
+            const result = await iterator.next();
+            if (result.done || !active) return;
+            const signature = eventSignature(result.value);
+            const matchingCount = pendingChanges.current.get(signature) ?? 0;
+            if (matchingCount === 0) continue;
+
+            if (matchingCount === 1) pendingChanges.current.delete(signature);
+            else pendingChanges.current.set(signature, matchingCount - 1);
+            setPendingChangeCount((count) => Math.max(0, count - 1));
+            setLastSyncedAt(Date.now());
+          }
+        } catch {
+          if (!active) return;
+          await new Promise<void>((resolve) => {
+            retryTimer = setTimeout(resolve, 1_000);
+          });
+        }
+      }
+    };
+
+    void listenForConfirmations();
+    return () => {
+      active = false;
+      if (retryTimer) clearTimeout(retryTimer);
+      void iterator?.return?.();
+    };
+  }, [store]);
 
   useEffect(() => {
     if (!actionNoteId) return;
@@ -151,9 +285,33 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       search: id ? { note: id } : {},
     });
 
+  const commitTrackedChange = (event: TrackableEvent) => {
+    const signature = eventSignature(event);
+    pendingChanges.current.set(signature, (pendingChanges.current.get(signature) ?? 0) + 1);
+    setPendingChangeCount((count) => count + 1);
+    try {
+      store.commit(event);
+    } catch (error) {
+      const matchingCount = pendingChanges.current.get(signature) ?? 0;
+      if (matchingCount <= 1) pendingChanges.current.delete(signature);
+      else pendingChanges.current.set(signature, matchingCount - 1);
+      setPendingChangeCount((count) => Math.max(0, count - 1));
+      throw error;
+    }
+  };
+
+  const openNote = (id: string) => {
+    if (isOffline) {
+      setPanelsReversed(true);
+      setRightPanelOpen(true);
+    }
+    selectNote(id);
+  };
+
   const startNewNote = () => {
     const id = crypto.randomUUID();
-    selectNote(id);
+    commitTrackedChange(events.noteCreated({ id, text: "", updatedAt: Date.now() }));
+    openNote(id);
   };
 
   const renameNote = (id: string) => {
@@ -161,19 +319,19 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
     setRenamingNoteId(undefined);
     if (!title) return;
     const updatedAt = Date.now();
-    store.commit(events.noteRenamed({ id, title, updatedAt }));
+    commitTrackedChange(events.noteRenamed({ id, title, updatedAt }));
     const conversation = conversations.find((item) => item.id === id);
     if (conversation) {
-      store.commit(events.agentConversationUpdated({ ...conversation, title, updatedAt }));
+      commitTrackedChange(events.agentConversationUpdated({ ...conversation, title, updatedAt }));
     }
   };
 
   const changeNoteStatus = (id: string, status: "archived" | "deleted") => {
     const updatedAt = Date.now();
-    store.commit(events.noteStatusChanged({ id, status, updatedAt }));
+    commitTrackedChange(events.noteStatusChanged({ id, status, updatedAt }));
     const conversation = conversations.find((item) => item.id === id);
     if (conversation) {
-      store.commit(
+      commitTrackedChange(
         events.agentConversationUpdated({
           ...conversation,
           status: "archived",
@@ -209,7 +367,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
     <div
       className={`${styles.workspace} relative grid h-full min-h-0 overflow-hidden ${
         panelsReversed ? styles.panelsReversed : ""
-      } ${rightPanelOpen ? "" : styles.rightCollapsed}`}
+      } ${rightPanelOpen ? "" : styles.rightCollapsed} ${isOffline ? styles.offline : ""}`}
       style={
         {
           "--notes-nav-width": sidebarOpen ? `${navWidth}px` : "3rem",
@@ -224,15 +382,17 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
           rightPanelOpen ? "flex-row" : "flex-col-reverse"
         }`}
       >
-        <button
-          type="button"
-          aria-label="Swap chat and note panels"
-          title="Swap chat and note panels"
-          onClick={() => setPanelsReversed((reversed) => !reversed)}
-          className="flex size-8 items-center justify-center rounded-lg bg-transparent text-[#5d5d5d] hover:bg-black/[0.06]"
-        >
-          <ArrowLeftRight className="size-4" />
-        </button>
+        {!isOffline && (
+          <button
+            type="button"
+            aria-label="Swap chat and note panels"
+            title="Swap chat and note panels"
+            onClick={() => setPanelsReversed((reversed) => !reversed)}
+            className="flex size-8 items-center justify-center rounded-lg bg-transparent text-[#5d5d5d] hover:bg-black/[0.06]"
+          >
+            <ArrowLeftRight className="size-4" />
+          </button>
+        )}
         <button
           type="button"
           aria-label={rightPanelOpen ? "Collapse right panel" : "Expand right panel"}
@@ -261,6 +421,11 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
           >
             <PanelLeft className="size-4 stroke-[1.8]" />
           </button>
+          {sidebarOpen && (
+            <span className="ml-2 truncate text-sm font-medium text-[#0d0d0d]">
+              Durable Object Demo
+            </span>
+          )}
         </div>
 
         <div
@@ -273,7 +438,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
             onClick={startNewNote}
             aria-label="New note"
             title={sidebarOpen ? undefined : "New note"}
-            className={`flex h-8 items-center overflow-hidden rounded-lg bg-[#ececec] text-left text-sm font-medium hover:bg-[#e4e4e4] ${
+            className={`flex h-8 items-center overflow-hidden rounded-lg bg-transparent text-left text-sm font-medium hover:bg-black/[0.04] ${
               sidebarOpen ? "w-full gap-3 px-3" : "w-8 gap-0 px-2"
             }`}
           >
@@ -341,7 +506,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => selectNote(note.id)}
+                          onClick={() => openNote(note.id)}
                           className="min-w-0 flex-1 truncate self-stretch pl-3 pr-1 text-left"
                         >
                           {noteTitle(note)}
@@ -413,7 +578,43 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#0d0d0d] text-xs font-semibold text-white">
                 {email.slice(0, 1).toUpperCase()}
               </div>
-              <span className="min-w-0 flex-1 truncate text-xs text-[#5d5d5d]">{email}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs text-[#5d5d5d]">{email}</p>
+                <div
+                  key={
+                    isOffline
+                      ? "offline"
+                      : `online-${onlineTransition}-${isReconnectSyncing ? "syncing" : "synced"}`
+                  }
+                  aria-live="polite"
+                  className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-normal leading-4 text-[#777]"
+                >
+                  <span
+                    tabIndex={0}
+                    aria-label={syncTooltip}
+                    className="group/status relative flex size-4 shrink-0 items-center justify-center rounded outline-none focus-visible:ring-2 focus-visible:ring-[#bdbdbd]"
+                  >
+                    {isOffline ? (
+                      <Circle className="size-2 fill-red-500 text-red-500" />
+                    ) : isReconnectSyncing ? (
+                      <LoaderCircle className="size-3.5 animate-spin text-[#8e8e8e]" />
+                    ) : (
+                      <Check className="size-3.5 text-[#8e8e8e]" />
+                    )}
+                    <span
+                      role="tooltip"
+                      className="pointer-events-none absolute bottom-[calc(100%+0.375rem)] left-0 z-50 w-max max-w-52 rounded-md bg-[#222] px-2 py-1.5 text-[11px] leading-4 text-white opacity-0 shadow-lg transition-opacity group-focus/status:opacity-100 group-hover/status:opacity-100"
+                    >
+                      {syncTooltip}
+                    </span>
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {isOffline && unsavedChangeCount > 0
+                      ? `${unsavedChangeCount} unsaved ${unsavedChangeCount === 1 ? "change" : "changes"} · Last synced at ${lastSyncedLabel}`
+                      : `Last synced at ${lastSyncedLabel}`}
+                  </span>
+                </div>
+              </div>
               <button
                 type="button"
                 aria-label="Sign out"
@@ -449,7 +650,41 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
               token={token}
               noteId={activeNoteId}
               conversationExists={conversations.some(({ id }) => id === activeNoteId)}
+              isOffline={isOffline}
             />
+          ) : isOffline ? (
+            <div className="flex h-full flex-col items-center justify-center px-4 pb-[10vh]">
+              <div className="flex w-full max-w-3xl flex-col items-stretch gap-5 text-center">
+                <OfflineIllustration />
+                <div>
+                  <h1 className="text-2xl font-normal">You're offline</h1>
+                  <p className="mt-2 text-sm text-[#6f6f6f]">
+                    Chat needs a connection, but you can still create and edit notes.
+                  </p>
+                </div>
+                <div className="flex h-14 items-center rounded-[28px] border border-[#e7e7e7] bg-[#f7f7f7] px-4 text-left text-sm text-[#8e8e8e]">
+                  <span className="min-w-0 flex-1 truncate">
+                    Chat is unavailable while you're offline
+                  </span>
+                  <button
+                    type="button"
+                    disabled
+                    aria-label="Send"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#0d0d0d] text-white opacity-30"
+                  >
+                    <ArrowUp className="size-5" />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={startNewNote}
+                  className="mx-auto flex h-10 items-center gap-2 rounded-full bg-[#0d0d0d] px-5 text-sm font-medium text-white"
+                >
+                  <Plus className="size-4" />
+                  Create a note offline
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 pb-[16vh]">
               <h1 className="text-center text-2xl font-normal">Where should we begin?</h1>
@@ -495,13 +730,13 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
                 markdown={selected?.text ?? ""}
                 onSave={(text) => {
                   if (selected) {
-                    store.commit(
+                    commitTrackedChange(
                       events.noteUpdated({ id: selected.id, text, updatedAt: Date.now() }),
                     );
                     return;
                   }
                   if (text.trim()) {
-                    store.commit(
+                    commitTrackedChange(
                       events.noteCreated({ id: activeNoteId, text, updatedAt: Date.now() }),
                     );
                   }

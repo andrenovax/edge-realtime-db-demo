@@ -4,6 +4,7 @@ declare const styles: {
   readonly "editorResizer": string;
   readonly "nav": string;
   readonly "navResizer": string;
+  readonly "offline": string;
   readonly "panelsReversed": string;
   readonly "rightCollapsed": string;
   readonly "workspace": string;
