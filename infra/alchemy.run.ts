@@ -50,10 +50,13 @@ const deploymentConfig = {
   },
 };
 
-// Values come from the deploy process environment and are installed as
-// encrypted Worker secret bindings only on the Worker that consumes them.
+// Values come from the deploy process environment and are installed only on
+// the auth Worker. Secrets remain redacted while Alchemy provisions bindings.
+const googleClientId = process.env.GOOGLE_CLIENT_ID ?? "";
 const authEnv = {
   BETTER_AUTH_SECRET: Config.redacted("BETTER_AUTH_SECRET"),
+  GOOGLE_CLIENT_ID: googleClientId,
+  GOOGLE_CLIENT_SECRET: googleClientId ? Config.redacted("GOOGLE_CLIENT_SECRET") : "",
 };
 
 export const AuthWorker = (
@@ -320,6 +323,8 @@ export default Alchemy.Stack(
 
           Alchemy stage: \`${stage}\`
           Commit: \`${github.sha.slice(0, 7)}\`
+
+          Google sign-in is disabled for generated preview domains; use email and password.
         `,
       });
     }
