@@ -24,13 +24,31 @@ export type CoercedEnvSchema = {
    */
   BETTER_AUTH_SECRET: string;
   
+  /**
+   * **CLOUDFLARE_ACCOUNT_ID**  
+   * Cloudflare account containing the deployed Workers and related resources.  
+   * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
+   *   
+   * 📚 {@link https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/}  
+   */
+  CLOUDFLARE_ACCOUNT_ID?: string;
+  
+  /**
+   * **CLOUDFLARE_API_TOKEN** 🔐 _sensitive_  
+   * Cloudflare API token used only by Alchemy during deployment and cleanup.  
+   * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
+   *   
+   * 📚 {@link https://developers.cloudflare.com/fundamentals/api/get-started/create-token/}  
+   */
+  CLOUDFLARE_API_TOKEN?: string;
+  
 };
 
-type _CoercedEnvSchema_1b8935f3 = CoercedEnvSchema;
+type _CoercedEnvSchema_cba054cb = CoercedEnvSchema;
 
 declare module 'varlock/env' {
-  export interface TypedEnvSchema extends Readonly<_CoercedEnvSchema_1b8935f3> {}
-  export interface PublicTypedEnvSchema extends Readonly<Pick<_CoercedEnvSchema_1b8935f3, 'APP_ENV'>> {}
+  export interface TypedEnvSchema extends Readonly<_CoercedEnvSchema_cba054cb> {}
+  export interface PublicTypedEnvSchema extends Readonly<Pick<_CoercedEnvSchema_cba054cb, 'APP_ENV' | 'CLOUDFLARE_ACCOUNT_ID'>> {}
 }
 
 
@@ -40,17 +58,17 @@ export type EnvSchemaAsStrings = {
       : (CoercedEnvSchema[Property] extends boolean ? ('true' | 'false') : string)
 };
 
-type _EnvSchemaAsStrings_1b8935f3 = EnvSchemaAsStrings;
+type _EnvSchemaAsStrings_cba054cb = EnvSchemaAsStrings;
 declare global {
 
   // add types for global import.meta.env
-  interface ImportMetaEnv extends _EnvSchemaAsStrings_1b8935f3 {}
+  interface ImportMetaEnv extends _EnvSchemaAsStrings_cba054cb {}
   interface ImportMeta {
     readonly env: ImportMetaEnv;
   }
 
   // add types for global process.env
   namespace NodeJS {
-    interface ProcessEnv extends _EnvSchemaAsStrings_1b8935f3 {}
+    interface ProcessEnv extends _EnvSchemaAsStrings_cba054cb {}
   }
 }

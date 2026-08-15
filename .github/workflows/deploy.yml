@@ -46,14 +46,6 @@ jobs:
       - name: Install application dependencies
         run: nub ci
 
-      - name: Validate environment schema
-        run: nub run env:check
-        env:
-          # Validate the contract on untrusted PR code without exposing a
-          # real environment secret. The deploy step validates the real value.
-          APP_ENV: test
-          BETTER_AUTH_SECRET: ci-only-schema-validation-secret
-
       - name: Lint
         run: nub run lint
 
@@ -92,6 +84,13 @@ jobs:
 
       - name: Install infrastructure dependencies
         run: nub --cwd infra ci
+
+      - name: Validate deployment environment
+        run: nub run env:check
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy Cloudflare stage
         run: nub exec varlock run -- nub --cwd infra exec alchemy deploy --stage "${ALCHEMY_STAGE}" --yes
@@ -134,6 +133,13 @@ jobs:
             echo "Refusing to destroy non-preview stage: ${ALCHEMY_STAGE}"
             exit 1
           fi
+
+      - name: Validate preview environment
+        run: nub run env:check
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Destroy Cloudflare preview stage
         run: nub exec varlock run -- nub --cwd infra exec alchemy destroy --stage "${ALCHEMY_STAGE}" --yes
