@@ -18,3 +18,4 @@ declare const styles: {
   readonly "primaryAction": string;
 };
 export = styles;
+
