@@ -6,6 +6,18 @@ import styles from "./login-page.module.css";
 
 type AuthMode = "in" | "up";
 
+const oauthErrorFromLocation = () => {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("error");
+};
+
+const oauthErrorMessage = (code: string | null) => {
+  if (code === "account_not_linked") {
+    return "This email already has a password account. Sign in with your password once to securely connect Google.";
+  }
+  return code ? "Google sign-in failed. Please try again." : null;
+};
+
 function GoogleIcon() {
   return (
     <svg aria-hidden="true" className="size-5 shrink-0" viewBox="0 0 18 18">
@@ -30,17 +42,23 @@ function GoogleIcon() {
 }
 
 export function LoginPage() {
+  const [oauthError] = useState(oauthErrorFromLocation);
   const [mode, setMode] = useState<AuthMode>("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => oauthErrorMessage(oauthError));
   const [busy, setBusy] = useState(false);
+  const shouldLinkGoogle = oauthError === "account_not_linked";
 
   const runGoogle = async () => {
     setBusy(true);
     setError(null);
-    const result = await authClient.signIn.social({ provider: "google", callbackURL: "/" });
+    const result = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+      errorCallbackURL: "/",
+    });
     if (result.error) {
       setError(result.error.message ?? "Google sign-in failed");
       setBusy(false);
@@ -54,7 +72,21 @@ export function LoginPage() {
       mode === "in"
         ? await authClient.signIn.email({ email, password })
         : await authClient.signUp.email({ email, password, name: email.split("@")[0] });
-    if (result.error) setError(result.error.message ?? "auth failed");
+    if (result.error) {
+      setError(result.error.message ?? "auth failed");
+      setBusy(false);
+      return;
+    }
+    if (mode === "in" && shouldLinkGoogle && GOOGLE_AUTH_ENABLED) {
+      const linkResult = await authClient.linkSocial({
+        provider: "google",
+        callbackURL: "/",
+        errorCallbackURL: "/",
+      });
+      if (linkResult.error) {
+        setError(linkResult.error.message ?? "Unable to connect Google");
+      }
+    }
     setBusy(false);
   };
 
@@ -138,9 +170,7 @@ export function LoginPage() {
               </p>
             )}
             <button type="submit" disabled={busy} className={styles.primaryAction}>
-              <span>
-                {busy ? "Please wait…" : isSignIn ? "Sign in" : "Create account"}
-              </span>
+              <span>{busy ? "Please wait…" : isSignIn ? "Sign in" : "Create account"}</span>
               <ArrowRight aria-hidden="true" />
             </button>
           </form>

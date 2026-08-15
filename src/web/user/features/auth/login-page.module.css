@@ -6,7 +6,8 @@
   height: 100dvh;
   align-items: center;
   justify-content: center;
-  overflow-y: auto;
+  overflow: hidden;
+  overscroll-behavior: none;
   padding: 1.5rem;
   color: white;
   background:
@@ -46,13 +47,23 @@
 
 .ambientLight {
   position: absolute;
+  inset: 0;
+  z-index: -1;
+  contain: paint;
+  overflow: hidden;
+  overflow: clip;
+  pointer-events: none;
+}
+
+.ambientLight::before {
+  position: absolute;
   top: 8%;
   left: 50%;
-  z-index: -1;
   width: min(38rem, 86vw);
   height: min(48rem, 90vh);
   border-radius: 45%;
   background: linear-gradient(125deg, rgb(255 255 255 / 76%), rgb(255 255 255 / 4%) 52%);
+  content: "";
   filter: blur(55px);
   opacity: 0.78;
   transform: translateX(-38%) rotate(15deg);
@@ -372,22 +383,32 @@
 
 @media (max-width: 520px) {
   .page {
+    min-height: 0;
+    height: 100dvh;
     padding: 0;
     background: #120e1e;
   }
 
   .panel {
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
     border: 0;
     border-radius: 0;
   }
 
   .content {
+    box-sizing: border-box;
     display: flex;
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
     flex-direction: column;
     justify-content: center;
-    padding: 2rem 1.4rem;
+    padding: max(1rem, env(safe-area-inset-top)) 1.4rem max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .inputShell input {
+    font-size: 1rem;
   }
 }
 
