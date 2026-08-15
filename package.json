@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "varlock run -- nub --cwd infra run dev",
+    "build": "vite build src/web/user",
     "deploy": "varlock run -- nub --cwd infra run deploy",
     "env:check": "varlock load --agent",
     "env:audit": "varlock audit src scripts infra db --ignore infra/.alchemy",

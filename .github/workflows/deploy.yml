@@ -1,0 +1,141 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+    types: [opened, reopened, synchronize, closed]
+
+permissions:
+  contents: read
+
+# Alchemy state is mutable. Serialize operations for each stage so a deploy
+# cannot race a newer deploy or the cleanup that runs when a PR closes.
+concurrency:
+  group: cloudflare-${{ github.event_name == 'pull_request' && format('preview-pr-{0}', github.event.pull_request.number) || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  ALCHEMY_STAGE: >-
+    ${{ github.event_name == 'pull_request'
+      && format('preview-pr-{0}', github.event.pull_request.number)
+      || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
+  APP_ENV: >-
+    ${{ github.event_name == 'pull_request'
+      && 'preview'
+      || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
+
+jobs:
+  checks:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    name: Lint, typecheck, and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Nub and Node.js
+        uses: nubjs/setup-nub@v0
+        with:
+          node-version: 24
+          cache-dependency-path: |
+            nub.lock
+            infra/nub.lock
+
+      - name: Install application dependencies
+        run: nub ci
+
+      - name: Lint
+        run: nub run lint
+
+      - name: Typecheck
+        run: nub run check:types
+
+      - name: Build
+        run: nub run build
+
+  deploy:
+    # Pull requests from forks do not receive repository or environment
+    # secrets. Keep their checks safe and skip deployment rather than using
+    # pull_request_target to execute untrusted code with Cloudflare access.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    name: Deploy ${{ github.event_name == 'pull_request' && 'preview' || (github.ref_name == 'main' && 'production' || 'staging') }}
+    needs: checks
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event_name == 'pull_request' && 'preview' || (github.ref_name == 'main' && 'production' || 'staging') }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Nub and Node.js
+        uses: nubjs/setup-nub@v0
+        with:
+          node-version: 24
+          cache-dependency-path: |
+            nub.lock
+            infra/nub.lock
+
+      - name: Install application dependencies
+        run: nub ci
+
+      - name: Install infrastructure dependencies
+        run: nub --cwd infra ci
+
+      - name: Deploy Cloudflare stage
+        run: nub exec varlock run -- nub --cwd infra exec alchemy deploy --stage "${ALCHEMY_STAGE}" --yes
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  cleanup-preview:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    name: Remove preview
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Nub and Node.js
+        uses: nubjs/setup-nub@v0
+        with:
+          node-version: 24
+          cache-dependency-path: |
+            nub.lock
+            infra/nub.lock
+
+      - name: Install application dependencies
+        run: nub ci
+
+      - name: Install infrastructure dependencies
+        run: nub --cwd infra ci
+
+      - name: Verify preview stage
+        shell: bash
+        run: |
+          if [[ "${ALCHEMY_STAGE}" != preview-pr-* ]]; then
+            echo "Refusing to destroy non-preview stage: ${ALCHEMY_STAGE}"
+            exit 1
+          fi
+
+      - name: Destroy Cloudflare preview stage
+        run: nub exec varlock run -- nub --cwd infra exec alchemy destroy --stage "${ALCHEMY_STAGE}" --yes
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

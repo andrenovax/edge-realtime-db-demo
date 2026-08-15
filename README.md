@@ -115,6 +115,30 @@ nub run deploy
 Alchemy builds Flue's virtual Worker entry through Vite and deploys the
 complete Worker topology in one plan.
 
+### GitHub deployments
+
+`.github/workflows/deploy.yml` runs linting, typechecking, and a production
+build before deploying these isolated Alchemy stages:
+
+| Git event | GitHub environment | Alchemy stage |
+| --- | --- | --- |
+| Pull request to `main` or `staging` | `preview` | `preview-pr-<number>` |
+| Push to `staging` | `staging` | `staging` |
+| Push to `main` | `production` | `production` |
+
+Create the `preview`, `staging`, and `production` environments under
+**Settings → Environments** in GitHub. Configure each with:
+
+- `CLOUDFLARE_ACCOUNT_ID` as an environment variable.
+- `CLOUDFLARE_API_TOKEN` as an environment secret.
+- `BETTER_AUTH_SECRET` as an environment secret containing at least 32
+  characters.
+
+The same Cloudflare account and API token can be used for every environment;
+Alchemy keeps their resources isolated by stage. A closed or merged pull
+request automatically destroys its preview stage. For security, fork pull
+requests run the checks but do not receive Cloudflare secrets or deploy.
+
 ## Learn more
 
 - [Flue docs](https://flueframework.com/docs/) — or `nubx flue docs` from the terminal.
