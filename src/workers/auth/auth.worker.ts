@@ -30,6 +30,13 @@ export default {
       baseURL: publicOrigin(request),
       secret: env.BETTER_AUTH_SECRET,
       emailAndPassword: { enabled: true },
+      account: {
+        accountLinking: {
+          // Google verifies the email claim. Existing unverified password
+          // accounts still require an authenticated, explicit link flow.
+          trustedProviders: ["google"],
+        },
+      },
       socialProviders: googleAuthEnabled
         ? {
             google: {
