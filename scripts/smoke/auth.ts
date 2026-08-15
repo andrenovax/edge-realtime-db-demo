@@ -30,7 +30,10 @@ export async function signInDemoUser(
     throw new Error(`token failed: ${tokenResponse.status} ${await tokenResponse.text()}`);
   }
   const { token } = (await tokenResponse.json()) as { token: string };
-  const userId = JSON.parse(atob(token.split(".")[1])).sub as string;
+  const payload = token.split(".")[1];
+  if (!payload) throw new Error("token did not contain a JWT payload");
+  const userId = JSON.parse(atob(payload)).sub as string | undefined;
+  if (!userId) throw new Error("token did not contain a subject");
 
   return { cookie, token, userId };
 }

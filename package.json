@@ -17,9 +17,12 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "db:generate": "drizzle-kit generate --config db/drizzle.config.ts",
-    "smoke": "nub scripts/realtime-smoke.ts",
-    "demo:setup": "nub scripts/setup-demo.ts",
-    "smoke:all": "nub scripts/rpc-smoke.ts && nub scripts/realtime-smoke.ts && nub scripts/livestore-smoke.ts && nub scripts/projection-smoke.ts"
+    "smoke": "nub scripts/smoke/all.ts",
+    "smoke:auth": "nub scripts/smoke/auth-smoke.ts",
+    "smoke:rpc": "nub scripts/smoke/rpc-smoke.ts",
+    "smoke:realtime": "nub scripts/smoke/realtime-smoke.ts",
+    "smoke:livestore": "nub scripts/smoke/livestore-smoke.ts",
+    "smoke:projection": "nub scripts/smoke/projection-smoke.ts"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.15.14",

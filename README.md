@@ -47,29 +47,33 @@ Markdown. Accepted events flow through one projection queue into the admin D1
 read model. After changing a D1 projection or auth schema, run
 `nub run db:generate`; Alchemy applies the generated D1 migrations.
 
-The local seed creates two real Better Auth credential users:
+Alchemy's local D1 seed creates two real Better Auth credential users:
 
 | Role  | Email                   | Password            |
 | ----- | ----------------------- | ------------------- |
 | admin | `demo-admin@local.test` | `demo-password-123` |
 | user  | `demo-user@local.test`  | `demo-password-123` |
 
-In another terminal, seed the `demo-admin` per-user store through the same
-LiveStore sync path used by the app:
+Application data starts empty and is created through the same LiveStore path
+used by the app. With the local stack running, exercise all public surfaces
+with:
 
 ```sh
-nub run demo:setup
+nub run smoke
 ```
 
-The setup command is idempotent. Override the default gateway with
-`DEMO_ORIGIN=http://localhost:PORT` when necessary.
-
-To verify Cap'n Web batching on the authenticated viewer surface against the
-local stack:
+Run one surface by itself when narrowing a failure:
 
 ```sh
-nub scripts/rpc-smoke.ts
+nub run smoke:auth
+nub run smoke:rpc
+nub run smoke:realtime
+nub run smoke:livestore
+nub run smoke:projection
 ```
+
+All smoke commands target `http://localhost:8787` by default. Set
+`GATEWAY_ORIGIN` directly when testing another gateway.
 
 ## Notes agent API
 
