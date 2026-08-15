@@ -1,7 +1,6 @@
 node_modules/
 dist/
 .env*
-!.env.example
 .dev.vars*
 .wrangler/
 .livestore-smoke/
@@ -13,3 +12,6 @@ infra/.alchemy/version-check.json
 .alchemy/
 
 _notes/
+
+# Varlock schemas are safe configuration contracts and must be committed.
+!.env.schema

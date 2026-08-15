@@ -4,7 +4,7 @@
  * Idempotent by event id; per-user event logs remain the truth.
  */
 import { index, integer, primaryKey, snakeCase, text } from "drizzle-orm/sqlite-core";
-import { itemColumns, noteColumns } from "./user.ts";
+import { agentConversationColumns, itemColumns, noteColumns } from "./user.ts";
 
 export const userEvents = snakeCase.table(
   "user_events",
@@ -22,7 +22,7 @@ export const userEvents = snakeCase.table(
 );
 
 // Entity ids are unique only within a store, hence the composite keys.
-// seqNum protects note upserts from out-of-order queue batches.
+// seqNum protects mutable projections from out-of-order queue batches.
 export const adminNotes = snakeCase.table(
   "admin_notes",
   {
@@ -40,4 +40,17 @@ export const adminItems = snakeCase.table(
     ...itemColumns(),
   },
   (table) => [primaryKey({ columns: [table.storeId, table.id] })],
+);
+
+export const adminAgentConversations = snakeCase.table(
+  "admin_agent_conversations",
+  {
+    storeId: text().notNull(),
+    ...agentConversationColumns(),
+    seqNum: integer().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.storeId, table.id] }),
+    index("admin_agent_conversations_updated_at_idx").on(table.updatedAt),
+  ],
 );

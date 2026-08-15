@@ -1,5 +1,5 @@
 import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
-import type { GatewayEnv } from "../../../infra/alchemy.run.ts";
+import type { GatewayEnv } from "@infra/env";
 
 // Any worker holding a service binding to the auth worker can verify.
 export type AuthEnv = Pick<GatewayEnv, "AUTH">;

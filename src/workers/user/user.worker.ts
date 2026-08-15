@@ -1,19 +1,20 @@
 /// <reference types="@cloudflare/workers-types" />
 /**
- * User-plane worker: a single capnweb RPC endpoint; methods are the
- * routing — no path dispatch, only the gateway reaches this worker
- * (service binding, /api/data). Regular users touch only their own DO
- * (hosted in the sync worker, reached cross-script) — never D1; the
- * cross-user read model lives behind the admin worker. The gateway
- * verifies JWTs and stamps x-user-id — methods authorize against that
- * identity.
+ * User-plane worker: a small capnweb RPC endpoint for viewer identity.
+ * User-owned application data flows through LiveStore, while an agent
+ * conversation is catalogued by the agent worker only after Flue admits its
+ * first message. Only the gateway reaches this worker (service binding,
+ * /api/data). The cross-user read model lives behind the admin worker.
  */
 import { newWorkersRpcResponse } from "capnweb";
-import type { UserEnv } from "../../../infra/alchemy.run.ts";
+import { WorkerEntrypoint } from "cloudflare:workers";
+import type { UserEnv } from "@infra/env";
+import type { UserCreatedV1 } from "../auth/auth.events.ts";
+import type { UserWorkerRpc } from "./user.contract.ts";
 import { UserApi } from "./user.rpc.ts";
 
-export default {
-  fetch(request: Request, env: UserEnv): Response | Promise<Response> {
+export default class UserWorker extends WorkerEntrypoint<UserEnv> implements UserWorkerRpc {
+  fetch(request: Request): Response | Promise<Response> {
     const userId = request.headers.get("x-user-id");
     const viewer = userId
       ? {
@@ -22,6 +23,10 @@ export default {
           role: request.headers.get("x-user-role"),
         }
       : null;
-    return newWorkersRpcResponse(request, new UserApi(env, viewer));
-  },
-};
+    return newWorkersRpcResponse(request, new UserApi(viewer));
+  }
+
+  async userCreated(event: UserCreatedV1) {
+    await this.env.USER_DO.getByName(event.user.id).provisionUser(event);
+  }
+}

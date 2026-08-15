@@ -9,7 +9,7 @@
  * admin access is authorized here against that role.
  */
 import { newWorkersRpcResponse } from "capnweb";
-import type { AdminEnv } from "../../../infra/alchemy.run.ts";
+import type { AdminEnv } from "@infra/env";
 import { queue } from "./admin.queue.ts";
 import { AdminApi } from "./admin.rpc.ts";
 
