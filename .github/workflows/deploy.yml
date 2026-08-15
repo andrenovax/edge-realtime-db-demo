@@ -25,6 +25,10 @@ env:
     ${{ github.event_name == 'pull_request'
       && 'preview'
       || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
+  GATEWAY_WORKER_NAME: >-
+    ${{ github.event_name == 'pull_request'
+      && format('dodemo-pr-{0}', github.event.pull_request.number)
+      || (github.ref == 'refs/heads/main' && 'dodemo' || 'dodemo-staging') }}
 
 jobs:
   checks:
@@ -68,11 +72,12 @@ jobs:
     name: Deploy to Cloudflare
     needs: checks
     runs-on: ubuntu-latest
-    outputs:
-      url: ${{ steps.deployment.outputs.url }}
+    permissions:
+      contents: read
+      pull-requests: write
     environment:
       name: ${{ github.event_name == 'pull_request' && 'preview' || (github.ref_name == 'main' && 'production' || 'staging') }}
-      url: ${{ steps.deployment.outputs.url }}
+      url: https://${{ env.GATEWAY_WORKER_NAME }}.hello-andrii-novak.workers.dev/
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -92,137 +97,13 @@ jobs:
         run: nub --cwd infra ci
 
       - name: Deploy Cloudflare stage
-        id: deployment
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          deploy_log="${RUNNER_TEMP}/alchemy-deploy.log"
-          nub exec varlock run -- \
-            nub --cwd infra exec alchemy deploy --stage "${ALCHEMY_STAGE}" --yes \
-            2>&1 | tee "${deploy_log}"
-
-          deployment_url="$(node .github/scripts/extract-alchemy-url.mjs "${deploy_log}")"
-          echo "url=${deployment_url}" >> "${GITHUB_OUTPUT}"
-
-          {
-            echo "### ${APP_ENV^} deployment ready"
-            echo
-            echo "[Open deployment](${deployment_url})"
-            echo
-            echo "Alchemy stage: \`${ALCHEMY_STAGE}\`"
-          } >> "${GITHUB_STEP_SUMMARY}"
+        run: nub exec varlock run -- nub --cwd infra exec alchemy deploy --stage "${ALCHEMY_STAGE}" --yes
         env:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-  publish-preview-link:
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.action != 'closed' &&
-      needs.deploy.result == 'success'
-    name: Share preview link
-    needs: deploy
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Comment on pull request
-        uses: actions/github-script@v9
-        env:
-          DEPLOYMENT_URL: ${{ needs.deploy.outputs.url }}
-          DEPLOYED_SHA: ${{ github.event.pull_request.head.sha }}
-        with:
-          script: |
-            const marker = "<!-- cloudflare-preview-deployment -->";
-            const body = `${marker}
-            ### Preview deployment ready
-
-            [Open preview deployment](${process.env.DEPLOYMENT_URL})
-
-            Alchemy stage: \`${process.env.ALCHEMY_STAGE}\`
-            Commit: \`${process.env.DEPLOYED_SHA.slice(0, 7)}\``;
-            const comments = await github.paginate(
-              github.rest.issues.listComments,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                per_page: 100,
-              },
-            );
-            const previous = comments.find(
-              (comment) => comment.user?.type === "Bot" && comment.body?.includes(marker),
-            );
-
-            if (previous) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: previous.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
-
-  publish-environment-link:
-    if: github.event_name == 'push' && needs.deploy.result == 'success'
-    name: Share environment link
-    needs: deploy
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Comment on deployed commit
-        uses: actions/github-script@v9
-        env:
-          DEPLOYMENT_URL: ${{ needs.deploy.outputs.url }}
-        with:
-          script: |
-            const environment = context.ref === "refs/heads/main" ? "Production" : "Staging";
-            const marker = `<!-- cloudflare-${environment.toLowerCase()}-deployment -->`;
-            const body = `${marker}
-            ### ${environment} deployment ready
-
-            [Open ${environment.toLowerCase()} deployment](${process.env.DEPLOYMENT_URL})
-
-            Alchemy stage: \`${process.env.ALCHEMY_STAGE}\``;
-            const comments = await github.paginate(
-              github.rest.repos.listCommentsForCommit,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: context.sha,
-                per_page: 100,
-              },
-            );
-            const previous = comments.find(
-              (comment) => comment.user?.type === "Bot" && comment.body?.includes(marker),
-            );
-
-            if (previous) {
-              await github.rest.repos.updateCommitComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: previous.id,
-                body,
-              });
-            } else {
-              await github.rest.repos.createCommitComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: context.sha,
-                body,
-              });
-            }
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULL_REQUEST: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || 0 }}
 
   cleanup-preview:
     if: >-

@@ -1,7 +1,10 @@
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
+import * as GitHub from "alchemy/GitHub";
+import * as Output from "alchemy/Output";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import type { UserDoRpc } from "@workers/livestore/user-contract";
 import { resolveFlueAlchemyManifest, type FlueAlchemyManifest } from "./flue-alchemy.ts";
 
@@ -160,6 +163,7 @@ export type AgentEnv = Cloudflare.InferEnv<ReturnType<typeof AgentWorker>>;
 
 type GatewayWorkerDependencies = {
   agentOrigin: string;
+  name?: string;
   auth: Cloudflare.Worker;
   agent: Cloudflare.Worker;
   user: Cloudflare.Worker;
@@ -172,6 +176,7 @@ type GatewayWorkerDependencies = {
 // client assets with SPA fallback (src/web/user).
 export const GatewayWorker = ({
   agentOrigin,
+  name,
   auth,
   agent,
   user,
@@ -179,6 +184,7 @@ export const GatewayWorker = ({
   livestore,
 }: GatewayWorkerDependencies) =>
   Cloudflare.Website.Vite("gateway", {
+    name,
     rootDir: deploymentConfig.paths.gatewayRoot,
     main: deploymentConfig.paths.gatewayWorker,
     compatibility: deploymentConfig.compatibility,
@@ -207,11 +213,13 @@ export type GatewayEnv = Cloudflare.InferEnv<ReturnType<typeof GatewayWorker>>;
 export default Alchemy.Stack(
   "flue-demo",
   {
-    providers: Cloudflare.providers(),
+    providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
     const isLocalDev = yield* Alchemy.ALCHEMY_DEV;
+    const stage = yield* Alchemy.Stage;
+    const github = yield* GitHub.GitHubEnv;
     const flueManifest = yield* Effect.promise(() =>
       resolveFlueAlchemyManifest(
         deploymentConfig.paths.agentRoot,
@@ -277,6 +285,15 @@ export default Alchemy.Stack(
       // the larger agent bundle starts or hot-reloads. A fixed loopback origin
       // keeps local routing deterministic; deployed stacks use the binding.
       agentOrigin: isLocalDev ? deploymentConfig.local.agentOrigin : "",
+      name: isLocalDev
+        ? undefined
+        : stage === "production"
+          ? "dodemo"
+          : stage === "staging"
+            ? "dodemo-staging"
+            : /^preview-pr-\d+$/.test(stage)
+              ? stage.replace("preview-", "dodemo-")
+              : undefined,
       auth,
       agent,
       user,
@@ -289,6 +306,22 @@ export default Alchemy.Stack(
       scriptName: eventRouter.workerName,
       settings: deploymentConfig.lifecycleConsumer,
     });
+
+    if (github?.pr) {
+      yield* GitHub.Comment("preview-deployment", {
+        owner: github.owner,
+        repository: github.repository,
+        issueNumber: github.pr,
+        body: Output.interpolate`
+          ## Preview deployment ready
+
+          [Open preview deployment](${gateway.url})
+
+          Alchemy stage: \`${stage}\`
+          Commit: \`${github.sha.slice(0, 7)}\`
+        `,
+      });
+    }
 
     return { url: gateway.url, database: db.databaseName };
   }),
