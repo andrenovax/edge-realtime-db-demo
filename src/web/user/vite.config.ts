@@ -6,6 +6,7 @@ import { defineConfig } from "vite";
 // builds the gateway worker entry alongside these client assets
 // (infra/alchemy.run.ts GatewayWorker).
 export default defineConfig({
+  envPrefix: ["VITE_", "GOOGLE_CLIENT_ID"],
   plugins: [react(), tailwindcss()],
   resolve: { tsconfigPaths: true },
 });

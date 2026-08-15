@@ -24,11 +24,20 @@ const publicOrigin = (request: Request) => {
 // (GET /api/auth/jwks). Owns the Better Auth tables in D1.
 export default {
   fetch(request: Request, env: AuthEnv) {
+    const googleAuthEnabled = Boolean(env.GOOGLE_CLIENT_ID);
     const auth = betterAuth({
       database: drizzleAdapter(drizzle(env.DB), { provider: "sqlite", schema }),
       baseURL: publicOrigin(request),
       secret: env.BETTER_AUTH_SECRET,
       emailAndPassword: { enabled: true },
+      socialProviders: googleAuthEnabled
+        ? {
+            google: {
+              clientId: env.GOOGLE_CLIENT_ID,
+              clientSecret: env.GOOGLE_CLIENT_SECRET,
+            },
+          }
+        : {},
       databaseHooks: {
         user: {
           create: {

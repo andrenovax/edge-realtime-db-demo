@@ -14,11 +14,15 @@ nub install --cwd infra
 ```
 
 `.env.schema` is the configuration contract. In a gitignored `.env.local`, set
-`BETTER_AUTH_SECRET` to a secret of at least 32 characters. Prefer a 1Password
-`op(...)` reference or let Varlock prompt for and encrypt a device-local value:
+`BETTER_AUTH_SECRET` to a secret of at least 32 characters and add the web
+client credentials for a Google OAuth app whose redirect URI is
+`http://localhost:8787/api/auth/callback/google`. Prefer 1Password `op(...)`
+references or let Varlock prompt for and encrypt device-local values:
 
 ```dotenv
 BETTER_AUTH_SECRET=varlock(prompt)
+GOOGLE_CLIENT_ID=your-local-web-client-id
+GOOGLE_CLIENT_SECRET=varlock(prompt)
 ```
 
 Then validate the configuration without exposing the secret:
@@ -153,6 +157,17 @@ Create the `preview`, `staging`, and `production` environments under
 - `CLOUDFLARE_API_TOKEN` as an environment secret.
 - `BETTER_AUTH_SECRET` as an environment secret containing at least 32
   characters.
+
+For `staging` and `production`, also configure:
+
+- `GOOGLE_CLIENT_ID` as an environment variable.
+- `GOOGLE_CLIENT_SECRET` as an environment secret.
+
+The corresponding Google web clients must register the exact Better Auth
+callback for each stable deployment host, ending in
+`/api/auth/callback/google`. Pull-request previews intentionally omit these
+values and hide Google sign-in because every preview receives a generated
+hostname. Email/password authentication remains available there.
 
 The same Cloudflare account and API token can be used for every environment;
 Alchemy keeps their resources isolated by stage. A closed or merged pull
