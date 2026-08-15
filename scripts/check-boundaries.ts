@@ -1,10 +1,12 @@
-// Dependency-boundary lint for the worker planes. See architecture.md.
+// Dependency-boundary lint for the worker planes. See docs/architecture.md.
 // Zero-dep on purpose: dependency-cruiser can't parse a typescript@7
 // (tsgo) environment yet — swap back to it when its TS7 support lands.
 //
 // Rules (each mirrors a named rule in architecture.md):
-//   workers-encapsulated        cross-worker imports only via .contract.ts/.schema.ts
+//   workers-encapsulated        cross-worker imports only via .contract.ts/.events.ts/.schema.ts
 //   contracts-type-only         importing a .contract.ts is `import type`
+//   events-producer-owned       emitted events live in <producer>.events.ts
+//   events-type-only            importing an .events.ts is `import type`
 //   db-schema-planes            auth sees auth.ts; admin sees admin.ts + canonical user.ts
 //   application-dos-livestore-only application *.do.ts files live in and export from livestore
 //   livestore-schema-owner-only db/livestore only from the livestore worker
@@ -78,6 +80,18 @@ const violations: string[] = [];
 const fail = (rule: string, edge: Edge, why: string) =>
   violations.push(`${rule}: ${edge.from} -> ${edge.to}\n    ${why}`);
 
+for (const file of sourceFiles) {
+  const path = relative(ROOT, file);
+  if (!path.endsWith(".events.ts")) continue;
+  const owner = workerOf(path);
+  const expected = owner ? `src/workers/${owner}/${owner}.events.ts` : undefined;
+  if (!owner || path !== expected) {
+    violations.push(
+      `events-producer-owned: ${path}\n    emitted event types belong to their producer and must live in src/workers/<producer>/<producer>.events.ts`,
+    );
+  }
+}
+
 const liveStoreDir = join(SRC, "workers", "livestore");
 const liveStoreEntry = join(liveStoreDir, "livestore.worker.ts");
 const liveStoreEntrySource = readFileSync(liveStoreEntry, "utf8");
@@ -106,13 +120,21 @@ for (const edge of edges) {
   const fromWorker = workerOf(edge.from);
   const toWorker = workerOf(edge.to);
   const toContract = edge.to.endsWith(".contract.ts");
+  const toEvents = edge.to.endsWith(".events.ts");
   const toSharedSchema = edge.to.endsWith(".schema.ts");
 
-  if (fromWorker && toWorker && fromWorker !== toWorker && !toContract && !toSharedSchema) {
+  if (
+    fromWorker &&
+    toWorker &&
+    fromWorker !== toWorker &&
+    !toContract &&
+    !toEvents &&
+    !toSharedSchema
+  ) {
     fail(
       "workers-encapsulated",
       edge,
-      "workers never import each other's logic; cross-worker seams are type-only .contract.ts modules or declarative .schema.ts validators",
+      "workers never import each other's logic; cross-worker seams are type-only .contract.ts/.events.ts modules or declarative .schema.ts validators",
     );
   }
   if (toContract && !edge.typeOnly) {
@@ -120,6 +142,13 @@ for (const edge of edges) {
       "contracts-type-only",
       edge,
       "a .contract.ts is a type seam — import it with `import type` so no runtime code crosses",
+    );
+  }
+  if (toEvents && !edge.typeOnly) {
+    fail(
+      "events-type-only",
+      edge,
+      "an .events.ts module is a producer-owned type seam — import it with `import type` so no runtime code crosses",
     );
   }
   if (fromWorker && edge.to.startsWith("db/schema/") && !DB_PLANES[fromWorker]?.includes(edge.to)) {
@@ -139,11 +168,11 @@ for (const edge of edges) {
     );
   }
   if (edge.from.startsWith("src/web/") && toWorker) {
-    if (!toContract && !edge.to.endsWith(".rpc.ts")) {
+    if (!toContract && !toEvents && !edge.to.endsWith(".rpc.ts")) {
       fail(
         "web-imports-types-only",
         edge,
-        "the SPA reaches workers over HTTP, never by import; only .contract.ts/.rpc.ts type surfaces cross",
+        "the SPA reaches workers over HTTP, never by import; only .contract.ts/.events.ts/.rpc.ts type surfaces cross",
       );
     } else if (!edge.typeOnly) {
       fail("web-imports-types-only", edge, "worker type surfaces cross into the SPA type-only");

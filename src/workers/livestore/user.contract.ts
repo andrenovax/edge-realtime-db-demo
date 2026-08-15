@@ -7,6 +7,11 @@ export type { AgentConversation, AgentModelVariant };
 // Type-only seam — the DO class itself never leaves this worker.
 export type UserDoRpc = Pick<
   UserDO,
-  "addNote" | "updateNote" | "listNotes" | "createConversation" | "getAgentConversation"
+  | "provisionUser"
+  | "addNote"
+  | "updateNote"
+  | "listNotes"
+  | "createConversation"
+  | "getAgentConversation"
 > &
   Rpc.DurableObjectBranded;

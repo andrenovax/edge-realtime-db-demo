@@ -16,20 +16,21 @@ plane. Regular users live in per-user DOs and **never touch D1**; system users
 live in D1 and **never touch the application DOs**. The projection Queue is
 the one bridge between those data planes.
 
-| Worker      | Actor / role                                                                                                                                            | Stores                        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `gateway`   | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers             | —                             |
-| `auth`      | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                            | D1 (Better Auth tables)       |
-| `livestore` | durable state — LiveStore sync plus all application DOs (`UserDO` client + `UserSyncBackendDO` event log); owns notes, items, and conversation metadata | DO SQLite, LiveStore schema   |
-| `user`      | authenticated viewer identity (`/api/data`); ordinary user state flows directly through LiveStore                                                       | —                             |
-| `admin`     | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                                       | D1 (`user_events` read model) |
-| `agent`     | agents — Flue runtime (`/api/agents/*`); create-only admits first messages, catalogs them in `UserDO`, and authorizes later access                      | generated agent DO SQLite     |
+| Worker         | Actor / role                                                                                                                                            | Stores                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `gateway`      | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers             | —                             |
+| `auth`         | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                            | D1 (Better Auth tables)       |
+| `event-router` | asynchronous event routing — consumes dedicated domain queues and forwards producer-owned events to the Worker that owns each operation                 | —                             |
+| `livestore`    | durable state — LiveStore sync plus all application DOs (`UserDO` client + `UserSyncBackendDO` event log); owns notes, items, and conversation metadata | DO SQLite, LiveStore schema   |
+| `user`         | authenticated viewer identity (`/api/data`); ordinary user state flows directly through LiveStore                                                       | —                             |
+| `admin`        | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                                       | D1 (`user_events` read model) |
+| `agent`        | agents — Flue runtime (`/api/agents/*`); create-only admits first messages, catalogs them in `UserDO`, and authorizes later access                      | generated agent DO SQLite     |
 
 ## Public ingress
 
 `gateway` is the application's **only public entry point**. It is the only
 Worker that may own a public URL, route, custom domain, or user-facing static
-assets. `auth`, `livestore`, `user`, `admin`, and `agent` are private Workers:
+assets. `auth`, `event-router`, `livestore`, `user`, `admin`, and `agent` are private Workers:
 they set `workersDev: false`, receive requests only through Cloudflare service
 bindings from `gateway`, and must never be exposed directly.
 
@@ -75,22 +76,30 @@ worker needs them.
 | `<w>.rpc.ts`    | the capnweb `RpcTarget` surface; also the type surface external consumers (scripts, web) may `import type` |
 | `<w>.queue.ts`  | queue consumer                                                                                             |
 | `<name>.do.ts`  | an application Durable Object in `livestore/`, named by subject (`user.do.ts`, `user-sync-backend.do.ts`)  |
-| `*.contract.ts` | a cross-worker type-only seam                                                                              |
+| `<w>.events.ts` | producer-owned event types emitted by that worker; a cross-worker type-only seam                           |
+| `*.contract.ts` | a receiver-owned command/capability type-only seam                                                         |
 | `*.schema.ts`   | receiver-owned runtime validation contract; exports schemas plus inferred payload types                    |
 | `*.util.ts`     | worker-private helper (`jwt.util.ts`)                                                                      |
 
 ## Hard rules (lint-enforced)
 
 - **`workers-encapsulated`** — workers never import each other's logic.
-  Cross-worker seams are type-only `.contract.ts` modules or declarative
-  `.schema.ts` validators. Ownership follows the xenguide command rule — a
-  contract is **receiver-owned**: the queue consumer owns `ProjectionMessage`
+  Cross-worker seams are type-only `.contract.ts`/`.events.ts` modules or
+  declarative `.schema.ts` validators. Command/capability contracts are
+  **receiver-owned**: the queue consumer owns `ProjectionMessage`
   ([admin.contract.ts](../src/workers/admin/admin.contract.ts), imported by the
   LiveStore producer), while the DO's home worker owns `UserDoRpc` and its
   Valibot payload schemas ([user.contract.ts](../src/workers/livestore/user.contract.ts),
   [user.schema.ts](../src/workers/livestore/user.schema.ts)).
 - **`contracts-type-only`** — importing a `.contract.ts` is `import type`;
   no runtime code crosses a worker boundary.
+- **`events-producer-owned`** — an emitted event is owned and versioned by
+  its producer. Its types live in exactly `<producer>/<producer>.events.ts`;
+  for example, Auth's `UserCreatedV1` lives in
+  [auth.events.ts](../src/workers/auth/auth.events.ts), never in the Event
+  Router or receiving User Worker. The Event Router owns routing only.
+- **`events-type-only`** — importing an `.events.ts` module is `import type`;
+  event catalogs contain serializable types, never producer implementation.
 - **`db-schema-planes`** — [user.ts](../db/schema/user.ts) is the canonical
   Drizzle schema for user-owned rows and event contracts. `livestore` uses its
   per-user tables and `admin` consumes the same declarations alongside its own
@@ -106,7 +115,8 @@ worker needs them.
 - **`livestore-schema-owner-only`** — only `livestore` imports `db/livestore/`
   (the web client will run its own store from the same schema).
 - **`web-imports-types-only`** — `src/web/` may `import type` from
-  `.contract.ts`/`.rpc.ts` only; it reaches workers over HTTP, never by import.
+  `.contract.ts`/`.events.ts`/`.rpc.ts` only; it reaches workers over HTTP,
+  never by import.
 - **`workers-never-import-web`** — the SPA is a consumer, not a dependency.
 - **`no-circular`** — no import cycles; break one with a type seam
   (`.contract.ts` for cross-worker capabilities; Alchemy-inferred environment
@@ -160,6 +170,8 @@ types cannot drift apart.
   `db/livestore/schema.ts`.
 - A type another worker needs? → the receiver's `.contract.ts`, imported
   `import type`.
+- A new emitted event? → define and version it in the producer's
+  `<producer>.events.ts`; routers and consumers import that type only.
 - A new Cloudflare binding or scalar runtime value? → declare it only in
   `infra/alchemy.run.ts`; use Effect `Config` for external scalar inputs and
   let `Cloudflare.InferEnv` derive its type.
