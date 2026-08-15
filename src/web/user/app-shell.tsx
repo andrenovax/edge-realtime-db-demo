@@ -49,7 +49,7 @@ export function AppShell({
 
   return (
     <StoreRegistryProvider storeRegistry={storeRegistry}>
-      <main className="h-dvh min-h-0 overflow-hidden bg-white text-[#0d0d0d]">
+      <main className="h-dvh min-h-0 overflow-hidden bg-transparent text-foreground">
         <Suspense
           fallback={
             <Center>

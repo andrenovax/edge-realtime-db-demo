@@ -3,6 +3,30 @@
 @import "@blocknote/core/fonts/inter.css";
 @import "@blocknote/ariakit/style.css";
 
+@layer theme {
+  [data-theme="lavender"] {
+    color-scheme: light;
+    --background: oklch(0.94 0.025 295);
+    --foreground: oklch(0.23 0.025 285);
+    --surface: oklch(1 0 0 / 68%);
+    --surface-foreground: var(--foreground);
+    --overlay: oklch(0.985 0.008 295 / 92%);
+    --overlay-foreground: var(--foreground);
+    --accent: oklch(0.61 0.19 292);
+    --accent-foreground: oklch(0.99 0 0);
+    --muted: oklch(0.53 0.025 285);
+    --default: oklch(0.91 0.025 295 / 78%);
+    --border: oklch(1 0 0 / 62%);
+    --separator: oklch(0.82 0.025 290 / 46%);
+    --field-background: oklch(1 0 0 / 58%);
+    --field-border: oklch(1 0 0 / 66%);
+    --border-width: 1px;
+    --radius: 0.875rem;
+    --surface-shadow: 0 20px 60px oklch(0.38 0.08 290 / 12%);
+    --overlay-shadow: 0 18px 48px oklch(0.3 0.07 290 / 18%);
+  }
+}
+
 html,
 body,
 #root {
@@ -12,5 +36,8 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 10% 5%, oklch(0.86 0.1 345), transparent 34%),
+    radial-gradient(circle at 90% 0%, oklch(0.82 0.11 285), transparent 36%),
+    radial-gradient(circle at 75% 100%, oklch(0.86 0.08 230), transparent 38%), var(--background);
 }

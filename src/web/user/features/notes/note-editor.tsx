@@ -46,7 +46,7 @@ export function NoteEditor({ noteId, markdown, onSave }: NoteEditorProps) {
   );
 
   return (
-    <div className={`${styles.root} flex h-full min-h-0 flex-col overflow-hidden bg-white`}>
+    <div className={`${styles.root} flex h-full min-h-0 flex-col overflow-hidden`}>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <BlockNoteView
           className="min-h-full"
