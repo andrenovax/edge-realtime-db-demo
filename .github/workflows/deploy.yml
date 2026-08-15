@@ -47,13 +47,13 @@ jobs:
         run: nub ci
 
       - name: Lint
-        run: nub run lint
+        run: nub run --node lint
 
       - name: Typecheck
-        run: nub run check:types
+        run: nub run --node check:types
 
       - name: Build
-        run: nub run build
+        run: nub run --node build
 
   deploy:
     # Pull requests from forks do not receive repository or environment
