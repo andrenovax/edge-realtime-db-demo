@@ -220,6 +220,7 @@ export default Alchemy.Stack(
     const isLocalDev = yield* Alchemy.ALCHEMY_DEV;
     const stage = yield* Alchemy.Stage;
     const github = yield* GitHub.GitHubEnv;
+    const cloudflareWorkerName = yield* Config.string("CLOUDFLARE_WORKER_NAME");
     const flueManifest = yield* Effect.promise(() =>
       resolveFlueAlchemyManifest(
         deploymentConfig.paths.agentRoot,
@@ -288,11 +289,11 @@ export default Alchemy.Stack(
       name: isLocalDev
         ? undefined
         : stage === "production"
-          ? "dodemo"
+          ? cloudflareWorkerName
           : stage === "staging"
-            ? "dodemo-staging"
+            ? `${cloudflareWorkerName}-staging`
             : /^preview-pr-\d+$/.test(stage)
-              ? stage.replace("preview-", "dodemo-")
+              ? stage.replace("preview-", `${cloudflareWorkerName}-`)
               : undefined,
       auth,
       agent,
