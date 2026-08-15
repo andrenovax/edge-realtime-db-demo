@@ -37,27 +37,22 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Nub and Node.js
+        uses: nubjs/setup-nub@v0
+        with:
+          node-version: 24
+          cache-dependency-path: "**/nub.lock"
+
+      - name: Install application dependencies
+        run: nub ci
+
       - name: Validate environment schema
-        uses: dmno-dev/varlock-action@v1.0.1
+        run: nub run env:check
         env:
           # Validate the contract on untrusted PR code without exposing a
           # real environment secret. The deploy step validates the real value.
           APP_ENV: test
           BETTER_AUTH_SECRET: ci-only-schema-validation-secret
-        with:
-          fail-on-error: true
-          show-summary: true
-
-      - name: Set up Nub and Node.js
-        uses: nubjs/setup-nub@v0
-        with:
-          node-version: 24
-          cache-dependency-path: |
-            nub.lock
-            infra/nub.lock
-
-      - name: Install application dependencies
-        run: nub ci
 
       - name: Lint
         run: nub run lint
@@ -90,9 +85,7 @@ jobs:
         uses: nubjs/setup-nub@v0
         with:
           node-version: 24
-          cache-dependency-path: |
-            nub.lock
-            infra/nub.lock
+          cache-dependency-path: "**/nub.lock"
 
       - name: Install application dependencies
         run: nub ci
@@ -126,9 +119,7 @@ jobs:
         uses: nubjs/setup-nub@v0
         with:
           node-version: 24
-          cache-dependency-path: |
-            nub.lock
-            infra/nub.lock
+          cache-dependency-path: "**/nub.lock"
 
       - name: Install application dependencies
         run: nub ci
