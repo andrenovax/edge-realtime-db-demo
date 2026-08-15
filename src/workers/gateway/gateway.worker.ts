@@ -23,7 +23,7 @@ type CloudflareRequest = Request<unknown, CfProperties<unknown>>;
 // Authenticate and forward. The identity headers are stripped from the
 // incoming request (public callers must not smuggle them) and set only
 // when the JWT verifies; the target decides what "no user" means.
-const forwardAsUser = async (request: Request, env: GatewayEnv, target: Fetcher) => {
+const forwardAsUser = async (request: Request, env: GatewayEnv, target: Fetcher | string) => {
   const user = await verifyUser(env, request);
   const headers = new Headers(request.headers);
   headers.delete("x-user-id");
@@ -34,11 +34,17 @@ const forwardAsUser = async (request: Request, env: GatewayEnv, target: Fetcher)
     if (user.email) headers.set("x-user-email", user.email);
     if (user.role) headers.set("x-user-role", user.role);
   }
+  const targetUrl = new URL(request.url);
+  if (typeof target === "string") {
+    const origin = new URL(target);
+    targetUrl.protocol = origin.protocol;
+    targetUrl.host = origin.host;
+  }
   const forwarded = new Request(
-    request.url,
+    typeof target === "string" ? targetUrl : request.url,
     new Request(request, { headers }),
   ) as CloudflareRequest;
-  return target.fetch(forwarded);
+  return typeof target === "string" ? fetch(forwarded) : target.fetch(forwarded);
 };
 
 export default {
@@ -47,7 +53,7 @@ export default {
 
     if (url.pathname.startsWith("/api/auth/")) return env.AUTH.fetch(request);
     if (url.pathname.startsWith("/api/agents/")) {
-      return forwardAsUser(request, env, env.AGENT);
+      return forwardAsUser(request, env, env.AGENT_ORIGIN || env.AGENT);
     }
     if (url.pathname === "/api/sync") return forwardAsUser(request, env, env.LIVESTORE);
     if (url.pathname === "/api/data") return forwardAsUser(request, env, env.USER);

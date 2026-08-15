@@ -23,6 +23,8 @@ const deploymentConfig = {
     localDatabaseSeed: "../db/seeds/local.sql",
   },
   local: {
+    agentOrigin: "http://127.0.0.1:8788",
+    agentPort: 8788,
     gatewayPort: 8787,
     livestoreWorkerName: "flue-demo-livestore-local",
   },
@@ -59,10 +61,8 @@ export type AuthEnv = Cloudflare.InferEnv<ReturnType<typeof AuthWorker>>;
 
 export const LiveStoreWorker = (events: Cloudflare.Queues.Queue, name?: string) =>
   Cloudflare.Worker("livestore", {
-    // The local provider currently pre-creates cross-script DO consumers
-    // before resolving a nested workerName Output. A stable local name
-    // keeps the binding explicit; live stacks retain Alchemy's generated
-    // physical name and dependency Output.
+    // Keep one stable local physical name so cross-script DO identities and
+    // persisted data survive isolated local stages.
     name,
     main: deploymentConfig.paths.livestoreWorker,
     workersDev: false,
@@ -110,6 +110,7 @@ export const AgentWorker = (
       date: flueManifest.compatibilityDate,
       flags: flueManifest.compatibilityFlags,
     },
+    dev: { port: deploymentConfig.local.agentPort, strictPort: true },
     env: {
       AI: Cloudflare.Workers.AI(),
       ...Object.fromEntries(
@@ -127,6 +128,7 @@ export const AgentWorker = (
 export type AgentEnv = Cloudflare.InferEnv<ReturnType<typeof AgentWorker>>;
 
 type GatewayWorkerDependencies = {
+  agentOrigin: string;
   auth: Cloudflare.Worker;
   agent: Cloudflare.Worker;
   user: Cloudflare.Worker;
@@ -137,7 +139,14 @@ type GatewayWorkerDependencies = {
 // Gateway = the SPA's Vite build + the proxy worker in one deploy:
 // /api/* routes worker-first, everything else is served from the built
 // client assets with SPA fallback (src/web/user).
-export const GatewayWorker = ({ auth, agent, user, admin, livestore }: GatewayWorkerDependencies) =>
+export const GatewayWorker = ({
+  agentOrigin,
+  auth,
+  agent,
+  user,
+  admin,
+  livestore,
+}: GatewayWorkerDependencies) =>
   Cloudflare.Website.Vite("gateway", {
     rootDir: deploymentConfig.paths.gatewayRoot,
     main: deploymentConfig.paths.gatewayWorker,
@@ -148,6 +157,7 @@ export const GatewayWorker = ({ auth, agent, user, admin, livestore }: GatewayWo
       notFoundHandling: "single-page-application",
     },
     env: {
+      AGENT_ORIGIN: agentOrigin,
       AUTH: Cloudflare.WorkerEntrypoint(auth),
       AGENT: Cloudflare.WorkerEntrypoint(agent),
       USER: Cloudflare.WorkerEntrypoint(user),
@@ -205,9 +215,6 @@ export default Alchemy.Stack(
       events,
       isLocalDev ? deploymentConfig.local.livestoreWorkerName : undefined,
     );
-    const liveStoreWorkerName = isLocalDev
-      ? deploymentConfig.local.livestoreWorkerName
-      : livestore.workerName;
 
     // User plane: the small authenticated-viewer capnweb surface.
     const user = yield* UserWorker();
@@ -223,10 +230,17 @@ export default Alchemy.Stack(
 
     // Alchemy injects its Cloudflare Vite runtime, builds Flue's virtual
     // Worker entry for deploys, and serves the same module graph with HMR.
-    const agent = yield* AgentWorker(liveStoreWorkerName, flueManifest);
+    // Preserve the resource Output even when the local physical name is
+    // stable. Alchemy uses this dependency to register LiveStore before
+    // starting workers that consume its cross-script Durable Objects.
+    const agent = yield* AgentWorker(livestore.workerName, flueManifest);
 
     // The only public worker: a prefix-routing proxy with JWT validation.
     const gateway = yield* GatewayWorker({
+      // Alchemy's beta local registry can retain a stale service target while
+      // the larger agent bundle starts or hot-reloads. A fixed loopback origin
+      // keeps local routing deterministic; deployed stacks use the binding.
+      agentOrigin: isLocalDev ? deploymentConfig.local.agentOrigin : "",
       auth,
       agent,
       user,
