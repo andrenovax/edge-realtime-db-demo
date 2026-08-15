@@ -1,4 +1,4 @@
-import { Button, Spinner } from "@heroui/react";
+import { Spinner } from "@heroui/react";
 import { StoreRegistry } from "@livestore/livestore";
 import { StoreRegistryProvider } from "@livestore/react";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +18,12 @@ const Center = ({ children }: { children: ReactNode }) => (
 export function AppShell({
   children,
 }: {
-  children: (auth: { userId: string; token: string }) => ReactNode;
+  children: (auth: {
+    userId: string;
+    token: string;
+    email: string;
+    signOut: () => Promise<void>;
+  }) => ReactNode;
 }) {
   const session = authClient.useSession();
   const jwt = useQuery({
@@ -44,28 +49,24 @@ export function AppShell({
 
   return (
     <StoreRegistryProvider storeRegistry={storeRegistry}>
-      <div className="flex h-dvh flex-col gap-3 p-4">
-        <header className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Everywhere Notes</h1>
-          <div className="flex items-center gap-2 text-sm opacity-70">
-            {session.data.user.email}
-            <Button size="sm" variant="ghost" onPress={() => void authClient.signOut()}>
-              Sign out
-            </Button>
-          </div>
-        </header>
-        <main className="min-h-0 flex-1">
-          <Suspense
-            fallback={
-              <Center>
-                <Spinner />
-              </Center>
-            }
-          >
-            {children({ userId: jwt.data.userId, token: jwt.data.token })}
-          </Suspense>
-        </main>
-      </div>
+      <main className="h-dvh min-h-0 overflow-hidden bg-white text-[#0d0d0d]">
+        <Suspense
+          fallback={
+            <Center>
+              <Spinner />
+            </Center>
+          }
+        >
+          {children({
+            userId: jwt.data.userId,
+            token: jwt.data.token,
+            email: session.data.user.email,
+            signOut: async () => {
+              await authClient.signOut();
+            },
+          })}
+        </Suspense>
+      </main>
     </StoreRegistryProvider>
   );
 }

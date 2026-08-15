@@ -8,9 +8,12 @@ import type { LiveStoreEnv } from "@infra/env";
 import type {
   AddNotePayload,
   CreateConversationPayload,
+  EnsureNotePayload,
   GetAgentConversationPayload,
+  GetNotePayload,
   ListNotesPayload,
   UpdateNotePayload,
+  WriteNotePayload,
 } from "./user.schema.ts";
 import type { UserCreatedV1 } from "../auth/auth.events.ts";
 
@@ -107,6 +110,34 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
 
     const updatedAt = Date.now();
     store.commit(events.noteUpdated({ id, text, updatedAt }));
+    return { id, text, updatedAt };
+  }
+
+  async ensureNote({ id, text }: EnsureNotePayload) {
+    const store = await this.#getStore();
+    const existing = store.query(tables.notes.select()).find((note) => note.id === id);
+    if (existing) return existing;
+
+    const updatedAt = Date.now();
+    store.commit(events.noteCreated({ id, text, updatedAt }));
+    return { id, title: "", text, status: "active" as const, updatedAt };
+  }
+
+  async getNote({ id }: GetNotePayload) {
+    const store = await this.#getStore();
+    return store.query(tables.notes.select()).find((note) => note.id === id);
+  }
+
+  async writeNote({ id, text }: WriteNotePayload) {
+    const store = await this.#getStore();
+    const existing = store.query(tables.notes.select()).find((note) => note.id === id);
+    const updatedAt = Date.now();
+
+    store.commit(
+      existing
+        ? events.noteUpdated({ id, text, updatedAt })
+        : events.noteCreated({ id, text, updatedAt }),
+    );
     return { id, text, updatedAt };
   }
 

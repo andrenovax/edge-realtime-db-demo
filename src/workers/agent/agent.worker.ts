@@ -34,7 +34,11 @@ function conversationTitle(body: DeliveredMessage) {
 function withServerContext(
   request: Request,
   body: PromptBody,
-  serverContext: { userId: string; modelVariant: AgentConversation["modelVariant"] },
+  serverContext: {
+    userId: string;
+    noteId: string;
+    modelVariant: AgentConversation["modelVariant"];
+  },
   createOnly: boolean,
 ) {
   const headers = new Headers(request.headers);
@@ -97,6 +101,7 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
         requestBody,
         {
           userId,
+          noteId: conversationId,
           modelVariant,
         },
         createOnly,
@@ -115,13 +120,15 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
         title: conversationTitle(requestBody),
       } satisfies CreateConversationPayload;
       try {
-        await c.env.USER_DO.getByName(userId).createConversation(payload);
+        const user = c.env.USER_DO.getByName(userId);
+        await user.ensureNote({ id: conversationId, text: "" });
+        await user.createConversation(payload);
       } catch (error) {
         // The fixed idempotency key makes an exact client retry converge on
         // the already-admitted first message before retrying this catalog write.
         console.error(
           JSON.stringify({
-            message: "conversation catalog creation failed",
+            message: "note or conversation catalog creation failed",
             conversationId,
             error: error instanceof Error ? error.message : String(error),
           }),

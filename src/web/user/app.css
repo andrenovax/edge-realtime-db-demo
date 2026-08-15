@@ -1,2 +1,16 @@
 @import "tailwindcss";
 @import "@heroui/react/styles";
+@import "@blocknote/core/fonts/inter.css";
+@import "@blocknote/ariakit/style.css";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #ffffff;
+}

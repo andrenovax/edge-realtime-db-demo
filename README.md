@@ -39,8 +39,12 @@ D1 migrations and `db/seeds/local.sql` are applied automatically; the local
 database persists between runs and is separate from deployed D1 data.
 
 Notes, items, and the per-user conversation catalog are LiveStore tables backed
-by each user's event log. Accepted events flow through one projection queue into
-the admin D1 read model. After changing a D1 projection or auth schema, run
+by each user's event log. In the web app, one note ID is also one Flue
+conversation ID: the left rail selects the note, assistant-ui renders its chat
+in the center, and BlockNote edits its Markdown on the right. BlockNote's slash
+menu includes tables, while the agent can create the same structures with GFM
+Markdown. Accepted events flow through one projection queue into the admin D1
+read model. After changing a D1 projection or auth schema, run
 `nub run db:generate`; Alchemy applies the generated D1 migrations.
 
 The local seed creates two real Better Auth credential users:
@@ -71,18 +75,18 @@ nub scripts/rpc-smoke.ts
 
 The gateway exposes the Flue agent at
 `/api/agents/hello/:conversationId`. Every request requires a Better Auth
-bearer token. The web app generates an opaque ID locally, but no conversation
-exists yet: clicking **New** only opens a draft. The first message is sent with
-Flue's create-only condition; after Flue durably admits it, the agent worker
-adds the active conversation to the user's LiveStore catalog with a title
-derived from that message. Failed or abandoned drafts therefore leave no empty
-conversations.
+bearer token. Clicking **New** creates a local-first note with an opaque ID; its
+conversation does not exist until the first message. That message is sent with
+Flue's create-only condition. After Flue durably admits it, the agent worker
+adds the active conversation to the user's LiveStore catalog with the same ID
+and a title derived from the message. Notes can therefore exist without chat,
+but a chat selected in the app always belongs to exactly one note.
 
-The official `@flue/react` client sends later messages and reads the streamed
-conversation state. A single user can own many IDs for the same agent while
-each ID retains an independent Flue transcript. The catalog fixes ownership
-and the model variant when the first message is admitted; callers cannot
-switch either with later prompt data.
+The official `@flue/react` client streams the external conversation state into
+assistant-ui. A single user can own many notes for the same agent while each
+note retains an independent Flue transcript. The catalog fixes ownership and
+the model variant when the first message is admitted; callers cannot switch
+either with later prompt data.
 
 Send a message with Flue's asynchronous conversation protocol:
 
@@ -90,16 +94,17 @@ Send a message with Flue's asynchronous conversation protocol:
 curl -i http://localhost:8787/api/agents/hello/CONVERSATION_ID \
   -H 'Authorization: Bearer JWT' \
   -H 'Content-Type: application/json' \
-  --data '{"kind":"user","body":"List my notes, then add one called Pack for Tokyo.","uid":null,"idempotencyKey":"first-message"}'
+  --data '{"kind":"user","body":"Draft a trip checklist as a table.","uid":null,"idempotencyKey":"first-message"}'
 ```
 
 The `POST` returns `202` after durable admission. Read the streamed conversation
 state from the same authenticated URL with `GET`. For an ID already in the
 catalog, omit `uid` and `idempotencyKey` on later messages. The agent can call
-`list_notes`, `create_note`, and `update_note`; each tool reaches only the
-caller’s per-user `UserDO` through its cross-worker binding. Before Flue admits
-the prompt, the agent worker injects the gateway-stamped owner and the
-conversation's catalogued model as server-owned creation data.
+`read_note` and `write_note`; both are bound to the conversation's matching note
+ID and reach only the caller's per-user `UserDO` through its cross-worker
+binding. Before Flue admits the prompt, the agent worker injects the
+gateway-stamped owner, matching note ID, and catalogued model as server-owned
+creation data.
 
 ## Deploy
 

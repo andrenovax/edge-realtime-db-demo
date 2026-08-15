@@ -1,0 +1,64 @@
+.workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 48rem) {
+  .workspace {
+    grid-template-columns:
+      var(--notes-nav-width) var(--notes-nav-resizer-width)
+      minmax(0, 1fr);
+  }
+
+  .nav {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .navResizer {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .chat {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 80rem) {
+  .workspace {
+    grid-template-columns:
+      var(--notes-nav-width) var(--notes-nav-resizer-width) minmax(420px, 1fr)
+      var(--notes-editor-resizer-width) var(--notes-editor-width);
+  }
+
+  .editorResizer {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .editor {
+    grid-column: 5;
+    grid-row: 1;
+  }
+
+  .workspace.panelsReversed {
+    grid-template-columns:
+      var(--notes-nav-width) var(--notes-nav-resizer-width) var(--notes-editor-width)
+      var(--notes-editor-resizer-width) minmax(420px, 1fr);
+  }
+
+  .panelsReversed .chat {
+    grid-column: 5;
+  }
+
+  .panelsReversed .editor {
+    grid-column: 3;
+  }
+
+  .workspace.panelsReversed.rightCollapsed {
+    grid-template-columns:
+      var(--notes-nav-width) var(--notes-nav-resizer-width) minmax(420px, 1fr)
+      0 3rem;
+  }
+}

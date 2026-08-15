@@ -6,9 +6,14 @@ import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlit
 // retaining different table names, keys, and projection metadata.
 export const noteColumns = () => ({
   id: text().notNull(),
+  title: text().default("").notNull(),
   text: text().default("").notNull(),
+  status: text().$type<NoteStatus>().default("active").notNull(),
   updatedAt: integer().default(0).notNull(),
 });
+
+export const noteStatuses = ["active", "archived", "deleted"] as const;
+export type NoteStatus = (typeof noteStatuses)[number];
 
 export const itemColumns = () => ({
   id: text().notNull(),
@@ -52,11 +57,16 @@ export const agentConversations = sqliteTable(
 export const eventNames = {
   noteCreated: "v1.NoteCreated",
   noteUpdated: "v1.NoteUpdated",
+  noteRenamed: "v1.NoteRenamed",
+  noteStatusChanged: "v1.NoteStatusChanged",
   itemAdded: "v1.ItemAdded",
   agentConversationCreated: "v1.AgentConversationCreated",
   agentConversationUpdated: "v1.AgentConversationUpdated",
 } as const;
 
 export type NoteEventArgs = InferSelectModel<typeof notes>;
+export type NoteContentEventArgs = Pick<NoteEventArgs, "id" | "text" | "updatedAt">;
+export type NoteRenamedEventArgs = Pick<NoteEventArgs, "id" | "title" | "updatedAt">;
+export type NoteStatusChangedEventArgs = Pick<NoteEventArgs, "id" | "status" | "updatedAt">;
 export type ItemEventArgs = InferSelectModel<typeof items>;
 export type AgentConversation = InferSelectModel<typeof agentConversations>;

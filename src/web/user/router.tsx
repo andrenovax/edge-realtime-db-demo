@@ -7,7 +7,6 @@ import { NotesPage } from "./features/notes/notes-page.tsx";
 // LiveStore already ships to the client. No extra validator dependency.
 const NotesSearch = Schema.Struct({
   note: Schema.optional(Schema.String),
-  chat: Schema.optional(Schema.String),
 });
 
 const rootRoute = createRootRoute({
@@ -19,7 +18,11 @@ const notesRoute = createRoute({
   path: "/",
   validateSearch: Schema.standardSchemaV1(NotesSearch),
   component: () => (
-    <AppShell>{({ userId, token }) => <NotesPage userId={userId} token={token} />}</AppShell>
+    <AppShell>
+      {({ userId, token, email, signOut }) => (
+        <NotesPage userId={userId} token={token} email={email} onSignOut={signOut} />
+      )}
+    </AppShell>
   ),
 });
 

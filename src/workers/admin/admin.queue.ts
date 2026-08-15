@@ -6,7 +6,9 @@ import {
   eventNames,
   type AgentConversation,
   type ItemEventArgs,
-  type NoteEventArgs,
+  type NoteContentEventArgs,
+  type NoteRenamedEventArgs,
+  type NoteStatusChangedEventArgs,
 } from "@db/schema/user";
 import type { AdminEnv } from "@infra/env";
 import type { ProjectionMessage } from "./admin.contract.ts";
@@ -49,7 +51,7 @@ export async function queue(batch: MessageBatch<ProjectionMessage>, env: AdminEn
     )
     .toSorted((a, b) => a.seqNum - b.seqNum)
     .map((event) => {
-      const args = event.args as NoteEventArgs;
+      const args = event.args as NoteContentEventArgs;
       return {
         storeId: event.storeId,
         id: args.id,
@@ -66,6 +68,52 @@ export async function queue(batch: MessageBatch<ProjectionMessage>, env: AdminEn
         target: [adminNotes.storeId, adminNotes.id],
         set: {
           text: sql`excluded.text`,
+          updatedAt: sql`excluded.updated_at`,
+          seqNum: sql`excluded.seq_num`,
+        },
+        setWhere: sql`excluded.seq_num > ${adminNotes.seqNum}`,
+      });
+  }
+
+  const renamedNoteRows = events
+    .filter((event) => event.name === eventNames.noteRenamed)
+    .toSorted((a, b) => a.seqNum - b.seqNum)
+    .map((event) => ({
+      storeId: event.storeId,
+      ...(event.args as NoteRenamedEventArgs),
+      seqNum: event.seqNum,
+    }));
+  for (const row of renamedNoteRows) {
+    await db
+      .insert(adminNotes)
+      .values(row)
+      .onConflictDoUpdate({
+        target: [adminNotes.storeId, adminNotes.id],
+        set: {
+          title: sql`excluded.title`,
+          updatedAt: sql`excluded.updated_at`,
+          seqNum: sql`excluded.seq_num`,
+        },
+        setWhere: sql`excluded.seq_num > ${adminNotes.seqNum}`,
+      });
+  }
+
+  const statusNoteRows = events
+    .filter((event) => event.name === eventNames.noteStatusChanged)
+    .toSorted((a, b) => a.seqNum - b.seqNum)
+    .map((event) => ({
+      storeId: event.storeId,
+      ...(event.args as NoteStatusChangedEventArgs),
+      seqNum: event.seqNum,
+    }));
+  for (const row of statusNoteRows) {
+    await db
+      .insert(adminNotes)
+      .values(row)
+      .onConflictDoUpdate({
+        target: [adminNotes.storeId, adminNotes.id],
+        set: {
+          status: sql`excluded.status`,
           updatedAt: sql`excluded.updated_at`,
           seqNum: sql`excluded.seq_num`,
         },
