@@ -1,21 +1,9 @@
 name: Set up project
-description: Restore Nub's cache and provision the project's pinned Node.js toolchain.
+description: Provision the project's pinned Nub and Node.js toolchain.
 
 runs:
   using: composite
   steps:
-    - name: Restore Nub cache
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.local/share/nub/store
-          ~/.cache/nub/node
-          ~/.cache/nub/pm
-        key: nub-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version') }}-${{ hashFiles('**/nub.lock') }}
-        restore-keys: |
-          nub-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version') }}-
-          nub-${{ runner.os }}-${{ runner.arch }}-
-
     - name: Set up Nub and Node.js
       uses: nubjs/setup-nub@v0
       with:
