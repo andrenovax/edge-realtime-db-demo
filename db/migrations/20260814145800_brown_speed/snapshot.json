@@ -1,15 +1,17 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "0bba26f9-82bc-47a2-9da8-3cc1eea00db5",
-  "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "id": "469eb370-7469-4415-bce7-84033161d1d2",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
   "ddl": [
     {
-      "name": "jwks",
+      "name": "account",
       "entityType": "tables"
     },
     {
-      "name": "account",
+      "name": "jwks",
       "entityType": "tables"
     },
     {
@@ -22,6 +24,10 @@
     },
     {
       "name": "verification",
+      "entityType": "tables"
+    },
+    {
+      "name": "admin_agent_conversations",
       "entityType": "tables"
     },
     {
@@ -44,56 +50,6 @@
       "generated": null,
       "name": "id",
       "entityType": "columns",
-      "table": "jwks"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "public_key",
-      "entityType": "columns",
-      "table": "jwks"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "private_key",
-      "entityType": "columns",
-      "table": "jwks"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "jwks"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "jwks"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
       "table": "account"
     },
     {
@@ -103,6 +59,16 @@
       "default": null,
       "generated": null,
       "name": "account_id",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "issuer",
       "entityType": "columns",
       "table": "account"
     },
@@ -215,6 +181,76 @@
       "name": "updated_at",
       "entityType": "columns",
       "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "jwks"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "public_key",
+      "entityType": "columns",
+      "table": "jwks"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "private_key",
+      "entityType": "columns",
+      "table": "jwks"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "jwks"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "jwks"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "alg",
+      "entityType": "columns",
+      "table": "jwks"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "crv",
+      "entityType": "columns",
+      "table": "jwks"
     },
     {
       "type": "text",
@@ -484,6 +520,96 @@
       "generated": null,
       "name": "store_id",
       "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "agent_name",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model_variant",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "title",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "seq_num",
+      "entityType": "columns",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "store_id",
+      "entityType": "columns",
       "table": "admin_items"
     },
     {
@@ -637,9 +763,13 @@
       "table": "user_events"
     },
     {
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "tableTo": "user",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -648,9 +778,13 @@
       "table": "account"
     },
     {
-      "columns": ["user_id"],
+      "columns": [
+        "user_id"
+      ],
       "tableTo": "user",
-      "columnsTo": ["id"],
+      "columnsTo": [
+        "id"
+      ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -659,56 +793,84 @@
       "table": "session"
     },
     {
-      "columns": ["store_id", "id"],
+      "columns": [
+        "store_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "admin_agent_conversations_pk",
+      "entityType": "pks",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "columns": [
+        "store_id",
+        "id"
+      ],
       "nameExplicit": false,
       "name": "admin_items_pk",
       "entityType": "pks",
       "table": "admin_items"
     },
     {
-      "columns": ["store_id", "id"],
+      "columns": [
+        "store_id",
+        "id"
+      ],
       "nameExplicit": false,
       "name": "admin_notes_pk",
       "entityType": "pks",
       "table": "admin_notes"
     },
     {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "jwks_pk",
-      "table": "jwks",
-      "entityType": "pks"
-    },
-    {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "account_pk",
       "table": "account",
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "jwks_pk",
+      "table": "jwks",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "session_pk",
       "table": "session",
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "user_pk",
       "table": "user",
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "verification_pk",
       "table": "verification",
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
+      "columns": [
+        "id"
+      ],
       "nameExplicit": false,
       "name": "user_events_pk",
       "table": "user_events",
@@ -725,6 +887,24 @@
       "where": null,
       "origin": "manual",
       "name": "account_userId_idx",
+      "entityType": "indexes",
+      "table": "account"
+    },
+    {
+      "columns": [
+        {
+          "value": "issuer",
+          "isExpression": false
+        },
+        {
+          "value": "account_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "account_issuer_accountId_uidx",
       "entityType": "indexes",
       "table": "account"
     },
@@ -759,6 +939,20 @@
     {
       "columns": [
         {
+          "value": "updated_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "admin_agent_conversations_updated_at_idx",
+      "entityType": "indexes",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "columns": [
+        {
           "value": "store_id",
           "isExpression": false
         }
@@ -771,14 +965,18 @@
       "table": "user_events"
     },
     {
-      "columns": ["token"],
+      "columns": [
+        "token"
+      ],
       "nameExplicit": false,
       "name": "session_token_unique",
       "entityType": "uniques",
       "table": "session"
     },
     {
-      "columns": ["email"],
+      "columns": [
+        "email"
+      ],
       "nameExplicit": false,
       "name": "user_email_unique",
       "entityType": "uniques",
