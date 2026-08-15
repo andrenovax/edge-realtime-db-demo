@@ -2,16 +2,6 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.workspace.offline.panelsReversed .chat {
-  display: none;
-}
-
-.workspace.offline.panelsReversed .editor {
-  display: block;
-  grid-column: 1;
-  grid-row: 1;
-}
-
 @media (min-width: 48rem) {
   .workspace {
     grid-template-columns:
@@ -35,7 +25,13 @@
   }
 
   .workspace.offline.panelsReversed .editor {
+    display: block;
     grid-column: 3;
+    grid-row: 1;
+  }
+
+  .workspace.offline.panelsReversed .chat {
+    display: none;
   }
 }
 

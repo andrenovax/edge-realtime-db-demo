@@ -1,3 +1,8 @@
+.root :global(.bn-container),
+.root :global(.bn-editor) {
+  background: transparent;
+}
+
 .root :global(.bn-container) :global(.bn-editor) {
   min-height: 100%;
   padding: 2.5rem 2.75rem 8rem 3.25rem;
@@ -15,4 +20,10 @@
 .root :global(.bn-side-menu) :global(.bn-ak-button) svg {
   height: 0.875rem;
   width: 0.875rem;
+}
+
+@media (max-width: 47.99rem) {
+  .root :global(.bn-container) :global(.bn-editor) {
+    padding: 1.5rem 1rem 6rem 1.5rem;
+  }
 }

@@ -108,7 +108,7 @@ const convertMessage = (message: FlueConversationMessage): ThreadMessageLike => 
 function UserMessage() {
   return (
     <MessagePrimitive.Root className="group/message relative mx-auto flex w-full max-w-3xl flex-col items-end">
-      <div className="max-w-[70%] rounded-[22px] bg-[#0d0d0d] px-4 py-2.5 leading-6 text-white">
+      <div className="max-w-[70%] rounded-[22px] bg-foreground px-4 py-2.5 leading-6 text-background shadow-lg">
         <MessagePrimitive.Parts components={{ Text: () => <MessagePartPrimitive.Text /> }} />
       </div>
       <ActionBarPrimitive.Root
@@ -176,7 +176,7 @@ export function OfflineIllustration() {
     <div
       role="img"
       aria-label="Offline"
-      className="relative mx-auto flex size-24 items-center justify-center rounded-[2rem] bg-[#f4f4f4] text-[#5d5d5d]"
+      className="relative mx-auto flex size-24 items-center justify-center rounded-[2rem] border border-border bg-surface text-muted shadow-lg backdrop-blur-xl"
     >
       <Cloud className="size-12 stroke-[1.35]" />
       <span className="absolute bottom-4 right-3 flex size-9 items-center justify-center rounded-full border-4 border-[#f4f4f4] bg-white text-red-500">
@@ -191,11 +191,7 @@ function ChatComposer({ error, isOffline }: { error?: string; isOffline: boolean
     <div className="w-full">
       {error && <p className="mb-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>}
       <ComposerPrimitive.Root
-        className={`group/composer flex w-full flex-col rounded-[28px] border px-2 py-2 shadow-[0_2px_6px_-2px_rgba(0,0,0,0.05)] ${
-          isOffline
-            ? "border-[#e7e7e7] bg-[#f7f7f7]"
-            : "border-[#e5e5e5] bg-white focus-within:border-[#d0d0d0]"
-        }`}
+        className={`group/composer flex w-full flex-col rounded-[28px] border border-border bg-surface px-2 py-2 shadow-lg backdrop-blur-xl focus-within:ring-2 focus-within:ring-accent/20 ${isOffline ? "opacity-75" : ""}`}
       >
         <div className="flex items-end gap-1">
           <button
@@ -390,7 +386,7 @@ export function AgentPanel({ token, noteId, conversationExists, isOffline }: Age
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <ThreadPrimitive.Root className="flex h-full min-h-0 flex-col items-stretch bg-white px-4 text-[#0d0d0d]">
+      <ThreadPrimitive.Root className="flex h-full min-h-0 flex-col items-stretch bg-transparent px-3 pb-16 text-foreground sm:px-4 md:pb-0">
         <AuiIf
           condition={(state) => state.thread.isEmpty && (!state.thread.isLoading || isOffline)}
         >
@@ -423,10 +419,10 @@ export function AgentPanel({ token, noteId, conversationExists, isOffline }: Age
         </AuiIf>
 
         <AuiIf condition={(state) => !state.thread.isEmpty}>
-          <ThreadPrimitive.Viewport className="flex grow flex-col gap-8 overflow-y-auto pt-16">
+          <ThreadPrimitive.Viewport className="flex grow flex-col gap-8 overflow-y-auto pt-6 md:pt-16">
             <ThreadPrimitive.Messages components={{ UserMessage, AssistantMessage }} />
             {isWorking && <WorkingIndicator />}
-            <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mx-auto mt-auto flex w-full max-w-3xl flex-col gap-2 overflow-visible rounded-t-3xl bg-white pb-2 pt-3">
+            <ThreadPrimitive.ViewportFooter className="sticky bottom-0 mx-auto mt-auto flex w-full max-w-3xl flex-col gap-2 overflow-visible pb-2 pt-3">
               <ChatComposer error={error} isOffline={isOffline} />
               <p className="text-center text-xs text-[#5d5d5d]">
                 AI can make mistakes. Check important info.

@@ -7,8 +7,10 @@ import {
   Check,
   Circle,
   Ellipsis,
+  FileText,
   LogOut,
   LoaderCircle,
+  MessageCircle,
   PanelLeft,
   PanelRightClose,
   PanelRightOpen,
@@ -156,7 +158,7 @@ function PanelResizeHandle({ label, value, className, onResize }: PanelResizeHan
         onResize(event.key === "ArrowRight" ? 16 : -16);
       }}
     >
-      <span className="w-px bg-[#e5e5e5] transition-colors group-focus/resize:bg-[#a3a3a3] group-hover/resize:bg-[#a3a3a3]" />
+      <span className="w-px bg-transparent transition-colors group-focus/resize:bg-accent/30 group-hover/resize:bg-accent/30" />
     </div>
   );
 }
@@ -179,6 +181,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
   const [lastSyncedAt, setLastSyncedAt] = useState(() => Date.now());
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobilePanel, setMobilePanel] = useState<"nav" | "chat" | "note">("chat");
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [panelsReversed, setPanelsReversed] = useState(false);
   const [actionNoteId, setActionNoteId] = useState<string>();
@@ -305,6 +308,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       setPanelsReversed(true);
       setRightPanelOpen(true);
     }
+    setMobilePanel("note");
     selectNote(id);
   };
 
@@ -365,30 +369,30 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
 
   return (
     <div
-      className={`${styles.workspace} relative grid h-full min-h-0 overflow-hidden ${
+      className={`${styles.workspace} relative grid h-full min-h-0 overflow-hidden p-0 md:p-3 ${
         panelsReversed ? styles.panelsReversed : ""
       } ${rightPanelOpen ? "" : styles.rightCollapsed} ${isOffline ? styles.offline : ""}`}
       style={
         {
           "--notes-nav-width": sidebarOpen ? `${navWidth}px` : "3rem",
-          "--notes-nav-resizer-width": sidebarOpen ? "0.5rem" : "0px",
-          "--notes-editor-resizer-width": rightPanelOpen ? "0.5rem" : "0px",
+          "--notes-nav-resizer-width": "0.25rem",
+          "--notes-editor-resizer-width": "0.25rem",
           "--notes-editor-width": rightPanelOpen ? `${editorWidth}px` : "3rem",
         } as React.CSSProperties
       }
     >
       <div
-        className={`absolute right-2 top-2 z-50 flex items-center gap-1 ${
-          rightPanelOpen ? "flex-row" : "flex-col-reverse"
+        className={`absolute top-6 z-50 hidden items-center gap-1 md:flex ${
+          rightPanelOpen ? "right-6 flex-row" : "right-5 flex-col-reverse"
         }`}
       >
-        {!isOffline && (
+        {!isOffline && rightPanelOpen && (
           <button
             type="button"
             aria-label="Swap chat and note panels"
             title="Swap chat and note panels"
             onClick={() => setPanelsReversed((reversed) => !reversed)}
-            className="flex size-8 items-center justify-center rounded-lg bg-transparent text-[#5d5d5d] hover:bg-black/[0.06]"
+            className="flex size-8 items-center justify-center rounded-lg text-muted hover:bg-default"
           >
             <ArrowLeftRight className="size-4" />
           </button>
@@ -398,7 +402,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
           aria-label={rightPanelOpen ? "Collapse right panel" : "Expand right panel"}
           title={rightPanelOpen ? "Collapse right panel" : "Expand right panel"}
           onClick={() => setRightPanelOpen((open) => !open)}
-          className="flex size-8 items-center justify-center rounded-lg bg-transparent text-[#5d5d5d] hover:bg-black/[0.06]"
+          className="flex size-8 items-center justify-center rounded-lg text-muted hover:bg-default"
         >
           {rightPanelOpen ? (
             <PanelRightClose className="size-4" />
@@ -409,15 +413,18 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       </div>
 
       <aside
-        className={`${styles.nav} hidden min-h-0 overflow-hidden bg-[#f9f9f9] md:flex md:flex-col ${sidebarOpen ? "" : "border-r border-[#e5e5e5]"}`}
+        id="mobile-panel-nav"
+        className={`${styles.nav} min-h-0 flex-col overflow-hidden rounded-none bg-surface pb-16 backdrop-blur-2xl md:rounded-l-xl md:rounded-r-md md:pb-0 ${mobilePanel === "nav" ? "flex" : "hidden"} md:flex`}
       >
-        <div className="flex h-12 shrink-0 items-center px-2">
+        <div
+          className={`flex h-14 shrink-0 items-center ${sidebarOpen ? "border-b border-separator px-3" : "px-2"}`}
+        >
           <button
             type="button"
             aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
             title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
             onClick={() => setSidebarOpen((open) => !open)}
-            className="flex size-8 items-center justify-center rounded-lg hover:bg-black/[0.06]"
+            className="hidden size-8 items-center justify-center rounded-lg text-muted hover:bg-default md:flex"
           >
             <PanelLeft className="size-4 stroke-[1.8]" />
           </button>
@@ -438,7 +445,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
             onClick={startNewNote}
             aria-label="New note"
             title={sidebarOpen ? undefined : "New note"}
-            className={`flex h-8 items-center overflow-hidden rounded-lg bg-transparent text-left text-sm font-medium hover:bg-black/[0.04] ${
+            className={`flex h-9 items-center overflow-hidden rounded-xl bg-default/70 text-left text-sm font-medium hover:bg-default ${
               sidebarOpen ? "w-full gap-3 px-3" : "w-8 gap-0 px-2"
             }`}
           >
@@ -448,7 +455,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
 
           {sidebarOpen && (
             <>
-              <label className="mt-2 flex h-8 items-center gap-2 rounded-lg border border-[#dedede] bg-white px-3 text-[#5d5d5d] focus-within:border-[#c5c5c5]">
+              <label className="mt-2 flex h-9 items-center gap-2 rounded-xl border border-border bg-field px-3 text-muted focus-within:ring-2 focus-within:ring-accent/20">
                 <Search className="size-4 shrink-0 stroke-[1.8]" />
                 <input
                   aria-label="Search notes"
@@ -472,8 +479,8 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
                   return (
                     <div
                       key={note.id}
-                      className={`group/note relative flex h-8 items-center rounded-lg text-sm ${
-                        selectedNote ? "bg-[#e7e7e7] font-medium" : "hover:bg-[#ededed]"
+                      className={`group/note relative flex h-9 items-center rounded-xl text-sm hover:bg-default/60 ${
+                        selectedNote ? "bg-accent/10 font-medium text-accent" : ""
                       }`}
                     >
                       {renamingNoteId === note.id ? (
@@ -531,7 +538,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
                         <div
                           ref={actionsRef}
                           role="menu"
-                          className="absolute right-0 top-[calc(100%+0.25rem)] z-40 w-40 rounded-xl border border-[#dedede] bg-white p-1.5 font-normal shadow-[0_12px_32px_rgba(0,0,0,0.14)]"
+                          className="absolute right-0 top-[calc(100%+0.25rem)] z-40 w-40 rounded-xl border border-border bg-overlay p-1.5 font-normal shadow-xl backdrop-blur-xl"
                         >
                           <button
                             type="button"
@@ -573,9 +580,9 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
         </div>
 
         {sidebarOpen && (
-          <div className="border-t border-[#e5e5e5] p-3">
+          <div className="border-t border-separator p-3">
             <div className="flex items-center gap-2 rounded-xl px-2 py-2">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#0d0d0d] text-xs font-semibold text-white">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground shadow-md">
                 {email.slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -632,14 +639,13 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       <PanelResizeHandle
         label="Resize notes sidebar"
         value={navWidth}
-        className={`${styles.navResizer} ${sidebarOpen ? "hidden md:flex" : "hidden"}`}
+        className={`${styles.navResizer} w-2 justify-self-center ${sidebarOpen ? "hidden md:flex" : "hidden"}`}
         onResize={resizeNav}
       />
 
       <section
-        className={`${styles.chat} relative min-h-0 min-w-0 overflow-hidden ${
-          chatPanelCollapsed ? "border-l border-[#e5e5e5] bg-[#f9f9f9]" : "bg-white"
-        }`}
+        id="mobile-panel-chat"
+        className={`${styles.chat} relative min-h-0 min-w-0 overflow-hidden rounded-none bg-surface backdrop-blur-2xl md:rounded-l-md md:rounded-r-xl ${mobilePanel === "chat" ? "block" : "hidden"} md:block ${panelsReversed ? "xl:rounded-l-md xl:rounded-r-xl" : "xl:rounded-md"}`}
       >
         <div
           className={`h-full min-h-0 ${chatPanelCollapsed ? "invisible pointer-events-none" : ""}`}
@@ -691,7 +697,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
               <button
                 type="button"
                 onClick={startNewNote}
-                className="flex h-14 w-full max-w-3xl items-center gap-3 rounded-[28px] border border-[#e5e5e5] px-4 text-left text-[#8e8e8e] shadow-[0_2px_6px_-2px_rgba(0,0,0,0.05)]"
+                className="flex h-14 w-full max-w-3xl items-center gap-3 rounded-[28px] border border-border bg-surface px-4 text-left text-muted shadow-lg backdrop-blur-xl"
               >
                 <Plus className="size-5" />
                 Create a note to start
@@ -704,14 +710,13 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       <PanelResizeHandle
         label="Resize note editor"
         value={editorWidth}
-        className={`${styles.editorResizer} ${rightPanelOpen ? "hidden xl:flex" : "hidden"}`}
+        className={`${styles.editorResizer} w-2 justify-self-center ${rightPanelOpen ? "hidden xl:flex" : "hidden"}`}
         onResize={(delta) => resizeEditor(panelsReversed ? -delta : delta)}
       />
 
       <section
-        className={`${styles.editor} relative hidden min-h-0 min-w-0 overflow-hidden xl:block ${
-          notePanelCollapsed ? "border-l border-[#e5e5e5] bg-[#f9f9f9]" : "bg-white"
-        }`}
+        id="mobile-panel-note"
+        className={`${styles.editor} relative min-h-0 min-w-0 overflow-hidden rounded-none bg-surface backdrop-blur-2xl md:rounded-l-md md:rounded-r-xl ${mobilePanel === "note" ? "block" : "hidden"} md:hidden xl:block ${panelsReversed ? "xl:rounded-md" : "xl:rounded-l-md xl:rounded-r-xl"}`}
       >
         <div
           className={`h-full min-h-0 ${notePanelCollapsed ? "invisible pointer-events-none" : ""}`}
@@ -750,6 +755,42 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
           </Suspense>
         </div>
       </section>
+
+      <nav
+        aria-label="Mobile panels"
+        role="tablist"
+        className="absolute bottom-3 left-1/2 z-50 flex -translate-x-1/2 items-center gap-0.5 rounded-2xl border border-border bg-overlay/90 p-1 shadow-xl backdrop-blur-2xl md:hidden"
+      >
+        {(
+          [
+            { id: "nav", label: "Notes", icon: PanelLeft },
+            { id: "chat", label: "Chat", icon: MessageCircle },
+            { id: "note", label: "Note", icon: FileText },
+          ] as const
+        ).map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-controls={`mobile-panel-${id}`}
+            aria-selected={mobilePanel === id}
+            aria-label={label}
+            title={label}
+            onClick={() => {
+              if (id === "nav") setSidebarOpen(true);
+              setMobilePanel(id);
+            }}
+            className={`flex size-10 items-center justify-center rounded-xl transition-colors ${
+              mobilePanel === id
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "text-muted hover:bg-default"
+            }`}
+          >
+            <Icon className="size-[1.125rem]" />
+            <span className="sr-only">{label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
