@@ -11,13 +11,25 @@ Install [Nub](https://nubjs.com/docs) first, then:
 ```sh
 nub install
 nub install --cwd infra
-cp .env.example .env
 ```
 
-Set `BETTER_AUTH_SECRET` in `.env` to a long random secret, then add a model
-provider API key (any
-[provider Pi supports](https://pi.dev/docs/latest/providers#api-keys)). Alchemy
-reads these inputs and injects each value only into the Worker that consumes it.
+`.env.schema` is the configuration contract. In a gitignored `.env.local`, set
+`BETTER_AUTH_SECRET` to a secret of at least 32 characters. Prefer a 1Password
+`op(...)` reference or let Varlock prompt for and encrypt a device-local value:
+
+```dotenv
+BETTER_AUTH_SECRET=varlock(prompt)
+```
+
+Then validate the configuration without exposing the secret:
+
+```sh
+nub run env:check
+```
+
+The current agent uses Cloudflare Workers AI through an Alchemy binding, so
+local full-stack development does not require a separate model-provider API
+key. Alchemy injects the resolved auth secret only into the auth Worker.
 
 ## Run the local stack
 
@@ -25,11 +37,13 @@ reads these inputs and injects each value only into the Worker that consumes it.
 nub run dev
 ```
 
-Alchemy runs the gateway, auth, LiveStore, user, and admin Workers plus the Queue
-and D1 database. The Flue agent is an Alchemy-managed Vite Worker in the same
-development loop, so agent edits retain Vite HMR while the gateway uses the
-same service binding in development and production. The gateway remains the
-only public entry at `http://localhost:8787`.
+Alchemy runs seven Workers: gateway, auth, LiveStore, user, event router, admin,
+and the Flue agent. It also manages the D1 database, the projection queue, and
+the user-lifecycle queue. The agent is an Alchemy-managed Vite Worker in the
+same development loop, so agent edits retain Vite HMR. In local development the
+gateway reaches it through a deterministic loopback origin; deployed stacks use
+the agent service binding. The gateway remains the only public entry at
+`http://localhost:8787`.
 
 The first run may ask to bootstrap Alchemy's Cloudflare-backed state store.
 State is shared for deploys but remains isolated by each developer's default
@@ -88,9 +102,11 @@ but a chat selected in the app always belongs to exactly one note.
 
 The official `@flue/react` client streams the external conversation state into
 assistant-ui. A single user can own many notes for the same agent while each
-note retains an independent Flue transcript. The catalog fixes ownership and
-the model variant when the first message is admitted; callers cannot switch
-either with later prompt data.
+note retains an independent Flue transcript. The catalog records ownership,
+agent identity, and model-variant compatibility metadata when the first message
+is admitted. Runtime model selection is currently server-owned and fixed to
+Workers AI for every execution, including conversations whose historical
+metadata says `openai`; callers cannot override it with prompt data.
 
 Send a message with Flue's asynchronous conversation protocol:
 
@@ -106,9 +122,9 @@ state from the same authenticated URL with `GET`. For an ID already in the
 catalog, omit `uid` and `idempotencyKey` on later messages. The agent can call
 `read_note` and `write_note`; both are bound to the conversation's matching note
 ID and reach only the caller's per-user `UserDO` through its cross-worker
-binding. Before Flue admits the prompt, the agent worker injects the
-gateway-stamped owner, matching note ID, and catalogued model as server-owned
-creation data.
+binding. Before Flue admits a create-only first prompt, the agent worker injects
+the gateway-stamped owner, matching note ID, and server-selected model metadata
+as server-owned creation data.
 
 ## Deploy
 
@@ -124,11 +140,11 @@ complete Worker topology in one plan.
 `.github/workflows/deploy.yml` runs linting, typechecking, and a production
 build before deploying these isolated Alchemy stages:
 
-| Git event | GitHub environment | Alchemy stage |
-| --- | --- | --- |
-| Pull request to `main` or `staging` | `preview` | `preview-pr-<number>` |
-| Push to `staging` | `staging` | `staging` |
-| Push to `main` | `production` | `production` |
+| Git event                           | GitHub environment | Alchemy stage         |
+| ----------------------------------- | ------------------ | --------------------- |
+| Pull request to `main` or `staging` | `preview`          | `preview-pr-<number>` |
+| Push to `staging`                   | `staging`          | `staging`             |
+| Push to `main`                      | `production`       | `production`          |
 
 Create the `preview`, `staging`, and `production` environments under
 **Settings → Environments** in GitHub. Configure each with:
