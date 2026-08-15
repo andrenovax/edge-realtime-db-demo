@@ -25,10 +25,6 @@ env:
     ${{ github.event_name == 'pull_request'
       && 'preview'
       || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
-  GATEWAY_WORKER_NAME: >-
-    ${{ github.event_name == 'pull_request'
-      && format('dodemo-pr-{0}', github.event.pull_request.number)
-      || (github.ref == 'refs/heads/main' && 'dodemo' || 'dodemo-staging') }}
 
 jobs:
   checks:
@@ -41,11 +37,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Nub and Node.js
-        uses: nubjs/setup-nub@v0
-        with:
-          node-version: 24
-          cache-dependency-path: "**/nub.lock"
+      - name: Set up project
+        uses: ./.github/actions/setup-project
 
       - name: Install application dependencies
         run: nub ci
@@ -77,18 +70,14 @@ jobs:
       pull-requests: write
     environment:
       name: ${{ github.event_name == 'pull_request' && 'preview' || (github.ref_name == 'main' && 'production' || 'staging') }}
-      url: https://${{ env.GATEWAY_WORKER_NAME }}.hello-andrii-novak.workers.dev/
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - name: Set up Nub and Node.js
-        uses: nubjs/setup-nub@v0
-        with:
-          node-version: 24
-          cache-dependency-path: "**/nub.lock"
+      - name: Set up project
+        uses: ./.github/actions/setup-project
 
       - name: Install application dependencies
         run: nub ci
@@ -120,11 +109,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Nub and Node.js
-        uses: nubjs/setup-nub@v0
-        with:
-          node-version: 24
-          cache-dependency-path: "**/nub.lock"
+      - name: Set up project
+        uses: ./.github/actions/setup-project
 
       - name: Install application dependencies
         run: nub ci
