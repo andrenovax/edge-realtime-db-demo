@@ -1,14 +1,24 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createAuthClient } from "better-auth/react";
+import { jwtClient } from "better-auth/client/plugins";
+import { useAuthenticateRouteContext } from "./router";
 
 // Same-origin: the gateway routes /api/auth/* to the auth worker.
-export const authClient = createAuthClient();
+export const authClient = createAuthClient({ plugins: [jwtClient()] });
 
-// Short-lived JWT for the RPC/sync/agent lanes; the session cookie only
-// authenticates against the auth worker itself.
-export async function fetchJwt(): Promise<{ token: string; userId: string }> {
-  const res = await fetch("/api/auth/token");
-  if (!res.ok) throw new Error(`token fetch failed: ${res.status}`);
-  const { token } = (await res.json()) as { token: string };
-  const userId = JSON.parse(atob(token.split(".")[1])).sub as string;
-  return { token, userId };
+export function useAuthToken() {
+  const { auth, session } = useAuthenticateRouteContext();
+  const token = useSuspenseQuery({
+    queryKey: ["jwt", session.user.id],
+    queryFn: async () => {
+      const { data, error } = await auth.token();
+      if (error) throw new Error(error.message ?? `token fetch failed: ${error.status}`);
+      return data.token;
+    },
+    // Tokens are short-lived; refresh well inside the 15m default expiry.
+    refetchInterval: 10 * 60 * 1000,
+    staleTime: Infinity,
+  });
+
+  return token.data;
 }

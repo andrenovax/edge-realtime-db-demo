@@ -41,7 +41,7 @@ function GoogleIcon() {
   );
 }
 
-export function LoginPage() {
+export function LoginPage({ onAuthenticated }: { onAuthenticated: () => Promise<void> }) {
   const [oauthError] = useState(oauthErrorFromLocation);
   const [mode, setMode] = useState<AuthMode>("in");
   const [email, setEmail] = useState("");
@@ -57,7 +57,7 @@ export function LoginPage() {
     const result = await authClient.signIn.social({
       provider: "google",
       callbackURL: "/",
-      errorCallbackURL: "/",
+      errorCallbackURL: "/sign-in",
     });
     if (result.error) {
       setError(result.error.message ?? "Google sign-in failed");
@@ -81,13 +81,15 @@ export function LoginPage() {
       const linkResult = await authClient.linkSocial({
         provider: "google",
         callbackURL: "/",
-        errorCallbackURL: "/",
+        errorCallbackURL: "/sign-in",
       });
       if (linkResult.error) {
         setError(linkResult.error.message ?? "Unable to connect Google");
+        setBusy(false);
       }
+      return;
     }
-    setBusy(false);
+    await onAuthenticated();
   };
 
   const selectMode = (nextMode: AuthMode) => {

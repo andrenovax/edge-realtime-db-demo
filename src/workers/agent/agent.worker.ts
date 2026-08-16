@@ -68,10 +68,13 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
     const user = c.env.USER_DO.getByName(userId);
     const conversation = await user.getAgentConversation(conversationId.output);
     const mayCreate = c.req.method === "POST" && !c.req.path.endsWith("/abort");
-    if (
-      (!conversation && !mayCreate) ||
-      (conversation && (conversation.agentName !== name || conversation.status !== "active"))
-    ) {
+    // Flue treats a missing conversation history response as an observable
+    // `absent` state. This lets useFlueAgent stay mounted before the first
+    // message and refresh itself after that message creates the conversation.
+    if (!conversation && !mayCreate) {
+      return c.json({ error: "not found" }, 404);
+    }
+    if (conversation && (conversation.agentName !== name || conversation.status !== "active")) {
       return c.json({ error: "forbidden" }, 403);
     }
 

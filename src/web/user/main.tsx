@@ -1,13 +1,39 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider } from "@tanstack/react-router";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { createRouter, Navigate, RouterProvider } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./app.css";
-import { router } from "./router.tsx";
+import { authClient as auth } from "./lib/auth.ts";
+import { routeTree } from "./lib/routeTree.gen.ts";
 
 const queryClient = new QueryClient();
+const router = createRouter({
+  routeTree,
+  context: { auth },
+  defaultNotFoundComponent: () => <Navigate to="/" replace />,
+});
 
-createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <RouterProvider router={router} />
-  </QueryClientProvider>,
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+const container = document.getElementById("root");
+const root = createRoot(container!);
+
+root.render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+      {import.meta.env.DEV && (
+        <>
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+          <TanStackRouterDevtools router={router} position="bottom-left" />
+        </>
+      )}
+    </QueryClientProvider>
+  </StrictMode>,
 );

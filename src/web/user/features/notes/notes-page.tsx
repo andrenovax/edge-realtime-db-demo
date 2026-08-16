@@ -1,5 +1,5 @@
-import { useStore } from "@livestore/react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Effect, Fiber, Stream } from "effect";
 import {
   Archive,
   ArrowLeftRight,
@@ -20,25 +20,26 @@ import {
   Trash2,
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { events, tables, userStoreOptions } from "../../lib/store.ts";
-import { AgentPanel, OfflineIllustration } from "../agent/agent-panel.tsx";
+import { OfflineIllustration } from "../../components/offline-illustration.tsx";
+import { events, tables, useCurrentUserLiveStore } from "../../lib/livestore.tsx";
+import { AgentPanel } from "../agent/agent-panel.tsx";
 import styles from "./notes-page.module.css";
 
 const OFFLINE_GRACE_MS = 3_500;
 
 type TrackableEvent = ReturnType<(typeof events)[keyof typeof events]>;
 
-function eventSignature(event: TrackableEvent) {
-  const canonicalize = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(canonicalize);
-    if (value === null || typeof value !== "object") return value;
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, entry]) => [key, canonicalize(entry)]),
-    );
-  };
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .toSorted(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => [key, canonicalize(entry)]),
+  );
+}
 
+function eventSignature(event: TrackableEvent) {
   return JSON.stringify([event.name, canonicalize(event.args)]);
 }
 
@@ -105,7 +106,6 @@ function noteTitle(note: { title: string; text: string }) {
 
 type NotesPageProps = {
   userId: string;
-  token: string;
   email: string;
   onSignOut: () => Promise<void>;
 };
@@ -165,8 +165,8 @@ function PanelResizeHandle({ label, value, className, onResize }: PanelResizeHan
 
 // Reads are local: useQuery hits the in-browser SQLite, kept converged
 // with the user's SyncBackendDO event log. Writes are LiveStore events.
-export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
-  const store = useStore(userStoreOptions(userId, token));
+export function NotesPage({ email, onSignOut }: NotesPageProps) {
+  const store = useCurrentUserLiveStore();
   const notes = store.useQuery(tables.notes.orderBy("updatedAt", "desc"));
   const syncedConversations = store.useQuery(
     tables.agentConversations.orderBy("updatedAt", "desc"),
@@ -177,6 +177,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
   const { isOffline, isBrowserOnline, onlineTransition } = useDebouncedOffline();
   const pendingChanges = useRef(new Map<string, number>());
   const [pendingChangeCount, setPendingChangeCount] = useState(0);
+  const [syncConnected, setSyncConnected] = useState<boolean>();
   const [completedReconnectTransition, setCompletedReconnectTransition] = useState(0);
   const [lastSyncedAt, setLastSyncedAt] = useState(() => Date.now());
   const [search, setSearch] = useState("");
@@ -195,7 +196,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       ? 520
       : Math.max(420, Math.round((window.innerWidth - 276) * 0.425)),
   );
-  const { note: selectedId } = useSearch({ from: "/" });
+  const { note: selectedId } = useSearch({ from: "/_authenticated/" });
   const navigate = useNavigate();
   const activeNotes = useMemo(() => notes.filter((note) => note.status === "active"), [notes]);
   const selected = selectedId ? activeNotes.find((note) => note.id === selectedId) : activeNotes[0];
@@ -209,8 +210,10 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
       : activeNotes;
   }, [activeNotes, search]);
   const unsavedChangeCount = pendingChangeCount;
+  const isSyncDisconnected = isBrowserOnline && syncConnected === false;
   const isReconnectSyncing =
-    isBrowserOnline && onlineTransition > completedReconnectTransition && pendingChangeCount > 0;
+    isSyncDisconnected ||
+    (isBrowserOnline && onlineTransition > completedReconnectTransition && pendingChangeCount > 0);
   const lastSyncedLabel = useMemo(
     () =>
       new Intl.DateTimeFormat(undefined, {
@@ -223,9 +226,35 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
     ? unsavedChangeCount > 0
       ? `Offline — ${unsavedChangeCount} unsaved ${unsavedChangeCount === 1 ? "change" : "changes"}`
       : "Offline — everything is saved locally"
-    : isReconnectSyncing
-      ? "Syncing changes"
-      : "Everything is synced";
+    : isSyncDisconnected
+      ? unsavedChangeCount > 0
+        ? `Reconnecting — ${unsavedChangeCount} ${unsavedChangeCount === 1 ? "change is" : "changes are"} waiting to sync`
+        : "Reconnecting to sync"
+      : isReconnectSyncing
+        ? "Syncing changes"
+        : "Everything is synced";
+
+  useEffect(() => {
+    let active = true;
+    const fiber = Effect.runFork(
+      Effect.gen(function* () {
+        const initial = yield* store.networkStatus;
+        if (active) setSyncConnected(initial.isConnected);
+        yield* store.networkStatus.changes.pipe(
+          Stream.runForEach((status) =>
+            Effect.sync(() => {
+              if (active) setSyncConnected(status.isConnected);
+            }),
+          ),
+        );
+      }).pipe(Effect.scoped),
+    );
+
+    return () => {
+      active = false;
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, [store]);
 
   useEffect(() => {
     if (onlineTransition > completedReconnectTransition && pendingChangeCount === 0) {
@@ -241,12 +270,14 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
     // This stream only yields events after the sync backend confirms them.
     // Matching the original commit keeps the UI honest across reconnects.
     const listenForConfirmations = async () => {
-      while (active) {
+      for (;;) {
+        if (!active) return;
         iterator = store.events()[Symbol.asyncIterator]() as AsyncIterator<TrackableEvent>;
         try {
-          while (active) {
+          for (;;) {
             const result = await iterator.next();
             if (result.done || !active) return;
+            setLastSyncedAt(Date.now());
             const signature = eventSignature(result.value);
             const matchingCount = pendingChanges.current.get(signature) ?? 0;
             if (matchingCount === 0) continue;
@@ -254,7 +285,6 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
             if (matchingCount === 1) pendingChanges.current.delete(signature);
             else pendingChanges.current.set(signature, matchingCount - 1);
             setPendingChangeCount((count) => Math.max(0, count - 1));
-            setLastSyncedAt(Date.now());
           }
         } catch {
           if (!active) return;
@@ -591,7 +621,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
                   key={
                     isOffline
                       ? "offline"
-                      : `online-${onlineTransition}-${isReconnectSyncing ? "syncing" : "synced"}`
+                      : `online-${onlineTransition}-${isSyncDisconnected ? "reconnecting" : isReconnectSyncing ? "syncing" : "synced"}`
                   }
                   aria-live="polite"
                   className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-normal leading-4 text-[#777]"
@@ -618,7 +648,11 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
                   <span className="min-w-0 flex-1 truncate">
                     {isOffline && unsavedChangeCount > 0
                       ? `${unsavedChangeCount} unsaved ${unsavedChangeCount === 1 ? "change" : "changes"} · Last synced at ${lastSyncedLabel}`
-                      : `Last synced at ${lastSyncedLabel}`}
+                      : isSyncDisconnected && unsavedChangeCount > 0
+                        ? `${unsavedChangeCount} waiting to sync · Last synced at ${lastSyncedLabel}`
+                        : isSyncDisconnected
+                          ? `Reconnecting · Last synced at ${lastSyncedLabel}`
+                          : `Last synced at ${lastSyncedLabel}`}
                   </span>
                 </div>
               </div>
@@ -651,13 +685,7 @@ export function NotesPage({ userId, token, email, onSignOut }: NotesPageProps) {
           className={`h-full min-h-0 ${chatPanelCollapsed ? "invisible pointer-events-none" : ""}`}
         >
           {activeNoteId ? (
-            <AgentPanel
-              key={activeNoteId}
-              token={token}
-              noteId={activeNoteId}
-              conversationExists={conversations.some(({ id }) => id === activeNoteId)}
-              isOffline={isOffline}
-            />
+            <AgentPanel key={activeNoteId} noteId={activeNoteId} isOffline={isOffline} />
           ) : isOffline ? (
             <div className="flex h-full flex-col items-center justify-center px-4 pb-[10vh]">
               <div className="flex w-full max-w-3xl flex-col items-stretch gap-5 text-center">
