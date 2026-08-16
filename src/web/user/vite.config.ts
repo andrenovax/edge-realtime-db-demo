@@ -11,6 +11,9 @@ import { defineConfig } from "vite";
 // (infra/alchemy.run.ts GatewayWorker).
 export default defineConfig({
   envPrefix: ["VITE_", "GOOGLE_CLIENT_ID"],
+  optimizeDeps: {
+    exclude: ["@livestore/wa-sqlite"],
+  },
   plugins: [
     DevTools({ visibility: "passive" }),
     livestoreDevtoolsPlugin({

@@ -20,10 +20,10 @@ export function useAgentChatRuntime({ noteId, isOffline }: AgentChatOptions) {
   };
 
   const runtime = useExternalStoreRuntime({
-    messages: agent.messages
-      .filter(({ display, role }) => display === "visible" && (role === "user" || role === "assistant"))
-      .map(toThreadMessage),
-    convertMessage: (message) => message,
+    messages: agent.messages.filter(
+      ({ display, role }) => display === "visible" && (role === "user" || role === "assistant"),
+    ),
+    convertMessage: toThreadMessage,
     isLoading: !agent.historyReady,
     isRunning: isWorking,
     onNew,

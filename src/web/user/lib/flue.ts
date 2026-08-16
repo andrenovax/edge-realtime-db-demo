@@ -3,7 +3,6 @@ import { createFlueClient } from "@flue/sdk";
 import { useMemo } from "react";
 import { useAuthToken } from "./auth";
 
-
 export enum AgentName {
   Hello = "hello",
 }
@@ -28,5 +27,5 @@ export const useCurrentUserAgent = ({
 
   const agent = useFlueAgent({ client });
 
-  return { agent, client};
-}
+  return { agent, client };
+};

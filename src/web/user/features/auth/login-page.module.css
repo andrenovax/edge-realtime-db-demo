@@ -166,6 +166,13 @@
   color: rgb(255 255 255 / 82%);
 }
 
+.fieldError {
+  padding: 0 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 450;
+  color: rgb(254 202 202);
+}
+
 .inputShell {
   display: flex;
   min-height: 3.55rem;

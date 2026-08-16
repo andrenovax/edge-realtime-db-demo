@@ -6,6 +6,7 @@ declare const styles: {
   readonly "divider": string;
   readonly "error": string;
   readonly "field": string;
+  readonly "fieldError": string;
   readonly "form": string;
   readonly "googleAction": string;
   readonly "header": string;

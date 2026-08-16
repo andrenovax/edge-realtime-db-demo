@@ -1,13 +1,13 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { Schema } from "effect";
+import * as v from "valibot";
 import { NotesPage } from "../features/notes/notes-page.tsx";
 
-const NotesSearch = Schema.Struct({
-  note: Schema.optional(Schema.String),
+const NotesSearch = v.object({
+  note: v.optional(v.string()),
 });
 
 export const Route = createFileRoute("/_authenticated/")({
-  validateSearch: Schema.standardSchemaV1(NotesSearch),
+  validateSearch: NotesSearch,
   component: NotesRoute,
 });
 

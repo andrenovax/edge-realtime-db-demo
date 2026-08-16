@@ -45,6 +45,17 @@ export function NoteEditor({ noteId, markdown, onSave }: NoteEditorProps) {
     [],
   );
 
+  const handleChange = () => {
+    if (applyingExternal.current) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const nextMarkdown = editor.blocksToMarkdownLossy(editor.document);
+      if (nextMarkdown === lastEditorMarkdown.current) return;
+      lastEditorMarkdown.current = nextMarkdown;
+      onSave(nextMarkdown);
+    }, 250);
+  };
+
   return (
     <div className={`${styles.root} flex h-full min-h-0 flex-col overflow-hidden`}>
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -52,16 +63,7 @@ export function NoteEditor({ noteId, markdown, onSave }: NoteEditorProps) {
           className="min-h-full"
           editor={editor}
           theme="light"
-          onChange={() => {
-            if (applyingExternal.current) return;
-            if (saveTimer.current) clearTimeout(saveTimer.current);
-            saveTimer.current = setTimeout(() => {
-              const nextMarkdown = editor.blocksToMarkdownLossy(editor.document);
-              if (nextMarkdown === lastEditorMarkdown.current) return;
-              lastEditorMarkdown.current = nextMarkdown;
-              onSave(nextMarkdown);
-            }, 250);
-          }}
+          onChange={handleChange}
         />
       </div>
     </div>
