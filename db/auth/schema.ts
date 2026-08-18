@@ -1,5 +1,5 @@
 /**
- * Better Auth core tables (D1).
+ * Better Auth core tables (Auth D1).
  * Matches https://www.better-auth.com/docs/concepts/database
  * - `user`: accounts with profile information
  * - `session`: active sessions

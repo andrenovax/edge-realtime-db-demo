@@ -1,6 +1,6 @@
 import * as v from "valibot";
+import { agentModelVariants } from "@db/constants";
 import { AgentName } from "@workers/agent/constants";
-import { agentModelVariants } from "../../../db/schema/user.ts";
 
 const requiredText = (label: string, maxLength: number) =>
   v.pipe(

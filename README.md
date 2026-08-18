@@ -53,7 +53,7 @@ The first run may ask to bootstrap Alchemy's Cloudflare-backed state store.
 State is shared for deploys but remains isolated by each developer's default
 Alchemy stage.
 
-D1 migrations and the auth-only `db/seeds/local.sql` are applied automatically;
+D1 migrations and the auth-only `db/auth/seeds/local.sql` are applied automatically;
 the local databases persist between runs and are separate from deployed D1 data.
 
 Notes, items, and the per-user conversation catalog are LiveStore tables backed

@@ -23,9 +23,9 @@ const deploymentConfig = {
     agentEntry: "flue.alchemy.worker.ts",
     gatewayRoot: "../src/web/user",
     gatewayWorker: "../../workers/gateway/gateway.worker.ts",
-    authDatabaseMigrations: "../db/migrations/auth",
-    adminDatabaseMigrations: "../db/migrations/admin",
-    localDatabaseSeed: "../db/seeds/local.sql",
+    authDatabaseMigrations: "../db/auth/migrations",
+    adminDatabaseMigrations: "../db/admin/migrations",
+    localDatabaseSeed: "../db/auth/seeds/local.sql",
   },
   local: {
     agentOrigin: "http://127.0.0.1:8788",

@@ -16,7 +16,7 @@
     "lint:boundaries": "nub scripts/check-boundaries.ts",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
-    "db:generate": "drizzle-kit generate --config db/drizzle.auth.config.ts && drizzle-kit generate --config db/drizzle.admin.config.ts",
+    "db:generate": "drizzle-kit generate --config db/auth/drizzle.config.ts && drizzle-kit generate --config db/admin/drizzle.config.ts",
     "smoke": "nub scripts/smoke/all.ts",
     "smoke:auth": "nub scripts/smoke/auth-smoke.ts",
     "smoke:rpc": "nub scripts/smoke/rpc-smoke.ts",

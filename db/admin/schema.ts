@@ -3,8 +3,10 @@
  * Fed by UserSyncBackendDO.onPush -> Queue -> admin worker consumer.
  * Idempotent by event id; per-user event logs remain the truth.
  */
+import type { InferSelectModel } from "drizzle-orm";
 import { index, integer, primaryKey, snakeCase, text } from "drizzle-orm/sqlite-core";
-import { agentConversationColumns, itemColumns, noteColumns } from "./user.ts";
+import type { AgentConversationStatus, AgentModelVariant, NoteStatus } from "../constants.ts";
+import type { AgentConversation, ItemEventArgs, NoteEventArgs } from "../livestore/schema.ts";
 
 export const userEvents = snakeCase.table(
   "user_events",
@@ -31,7 +33,11 @@ export const adminNotes = snakeCase.table(
   "admin_notes",
   {
     storeId: text().notNull(),
-    ...noteColumns(),
+    id: text().notNull(),
+    title: text().default("").notNull(),
+    text: text().default("").notNull(),
+    status: text().$type<NoteStatus>().default("active").notNull(),
+    updatedAt: integer().default(0).notNull(),
     seqNum: integer().notNull(),
   },
   (table) => [
@@ -45,7 +51,9 @@ export const adminItems = snakeCase.table(
   "admin_items",
   {
     storeId: text().notNull(),
-    ...itemColumns(),
+    id: text().notNull(),
+    title: text().default("").notNull(),
+    createdAt: integer().default(0).notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.storeId, table.id] }),
@@ -58,7 +66,13 @@ export const adminAgentConversations = snakeCase.table(
   "admin_agent_conversations",
   {
     storeId: text().notNull(),
-    ...agentConversationColumns(),
+    id: text().notNull(),
+    agentName: text().notNull(),
+    modelVariant: text().$type<AgentModelVariant>().notNull(),
+    title: text().notNull(),
+    status: text().$type<AgentConversationStatus>().notNull(),
+    createdAt: integer().notNull(),
+    updatedAt: integer().notNull(),
     seqNum: integer().notNull(),
   },
   (table) => [
@@ -67,3 +81,28 @@ export const adminAgentConversations = snakeCase.table(
     index("admin_agent_conversations_store_id_updated_at_idx").on(table.storeId, table.updatedAt),
   ],
 );
+
+type MutuallyAssignable<TLeft, TRight> = [TLeft] extends [TRight]
+  ? [TRight] extends [TLeft]
+    ? true
+    : false
+  : false;
+type Assert<T extends true> = T;
+
+export type AdminLiveStoreSchemaParity = {
+  notes: Assert<
+    MutuallyAssignable<
+      Omit<InferSelectModel<typeof adminNotes>, "storeId" | "seqNum">,
+      NoteEventArgs
+    >
+  >;
+  items: Assert<
+    MutuallyAssignable<Omit<InferSelectModel<typeof adminItems>, "storeId">, ItemEventArgs>
+  >;
+  agentConversations: Assert<
+    MutuallyAssignable<
+      Omit<InferSelectModel<typeof adminAgentConversations>, "storeId" | "seqNum">,
+      AgentConversation
+    >
+  >;
+};

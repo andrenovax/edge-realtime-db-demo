@@ -1,7 +1,7 @@
 import { RpcTarget } from "capnweb";
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { adminAgentConversations, adminItems, adminNotes, userEvents } from "@db/schema/admin";
+import { adminAgentConversations, adminItems, adminNotes, userEvents } from "@db/admin";
 import type { AdminEnv } from "@infra/env";
 
 // The /api/admin RPC surface: system-side reads over the cross-user D1

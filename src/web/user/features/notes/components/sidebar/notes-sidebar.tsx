@@ -1,4 +1,5 @@
-import type { NoteEventArgs, NoteStatus } from "@db/schema/user";
+import type { NoteStatus } from "@db/constants";
+import type { NoteEventArgs } from "@db/livestore";
 import { LogOut, PanelLeft, Plus, Search } from "lucide-react";
 import { type ChangeEvent, useMemo, useState } from "react";
 import {

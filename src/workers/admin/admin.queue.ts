@@ -1,13 +1,9 @@
 /// <reference types="@cloudflare/workers-types" />
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { adminAgentConversations, adminItems, adminNotes, userEvents } from "@db/schema/admin";
-import {
-  eventNames,
-  type AgentConversation,
-  type ItemEventArgs,
-  type NoteEventArgs,
-} from "@db/schema/user";
+import { adminAgentConversations, adminItems, adminNotes, userEvents } from "@db/admin";
+import type { AgentConversation, ItemEventArgs, NoteEventArgs } from "@db/livestore";
+import { eventNames } from "@db/livestore/constants";
 import type { AdminEnv } from "@infra/env";
 import type { ProjectionMessage } from "./admin.contract.ts";
 

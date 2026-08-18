@@ -8,17 +8,19 @@
 //   contracts-type-only         importing a .contract.ts is `import type`
 //   events-producer-owned       emitted events live in <producer>.events.ts
 //   events-type-only            importing an .events.ts is `import type`
-//   db-schema-planes            auth sees auth.ts; admin sees admin.ts + canonical user.ts
+//   db-never-import-workers     database modules never depend on Worker modules
+//   db-schema-planes            workers see only their owned Drizzle schema slices
 //   application-dos-livestore-only application *.do.ts files live in and export from livestore
 //   livestore-schema-owner-only db/livestore only from the livestore worker
 //   web-imports-worker-seams    src/web -> workers: type surfaces or shared constants only
 //   workers-never-import-web    workers never import src/web
-//   no-circular                 no import cycles under src/
+//   no-circular                 no import cycles under src/ or db/
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const SRC = join(ROOT, "src");
+const DB = join(ROOT, "db");
 
 const tsFiles = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -34,7 +36,11 @@ type Edge = { from: string; to: string; typeOnly: boolean };
 
 const EXACT_ALIASES: Record<string, string> = {
   "@infra/env": "infra/alchemy.run.ts",
+  "@db/admin": "db/admin/schema.ts",
+  "@db/auth": "db/auth/schema.ts",
+  "@db/constants": "db/constants.ts",
   "@db/livestore": "db/livestore/schema.ts",
+  "@db/livestore/constants": "db/livestore/constants.ts",
   "@workers/livestore/user-contract": "src/workers/livestore/user.contract.ts",
   "@workers/livestore/user-schema": "src/workers/livestore/user.schema.ts",
   "@workers/admin/contract": "src/workers/admin/admin.contract.ts",
@@ -56,16 +62,13 @@ const resolveInternalImport = (file: string, specifier: string) => {
   if (specifier.startsWith(".")) {
     return relative(ROOT, resolve(file, "..", specifier));
   }
-  if (specifier.startsWith("@db/schema/")) {
-    return `db/schema/${specifier.slice("@db/schema/".length)}.ts`;
-  }
   for (const [alias, target] of Object.entries(PREFIX_ALIASES)) {
     if (specifier.startsWith(alias)) return `${target}${specifier.slice(alias.length)}`;
   }
   return EXACT_ALIASES[specifier] ?? null;
 };
 
-const sourceFiles = tsFiles(SRC);
+const sourceFiles = [...tsFiles(SRC), ...tsFiles(DB)];
 const edges: Edge[] = [];
 for (const file of sourceFiles) {
   const source = readFileSync(file, "utf8");
@@ -82,16 +85,16 @@ for (const file of sourceFiles) {
 }
 
 const workerOf = (path: string) => /^src\/workers\/([^/]+)\//.exec(path)?.[1] ?? null;
+const isConstantsModule = (path: string) =>
+  path.endsWith(".constants.ts") || path.endsWith("/constants.ts");
 
-// Which Drizzle schema slices each worker may import. auth owns its D1
-// tables; admin and livestore consume the canonical user row schema for their
-// respective D1 and per-user projections. Anything unlisted (including
-// index.ts) is a failure.
+// Which Drizzle schema slices each worker may import. Anything unlisted
+// (including index.ts) is a failure.
 const DB_PLANES: Record<string, string[]> = {
-  auth: ["db/schema/better-auth.ts"],
-  admin: ["db/schema/admin.ts", "db/schema/user.ts"],
-  livestore: ["db/schema/user.ts"],
+  auth: ["db/auth/schema.ts"],
+  admin: ["db/admin/schema.ts"],
 };
+const DRIZZLE_SCHEMAS = new Set(Object.values(DB_PLANES).flat());
 const violations: string[] = [];
 const fail = (rule: string, edge: Edge, why: string) =>
   violations.push(`${rule}: ${edge.from} -> ${edge.to}\n    ${why}`);
@@ -138,13 +141,21 @@ for (const edge of edges) {
   const toContract = edge.to.endsWith(".contract.ts");
   const toEvents = edge.to.endsWith(".events.ts");
   const toSharedSchema = edge.to.endsWith(".schema.ts");
-  const toConstants = edge.to.endsWith(".constants.ts");
+  const toConstants = isConstantsModule(edge.to);
 
-  if (edge.from.endsWith(".constants.ts")) {
+  if (isConstantsModule(edge.from)) {
     fail(
       "constants-dependency-free",
       edge,
       "shared constants must remain dependency-free so consumers never pull in Worker runtime code",
+    );
+  }
+
+  if (edge.from.startsWith("db/") && toWorker) {
+    fail(
+      "db-never-import-workers",
+      edge,
+      "database modules are lower-level and must never depend on Worker modules",
     );
   }
 
@@ -177,20 +188,26 @@ for (const edge of edges) {
       "an .events.ts module is a producer-owned type seam — import it with `import type` so no runtime code crosses",
     );
   }
-  if (fromWorker && edge.to.startsWith("db/schema/") && !DB_PLANES[fromWorker]?.includes(edge.to)) {
+  if (fromWorker && DRIZZLE_SCHEMAS.has(edge.to) && !DB_PLANES[fromWorker]?.includes(edge.to)) {
     fail(
       "db-schema-planes",
       edge,
       `a worker sees only its owned/consumed Drizzle slices: ${
-        DB_PLANES[fromWorker]?.join(", ") ?? "no db/schema import is allowed here"
-      }. db/schema/index.ts is the drizzle-kit migration barrel — never import it from src/`,
+        DB_PLANES[fromWorker]?.join(", ") ?? "no Drizzle schema import is allowed here"
+      }. Import the owning database schema only.`,
     );
   }
-  if (fromWorker && fromWorker !== "livestore" && edge.to.startsWith("db/livestore/")) {
+  if (
+    fromWorker &&
+    fromWorker !== "livestore" &&
+    edge.to.startsWith("db/livestore/") &&
+    !edge.typeOnly &&
+    !toConstants
+  ) {
     fail(
       "livestore-schema-owner-only",
       edge,
-      "the LiveStore schema belongs to the livestore worker (and the web client's own store)",
+      "the LiveStore runtime schema belongs to the livestore worker (and the web client's own store); other workers may import its derived row types type-only",
     );
   }
   if (edge.from.startsWith("src/web/") && toWorker) {

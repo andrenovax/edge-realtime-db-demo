@@ -1,4 +1,4 @@
-import type { NoteStatus } from "@db/schema/user";
+import type { NoteStatus } from "@db/constants";
 import { useCallback, useMemo } from "react";
 import { events, tables } from "@ui/libs/livestore.tsx";
 import { useCurrentUserLiveStore } from "@ui/providers/livestore-provider.tsx";

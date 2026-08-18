@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { NoteStatus } from "@db/schema/user";
+import type { NoteStatus } from "@db/constants";
 import { useSignOut } from "@ui/features/auth/hooks/use-sign-out.ts";
 import { ChatPanel } from "@ui/features/notes/components/chat-panel.tsx";
 import { MobilePanelNav } from "@ui/features/notes/components/controls/mobile-panel-nav.tsx";
@@ -20,7 +20,11 @@ export function NotesPage() {
   const isOnline = useOnline();
   const signOut = useSignOut();
   const { note: selectedId } = useSearch({ from: "/_authenticated/" });
-  const selection = useNoteSelection({ activeNotes: notes.activeNotes, notes: notes.notes, noteId: selectedId });
+  const selection = useNoteSelection({
+    activeNotes: notes.activeNotes,
+    notes: notes.notes,
+    noteId: selectedId,
+  });
   const layout = useNotesLayout();
   const { email } = useCurrentUser();
 

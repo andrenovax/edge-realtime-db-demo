@@ -3,7 +3,7 @@ import type { Store } from "@livestore/livestore";
 import { handleSyncUpdateRpc } from "@livestore/sync-cf/client";
 import { DurableObject } from "cloudflare:workers";
 import { events, schema, tables } from "@db/livestore";
-import type { AgentConversation } from "@db/schema/user";
+import type { AgentConversation } from "@db/livestore";
 import type { LiveStoreEnv } from "@infra/env";
 import type {
   AddNotePayload,

@@ -1,4 +1,5 @@
-import type { NoteEventArgs, NoteStatus } from "@db/schema/user";
+import type { NoteStatus } from "@db/constants";
+import type { NoteEventArgs } from "@db/livestore";
 import { Archive, Ellipsis, Pencil, Trash2 } from "lucide-react";
 import { useNoteRename } from "@ui/features/notes/components/sidebar/use-note-rename.ts";
 import { useActionMenu } from "@ui/hooks/use-action-menu.ts";

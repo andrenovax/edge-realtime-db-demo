@@ -1,4 +1,4 @@
--- Local development seed data. infra/alchemy.run.ts imports this file only
+-- Auth D1 local development seed data. infra/alchemy.run.ts imports this file only
 -- to the auth database during `alchemy dev`, after its migrations are applied.
 -- Both users authenticate through Better Auth with: demo-password-123
 INSERT INTO `user` (

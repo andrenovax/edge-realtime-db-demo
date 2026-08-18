@@ -62,10 +62,10 @@ src/
   web/user/           user-facing SPA (Vite root; deployed with gateway)
   web/admin/          admin SPA (future)
 db/
-  drizzle.config.ts   Drizzle migration target for D1
-  schema/             Drizzle source — user canonical + D1 projections/auth
-  livestore/          LiveStore events and materializers for per-user state
-  migrations/         D1 migrations (applied by alchemy on deploy)
+  constants.ts        enum values shared across storage planes
+  auth/               Auth D1 schema, Drizzle config, migrations, and local seeds
+  admin/              Admin D1 schema, Drizzle config, and migrations
+  livestore/          LiveStore tables, events, and materializers
 infra/alchemy.run.ts  the stack: workers, bindings, D1, queues, consumers
 scripts/              smoke tests + boundary lint (external consumers)
 ```
@@ -109,21 +109,24 @@ worker needs them.
   its producer. Its types live in exactly `<producer>/<producer>.events.ts`.
 - **`events-type-only`** — importing an `.events.ts` module is `import type`;
   event catalogs contain serializable types, never producer implementation.
-- **`db-schema-planes`** — [user.ts](../db/schema/user.ts) is the canonical
-  Drizzle schema for user-owned rows and event contracts. `livestore` uses its
-  per-user tables and `admin` consumes the same declarations alongside its own
-  [admin.ts](../db/schema/admin.ts) D1 read model; `auth` sees only
-  [better-auth.ts](../db/schema/better-auth.ts). [index.ts](../db/schema/index.ts)
-  exports only D1 tables for drizzle-kit and is never imported from `src/`.
-  LiveStore derives the per-user SQLite tables from these declarations; Drizzle
-  migrations apply only to D1. `nub run db:generate` updates the D1 stream.
+- **`db-never-import-workers`** — modules under `db/` never import from
+  `src/workers/`; database definitions are a lower-level dependency.
+- **`db-schema-planes`** — [constants.ts](../db/constants.ts) owns enum values
+  shared across storage planes. `livestore` owns the canonical user-row schemas,
+  derives their TypeScript types, and owns its event names in dependency-free
+  [constants.ts](../db/livestore/constants.ts). Admin's
+  [schema.ts](../db/admin/schema.ts) D1 read model checks its inferred row types
+  against the LiveStore-derived types at compile time.
+  `auth` sees only [schema.ts](../db/auth/schema.ts). Each D1 database owns its
+  adjacent Drizzle config and migrations; `db:generate` updates both streams.
 - **`application-dos-livestore-only`** — every application-owned `*.do.ts`
   lives in `src/workers/livestore/` and is exported by `livestore.worker.ts`.
   Framework-generated DOs are the sole exception and stay with their framework
   worker; Flue's generated agent DOs therefore remain hosted by `agent`.
 - **`livestore-schema-owner-only`** — `livestore` is the only Worker that may
-  import `db/livestore/`; the web client also imports the shared schema for its
-  own local store.
+  import the runtime `db/livestore/` schema; the web client imports it for its
+  local store. Other Workers may import its derived row types type-only and its
+  dependency-free constants at runtime.
 - **`web-imports-worker-seams`** — `src/web/` may import dependency-free values
   from `.constants.ts` and may `import type` from
   `.contract.ts`/`.events.ts`/`.rpc.ts`; it reaches Worker behavior over HTTP,
@@ -140,7 +143,7 @@ normalizes external payloads before calling `UserDO`; `user` adapts stamped
 viewer identity for `UserApi` and derives its opaque store ID through the
 `USER_DO` namespace. The DO owns application state transitions, not transport validation.
 Local smoke tests sign in through Better Auth as users from
-`db/seeds/local.sql`.
+`db/auth/seeds/local.sql`.
 
 ## Runtime environment
 
@@ -177,11 +180,11 @@ declarations and types cannot drift apart.
   another Worker can consume it? → a narrowly scoped method on `UserApi`
   (`user/user.rpc.ts`) that may only call the caller's own DO.
 - New cross-user/system read? → a method on `AdminApi` (`admin/admin.rpc.ts`).
-- New read-model fold? → `admin/admin.queue.ts` + `db/schema/admin.ts`; enqueue
+- New read-model fold? → `admin/admin.queue.ts` + `db/admin/schema.ts`; enqueue
   its typed snapshot/event after the source write succeeds.
-- New synced state? → define its row/event contract once in
-  `db/schema/user.ts`, then add the LiveStore materializer in
-  `db/livestore/schema.ts`.
+- New synced state? → define its table, derived row type, event, and materializer
+  in `db/livestore/schema.ts`; add shared enum values to `db/constants.ts` and
+  assert any Admin D1 projection against the derived LiveStore row type.
 - A type another worker needs? → the receiver's `.contract.ts`, imported
   `import type`.
 - A new emitted event? → define and version it in the producer's

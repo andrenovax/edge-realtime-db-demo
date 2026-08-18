@@ -1,41 +1,76 @@
-import { Events, makeSchema, State } from "@livestore/livestore";
-import { agentConversations, eventNames, items, notes } from "../schema/user.ts";
-import { liveStoreModelFromDrizzle } from "./from-drizzle.ts";
+import { Events, makeSchema, Schema, State } from "@livestore/livestore";
+import { agentConversationStatuses, agentModelVariants, noteStatuses } from "../constants.ts";
+import { eventNames } from "./constants.ts";
 
 // Per-user local-first state: client and UserDO SQLite are materialized views
 // of the event log stored in the user's SyncBackendDO SQLite.
-const models = {
-  notes: liveStoreModelFromDrizzle(notes),
-  items: liveStoreModelFromDrizzle(items),
-  agentConversations: liveStoreModelFromDrizzle(agentConversations),
+export const tables = {
+  notes: State.SQLite.table({
+    name: "notes",
+    columns: {
+      id: State.SQLite.text({ primaryKey: true }),
+      title: State.SQLite.text({ default: "" }),
+      text: State.SQLite.text({ default: "" }),
+      status: State.SQLite.text({
+        schema: Schema.Literal(...noteStatuses),
+        default: "active",
+      }),
+      updatedAt: State.SQLite.integer({ default: 0 }),
+    },
+  }),
+  items: State.SQLite.table({
+    name: "items",
+    columns: {
+      id: State.SQLite.text({ primaryKey: true }),
+      title: State.SQLite.text({ default: "" }),
+      createdAt: State.SQLite.integer({ default: 0 }),
+    },
+  }),
+  agentConversations: State.SQLite.table({
+    name: "agent_conversations",
+    columns: {
+      id: State.SQLite.text({ primaryKey: true }),
+      agentName: State.SQLite.text(),
+      modelVariant: State.SQLite.text({ schema: Schema.Literal(...agentModelVariants) }),
+      title: State.SQLite.text(),
+      status: State.SQLite.text({ schema: Schema.Literal(...agentConversationStatuses) }),
+      createdAt: State.SQLite.integer(),
+      updatedAt: State.SQLite.integer(),
+    },
+    indexes: [
+      {
+        name: "agent_conversations_updated_at",
+        columns: ["updatedAt"],
+        isUnique: false,
+      },
+    ],
+  }),
 };
 
-export const tables = {
-  notes: models.notes.table,
-  items: models.items.table,
-  agentConversations: models.agentConversations.table,
-};
+export type NoteEventArgs = (typeof tables.notes)["Type"];
+export type ItemEventArgs = (typeof tables.items)["Type"];
+export type AgentConversation = (typeof tables.agentConversations)["Type"];
 
 export const events = {
   noteCreated: Events.synced({
     name: eventNames.noteCreated,
-    schema: models.notes.schema,
+    schema: tables.notes.rowSchema,
   }),
   noteUpdated: Events.synced({
     name: eventNames.noteUpdated,
-    schema: models.notes.schema,
+    schema: tables.notes.rowSchema,
   }),
   itemAdded: Events.synced({
     name: eventNames.itemAdded,
-    schema: models.items.schema,
+    schema: tables.items.rowSchema,
   }),
   agentConversationCreated: Events.synced({
     name: eventNames.agentConversationCreated,
-    schema: models.agentConversations.schema,
+    schema: tables.agentConversations.rowSchema,
   }),
   agentConversationUpdated: Events.synced({
     name: eventNames.agentConversationUpdated,
-    schema: models.agentConversations.schema,
+    schema: tables.agentConversations.rowSchema,
   }),
 };
 
