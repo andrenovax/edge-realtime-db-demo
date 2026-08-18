@@ -41,7 +41,6 @@ function withServerContext(
   serverContext: {
     userId: string;
     noteId: string;
-    modelVariant: AgentConversation["modelVariant"];
   },
   createOnly: boolean,
 ) {
@@ -89,7 +88,7 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
   });
 
   // Flue creation data is server-owned. For message admission, overwrite any
-  // caller-provided value with the authenticated owner and server-selected model.
+  // caller-provided value with the authenticated owner and note identity.
   router.post("/:id", async (c, next) => {
     const conversation = c.get("conversation");
     const conversationId = c.get("conversationId");
@@ -109,7 +108,6 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
         {
           userId,
           noteId: conversationId,
-          modelVariant,
         },
         createOnly,
       );
