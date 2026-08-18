@@ -2,39 +2,39 @@ import { makeDurableObject } from "@livestore/sync-cf/cf-worker";
 import type { LiveStoreEnv } from "@infra/env";
 import type { ProjectionMessage } from "@workers/admin/contract";
 
-// onPush is defined at class-creation time and receives no env; the
-// constructor captures it. One env object per worker, so a module slot
-// is safe.
 let doEnv: LiveStoreEnv | undefined;
+const maxQueueMessageBytes = 120_000;
+const maxQueueBatchBytes = 240_000;
+const encoder = new TextEncoder();
 
-// Event-log store, one per opaque UserDO ID. Events persist in this
-// DO's own SQLite (sync-cf default). All transports enabled: ws/http for
-// browsers and Node, do-rpc for the UserDO LiveStore client.
 export class UserSyncBackendDO extends makeDurableObject({
-  // CQRS projection feed: accepted event batches go to a Queue; a
-  // consumer folds them into D1. onPush runs before sync-cf persists the
-  // source batch, so enqueue failures must propagate to keep both stores
-  // consistent and allow the client to retry the push.
+  // sync-cf invokes onPush after head validation but before append. Queue
+  // failure therefore aborts the append, and rejected pushes publish nothing.
   onPush: async (message, { storeId }) => {
-    if (message.batch.length === 0) return;
-
     const queue = doEnv?.EVENTS_QUEUE;
-    if (!queue) {
-      throw new Error("EVENTS_QUEUE binding is unavailable");
-    }
+    if (!queue) throw new Error("EVENTS_QUEUE binding is unavailable");
 
-    const projection = {
+    const projections = message.batch.map((event): ProjectionMessage => ({
       storeId,
-      events: message.batch.map((event) => ({
+      event: {
         id: `${storeId}:${event.seqNum}`,
         name: event.name,
         args: event.args,
         seqNum: event.seqNum,
         clientId: event.clientId,
-      })),
-    } satisfies ProjectionMessage;
+      },
+    }));
+    const projectionBytes = projections.map(
+      (event) => encoder.encode(JSON.stringify(event)).length,
+    );
+    if (
+      projectionBytes.some((bytes) => bytes > maxQueueMessageBytes) ||
+      projectionBytes.reduce((total, bytes) => total + bytes, 0) > maxQueueBatchBytes
+    ) {
+      throw new Error("Push is too large for projection");
+    }
 
-    await queue.send(projection);
+    await queue.sendBatch(projections.map((body) => ({ body })));
   },
 }) {
   constructor(ctx: DurableObjectState, env: LiveStoreEnv) {

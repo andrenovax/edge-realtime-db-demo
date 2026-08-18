@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@livestore/sync-cf@0.4.0':
+    hash: 9352cc0163706a6c1f1012ae4e517bc70999b9edffe58d60011c6f797fcb59bd
+    path: patches/@livestore+sync-cf@0.4.0.patch
+
 importers:
 
   .:
@@ -52,7 +57,7 @@ importers:
         version: 0.4.0(ae21002ae474049659b1441569b40f60)
       '@livestore/sync-cf':
         specifier: ^0.4.0
-        version: 0.4.0(057ca58d0a28fd8784684baf8ecb7bce)
+        version: 0.4.0(patch_hash=9352cc0163706a6c1f1012ae4e517bc70999b9edffe58d60011c6f797fcb59bd)(057ca58d0a28fd8784684baf8ecb7bce)
       '@livestore/wa-sqlite':
         specifier: ^0.4.0
         version: 0.4.0
@@ -8055,7 +8060,7 @@ snapshots:
       '@livestore/common-cf': 0.4.0(057ca58d0a28fd8784684baf8ecb7bce)
       '@livestore/livestore': 0.4.0(057ca58d0a28fd8784684baf8ecb7bce)
       '@livestore/sqlite-wasm': 0.4.0(057ca58d0a28fd8784684baf8ecb7bce)
-      '@livestore/sync-cf': 0.4.0(057ca58d0a28fd8784684baf8ecb7bce)
+      '@livestore/sync-cf': 0.4.0(patch_hash=9352cc0163706a6c1f1012ae4e517bc70999b9edffe58d60011c6f797fcb59bd)(057ca58d0a28fd8784684baf8ecb7bce)
       '@livestore/utils': 0.4.0(057ca58d0a28fd8784684baf8ecb7bce)
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/resources': 2.10.0(@opentelemetry/api@1.9.0)
@@ -8298,7 +8303,7 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       effect: 3.22.1
 
-  '@livestore/sync-cf@0.4.0(057ca58d0a28fd8784684baf8ecb7bce)':
+  '@livestore/sync-cf@0.4.0(patch_hash=9352cc0163706a6c1f1012ae4e517bc70999b9edffe58d60011c6f797fcb59bd)(057ca58d0a28fd8784684baf8ecb7bce)':
     dependencies:
       '@cloudflare/workers-types': 4.20251118.0
       '@effect/ai': 0.35.0(@effect/experimental@0.60.0(@effect/platform@0.96.3(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.96.3(effect@3.22.1))(@effect/rpc@0.75.1(@effect/platform@0.96.3(effect@3.22.1))(effect@3.22.1))(effect@3.22.1)
