@@ -2,6 +2,7 @@ import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as GitHub from "alchemy/GitHub";
 import * as Output from "alchemy/Output";
+import * as RemovalPolicy from "alchemy/RemovalPolicy";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -222,6 +223,8 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const isLocalDev = yield* Alchemy.ALCHEMY_DEV;
     const stage = yield* Alchemy.Stage;
+    const isPreviewStage = /^preview-pr-\d+$/.test(stage);
+    const retainProductionState = RemovalPolicy.retain(stage === "production");
     const github = yield* GitHub.GitHubEnv;
     const cloudflareWorkerName = yield* Config.string("CLOUDFLARE_WORKER_NAME");
     const flueManifest = yield* Effect.promise(() =>
@@ -239,12 +242,21 @@ export default Alchemy.Stack(
       // Alchemy applies local seed data after migrations. Live deploys
       // intentionally never import demo identities.
       importFiles: isLocalDev ? [deploymentConfig.paths.localDatabaseSeed] : undefined,
-    });
+    }).pipe(retainProductionState);
 
     // Both feeds are ordinary Cloudflare events. The lifecycle queue avoids a
     // circular service-binding bootstrap and decouples Auth from its consumer.
-    const events = yield* Cloudflare.Queues.Queue("events");
-    const userLifecycleEvents = yield* Cloudflare.Queues.Queue("user-lifecycle-events");
+    const events = yield* Cloudflare.Queues.Queue("events").pipe(retainProductionState);
+    const eventsDeadLetter =
+      yield* Cloudflare.Queues.Queue("events-dlq").pipe(retainProductionState);
+    const userLifecycleEvents =
+      yield* Cloudflare.Queues.Queue("user-lifecycle-events").pipe(retainProductionState);
+    // This event is the sole path that persists a UserDO's identity. Preserve
+    // exhausted deliveries for operator replay instead of letting Cloudflare
+    // discard them and leave the new account permanently unprovisioned.
+    const userLifecycleEventsDeadLetter = yield* Cloudflare.Queues.Queue(
+      "user-lifecycle-events-dlq",
+    ).pipe(retainProductionState);
 
     const auth = yield* AuthWorker(db, userLifecycleEvents);
 
@@ -258,7 +270,7 @@ export default Alchemy.Stack(
     const livestore = yield* LiveStoreWorker(
       events,
       isLocalDev ? deploymentConfig.local.livestoreWorkerName : undefined,
-    );
+    ).pipe(retainProductionState);
 
     // User plane: the small authenticated-viewer capnweb surface.
     const user = yield* UserWorker(livestore.workerName);
@@ -273,6 +285,7 @@ export default Alchemy.Stack(
     yield* Cloudflare.Queues.Consumer("events-consumer", {
       queueId: events.queueId,
       scriptName: admin.workerName,
+      deadLetterQueue: eventsDeadLetter.queueName,
       settings: deploymentConfig.eventsConsumer,
     });
 
@@ -281,7 +294,9 @@ export default Alchemy.Stack(
     // Preserve the resource Output even when the local physical name is
     // stable. Alchemy uses this dependency to register LiveStore before
     // starting workers that consume its cross-script Durable Objects.
-    const agent = yield* AgentWorker(livestore.workerName, flueManifest);
+    const agent = yield* AgentWorker(livestore.workerName, flueManifest).pipe(
+      retainProductionState,
+    );
 
     // The only public worker: a prefix-routing proxy with JWT validation.
     const gateway = yield* GatewayWorker({
@@ -295,7 +310,7 @@ export default Alchemy.Stack(
           ? cloudflareWorkerName
           : stage === "staging"
             ? `${cloudflareWorkerName}-staging`
-            : /^preview-pr-\d+$/.test(stage)
+            : isPreviewStage
               ? stage.replace("preview-", `${cloudflareWorkerName}-`)
               : undefined,
       auth,
@@ -308,6 +323,7 @@ export default Alchemy.Stack(
     yield* Cloudflare.Queues.Consumer("user-lifecycle-events-consumer", {
       queueId: userLifecycleEvents.queueId,
       scriptName: eventRouter.workerName,
+      deadLetterQueue: userLifecycleEventsDeadLetter.queueName,
       settings: deploymentConfig.lifecycleConsumer,
     });
 
