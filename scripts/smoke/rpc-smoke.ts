@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { newHttpBatchRpcSession } from "capnweb";
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
 import type { UserApi } from "../../src/workers/user/user.rpc.ts";
 import { signInDemoUser } from "./auth.ts";
 import { gatewayOrigin } from "./config.ts";
 
 export async function runRpcSmoke() {
   const { token } = await signInDemoUser(gatewayOrigin);
-  const url = `${gatewayOrigin}/api/data?auth=${encodeURIComponent(token)}`;
+  const url = `${gatewayOrigin}${API_PATHS.data}?auth=${encodeURIComponent(token)}`;
 
   let fetches = 0;
   const realFetch = globalThis.fetch;
@@ -22,6 +23,7 @@ export async function runRpcSmoke() {
     const [viewer, repeatedViewer] = await Promise.all([firstViewer, secondViewer]);
 
     assert.deepEqual(repeatedViewer, viewer, "batched viewer calls should agree");
+    assert.match(viewer.storeId, /^[0-9a-f]{64}$/, "viewer should expose an opaque DO id");
     assert.equal(fetches, 1, "two calls made before awaiting should use one HTTP request");
     console.log(`PASS rpc: 2 viewer calls used ${fetches} HTTP request`);
   } finally {

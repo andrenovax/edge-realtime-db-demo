@@ -1,48 +1,38 @@
 /// <reference types="@cloudflare/workers-types" />
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { adminAgentConversations, adminItems, adminNotes, userEvents } from "@db/schema/admin";
-import {
-  eventNames,
-  type AgentConversation,
-  type ItemEventArgs,
-  type NoteContentEventArgs,
-  type NoteRenamedEventArgs,
-  type NoteStatusChangedEventArgs,
-} from "@db/schema/user";
+import { adminAgentConversations, adminItems, adminNotes, userEvents } from "@db/admin";
+import type { AgentConversation, ItemEventArgs, NoteEventArgs } from "@db/livestore";
+import { eventNames } from "@db/livestore/constants";
 import type { AdminEnv } from "@infra/env";
 import type { ProjectionMessage } from "./admin.contract.ts";
 
-// Queue consumer: fold event batches into the D1 read model — the raw
-// event log plus current-state note/item/conversation tables (server-side
-// mirrors of the materializers in db/livestore/schema.ts). Sole writer of
-// the read model. Idempotent — queue delivery is at-least-once and
-// unordered across batches, so the log insert dedupes by event id and
-// the note upsert only applies when the event is newer by log order.
-// Arg shapes and event names come from the shared Drizzle model — renaming
-// an event or changing its payload there breaks this fold at compile time.
+const d1MaxBoundParameters = 100;
+const chunkForD1Insert = <TRow>(rows: readonly TRow[], boundParametersPerRow: number) => {
+  const chunkSize = Math.floor(d1MaxBoundParameters / boundParametersPerRow);
+  return Array.from({ length: Math.ceil(rows.length / chunkSize) }, (_, index) =>
+    rows.slice(index * chunkSize, (index + 1) * chunkSize),
+  );
+};
 
+// Queue delivery is at-least-once and unordered across batches, so the log
+// dedupes by event id and snapshots only accept newer source sequence numbers.
 export async function queue(batch: MessageBatch<ProjectionMessage>, env: AdminEnv) {
   const db = drizzle(env.DB);
   const projectedAt = Date.now();
-  const events = batch.messages.flatMap((message) =>
-    message.body.events.map((event) => ({ ...event, storeId: message.body.storeId })),
-  );
-  if (events.length > 0) {
-    await db
-      .insert(userEvents)
-      .values(
-        events.map((event) => ({
-          id: event.id,
-          storeId: event.storeId,
-          name: event.name,
-          args: JSON.stringify(event.args ?? null),
-          seqNum: event.seqNum,
-          clientId: event.clientId,
-          projectedAt,
-        })),
-      )
-      .onConflictDoNothing();
+  const events = batch.messages.map(({ body }) => ({ ...body.event, storeId: body.storeId }));
+
+  const eventRows = events.map((event) => ({
+    id: event.id,
+    storeId: event.storeId,
+    name: event.name,
+    args: JSON.stringify(event.args ?? null),
+    seqNum: event.seqNum,
+    clientId: event.clientId,
+    projectedAt,
+  }));
+  for (const rows of chunkForD1Insert(eventRows, 7)) {
+    await db.insert(userEvents).values(rows).onConflictDoNothing();
   }
 
   const noteRows = events
@@ -50,69 +40,20 @@ export async function queue(batch: MessageBatch<ProjectionMessage>, env: AdminEn
       (event) => event.name === eventNames.noteCreated || event.name === eventNames.noteUpdated,
     )
     .toSorted((a, b) => a.seqNum - b.seqNum)
-    .map((event) => {
-      const args = event.args as NoteContentEventArgs;
-      return {
-        storeId: event.storeId,
-        id: args.id,
-        text: args.text,
-        updatedAt: args.updatedAt,
-        seqNum: event.seqNum,
-      };
-    });
-  if (noteRows.length > 0) {
-    await db
-      .insert(adminNotes)
-      .values(noteRows)
-      .onConflictDoUpdate({
-        target: [adminNotes.storeId, adminNotes.id],
-        set: {
-          text: sql`excluded.text`,
-          updatedAt: sql`excluded.updated_at`,
-          seqNum: sql`excluded.seq_num`,
-        },
-        setWhere: sql`excluded.seq_num > ${adminNotes.seqNum}`,
-      });
-  }
-
-  const renamedNoteRows = events
-    .filter((event) => event.name === eventNames.noteRenamed)
-    .toSorted((a, b) => a.seqNum - b.seqNum)
     .map((event) => ({
       storeId: event.storeId,
-      ...(event.args as NoteRenamedEventArgs),
+      ...(event.args as NoteEventArgs),
       seqNum: event.seqNum,
     }));
-  for (const row of renamedNoteRows) {
+  for (const rows of chunkForD1Insert(noteRows, 7)) {
     await db
       .insert(adminNotes)
-      .values(row)
+      .values(rows)
       .onConflictDoUpdate({
         target: [adminNotes.storeId, adminNotes.id],
         set: {
           title: sql`excluded.title`,
-          updatedAt: sql`excluded.updated_at`,
-          seqNum: sql`excluded.seq_num`,
-        },
-        setWhere: sql`excluded.seq_num > ${adminNotes.seqNum}`,
-      });
-  }
-
-  const statusNoteRows = events
-    .filter((event) => event.name === eventNames.noteStatusChanged)
-    .toSorted((a, b) => a.seqNum - b.seqNum)
-    .map((event) => ({
-      storeId: event.storeId,
-      ...(event.args as NoteStatusChangedEventArgs),
-      seqNum: event.seqNum,
-    }));
-  for (const row of statusNoteRows) {
-    await db
-      .insert(adminNotes)
-      .values(row)
-      .onConflictDoUpdate({
-        target: [adminNotes.storeId, adminNotes.id],
-        set: {
+          text: sql`excluded.text`,
           status: sql`excluded.status`,
           updatedAt: sql`excluded.updated_at`,
           seqNum: sql`excluded.seq_num`,
@@ -132,8 +73,8 @@ export async function queue(batch: MessageBatch<ProjectionMessage>, env: AdminEn
         createdAt: args.createdAt,
       };
     });
-  if (itemRows.length > 0) {
-    await db.insert(adminItems).values(itemRows).onConflictDoNothing();
+  for (const rows of chunkForD1Insert(itemRows, 4)) {
+    await db.insert(adminItems).values(rows).onConflictDoNothing();
   }
 
   const conversationRows = events
@@ -148,10 +89,10 @@ export async function queue(batch: MessageBatch<ProjectionMessage>, env: AdminEn
       ...(event.args as AgentConversation),
       seqNum: event.seqNum,
     }));
-  if (conversationRows.length > 0) {
+  for (const rows of chunkForD1Insert(conversationRows, 9)) {
     await db
       .insert(adminAgentConversations)
-      .values(conversationRows)
+      .values(rows)
       .onConflictDoUpdate({
         target: [adminAgentConversations.storeId, adminAgentConversations.id],
         set: {

@@ -16,6 +16,7 @@
  *                    infra/alchemy.run.ts)
  */
 import type { GatewayEnv } from "@infra/env";
+import { API_PATHS } from "./gateway.constants.ts";
 import { verifyUser } from "./jwt.util.ts";
 
 type CloudflareRequest = Request<unknown, CfProperties<unknown>>;
@@ -51,13 +52,13 @@ export default {
   async fetch(request: Request, env: GatewayEnv): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname.startsWith("/api/auth/")) return env.AUTH.fetch(request);
-    if (url.pathname.startsWith("/api/agents/")) {
+    if (url.pathname.startsWith(`${API_PATHS.auth}/`)) return env.AUTH.fetch(request);
+    if (url.pathname.startsWith(`${API_PATHS.agents}/`)) {
       return forwardAsUser(request, env, env.AGENT_ORIGIN || env.AGENT);
     }
-    if (url.pathname === "/api/sync") return forwardAsUser(request, env, env.LIVESTORE);
-    if (url.pathname === "/api/data") return forwardAsUser(request, env, env.USER);
-    if (url.pathname === "/api/admin") return forwardAsUser(request, env, env.ADMIN);
+    if (url.pathname === API_PATHS.sync) return forwardAsUser(request, env, env.LIVESTORE);
+    if (url.pathname === API_PATHS.data) return forwardAsUser(request, env, env.USER);
+    if (url.pathname === API_PATHS.admin) return forwardAsUser(request, env, env.ADMIN);
 
     return new Response("not found", { status: 404 });
   },

@@ -4,7 +4,8 @@ import { makeAdapter } from "@livestore/adapter-node";
 import { createStorePromise, nanoid } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { events, schema, tables } from "../../db/livestore/schema.ts";
-import { signInDemoUser } from "./auth.ts";
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
+import { getDemoUserStoreId, signInDemoUser } from "./auth.ts";
 import { gatewayOrigin, gatewayWebSocketOrigin } from "./config.ts";
 
 const dataDir = ".livestore-smoke";
@@ -21,17 +22,18 @@ const poll = async <T>(label: string, fn: () => T | undefined, timeoutMs = 20_00
 
 export async function runLivestoreSmoke() {
   rmSync(dataDir, { recursive: true, force: true });
-  const { token, userId } = await signInDemoUser(gatewayOrigin);
+  const { token } = await signInDemoUser(gatewayOrigin);
+  const storeId = await getDemoUserStoreId(gatewayOrigin, token);
   const syncedAdapter = (dir: string) =>
     makeAdapter({
       storage: { type: "fs", baseDirectory: `${dataDir}/${dir}` },
-      sync: { backend: makeWsSync({ url: `${gatewayWebSocketOrigin}/api/sync` }) },
+      sync: { backend: makeWsSync({ url: `${gatewayWebSocketOrigin}${API_PATHS.sync}` }) },
     });
   const makeStore = (dir: string) =>
     createStorePromise({
       schema,
       adapter: syncedAdapter(dir),
-      storeId: userId,
+      storeId,
       syncPayload: { authToken: token },
     });
 
@@ -40,19 +42,45 @@ export async function runLivestoreSmoke() {
   let storeC2: Awaited<ReturnType<typeof makeStore>> | undefined;
   try {
     const noteId = nanoid();
-    storeA.commit(events.noteCreated({ id: noteId, text: "hello from A", updatedAt: Date.now() }));
+    storeA.commit(
+      events.noteCreated({
+        id: noteId,
+        title: "",
+        text: "hello from A",
+        status: "active",
+        updatedAt: Date.now(),
+      }),
+    );
     await poll("B sees A's note", () =>
       storeB.query(tables.notes.select()).find((note) => note.id === noteId),
     );
 
+    // Prime device C once before it goes offline. The durable backend persists
+    // across smoke runs, so a brand-new offline database would otherwise write
+    // from sequence zero without ever having observed the current server head.
+    const primedStoreC = await makeStore("c");
+    try {
+      await poll("C catches up before going offline", () =>
+        primedStoreC.query(tables.notes.select()).find((note) => note.id === noteId),
+      );
+    } finally {
+      await primedStoreC.shutdownPromise();
+    }
+
     const offlineAdapter = makeAdapter({
       storage: { type: "fs", baseDirectory: `${dataDir}/c` },
     });
-    const storeC = await createStorePromise({ schema, adapter: offlineAdapter, storeId: userId });
+    const storeC = await createStorePromise({ schema, adapter: offlineAdapter, storeId });
     const offlineNoteId = nanoid();
     try {
       storeC.commit(
-        events.noteCreated({ id: offlineNoteId, text: "written offline", updatedAt: Date.now() }),
+        events.noteCreated({
+          id: offlineNoteId,
+          title: "",
+          text: "written offline",
+          status: "active",
+          updatedAt: Date.now(),
+        }),
       );
       assert.ok(
         storeC.query(tables.notes.select()).some((note) => note.id === offlineNoteId),
@@ -82,4 +110,7 @@ export async function runLivestoreSmoke() {
   }
 }
 
-if (import.meta.main) await runLivestoreSmoke();
+if (import.meta.main) {
+  await runLivestoreSmoke();
+  process.exit(0);
+}

@@ -1,3 +1,7 @@
+import { newHttpBatchRpcSession } from "capnweb";
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
+import type { UserApi } from "../../src/workers/user/user.rpc.ts";
+
 export const demoUsers = {
   admin: {
     id: "demo-admin",
@@ -15,7 +19,7 @@ export async function signInDemoUser(
   origin: string,
   credentials: { email: string; password: string } = demoUsers.admin,
 ) {
-  const login = await fetch(`${origin}/api/auth/sign-in/email`, {
+  const login = await fetch(`${origin}${API_PATHS.auth}/sign-in/email`, {
     method: "POST",
     headers: { "content-type": "application/json", origin },
     body: JSON.stringify(credentials),
@@ -25,7 +29,7 @@ export async function signInDemoUser(
   const cookie = login.headers.get("set-cookie")?.split(";")[0];
   if (!cookie) throw new Error("login did not return a session cookie");
 
-  const tokenResponse = await fetch(`${origin}/api/auth/token`, { headers: { cookie } });
+  const tokenResponse = await fetch(`${origin}${API_PATHS.auth}/token`, { headers: { cookie } });
   if (!tokenResponse.ok) {
     throw new Error(`token failed: ${tokenResponse.status} ${await tokenResponse.text()}`);
   }
@@ -36,4 +40,12 @@ export async function signInDemoUser(
   if (!userId) throw new Error("token did not contain a subject");
 
   return { cookie, token, userId };
+}
+
+export async function getDemoUserStoreId(origin: string, token: string) {
+  const api = newHttpBatchRpcSession<UserApi>(
+    `${origin}${API_PATHS.data}?auth=${encodeURIComponent(token)}`,
+  );
+  const viewer = await api.viewer();
+  return viewer.storeId;
 }

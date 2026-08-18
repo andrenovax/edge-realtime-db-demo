@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { createFlueClient } from "@flue/sdk";
+import { AgentName } from "../../src/workers/agent/agent.constants.ts";
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
 import { signInDemoUser } from "../smoke/auth.ts";
 import { gatewayOrigin } from "../smoke/config.ts";
 
@@ -13,7 +15,7 @@ const results: Array<Record<string, string | number>> = [];
 
 for (let trial = 1; trial <= rounds; trial++) {
   const conversation = createFlueClient({
-    url: `${gatewayOrigin}/api/agents/hello/${crypto.randomUUID()}`,
+    url: `${gatewayOrigin}${API_PATHS.agent(AgentName.Hello, crypto.randomUUID())}`,
     token,
   });
   const startedAt = performance.now();
@@ -27,7 +29,10 @@ for (let trial = 1; trial <= rounds; trial++) {
   let firstTextAt: number | undefined;
   let settledAt: number | undefined;
 
-  const reply = await conversation.read(admission, {
+  // Reattach through the client's public gateway URL. Local Flue admissions
+  // are created by the loopback-hosted worker and therefore advertise that
+  // internal origin in streamUrl.
+  const reply = await conversation.read(admission.submissionId, {
     onEvent(event) {
       const now = performance.now();
       firstEventAt ??= now;

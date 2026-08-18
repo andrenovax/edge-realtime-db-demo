@@ -1,12 +1,12 @@
-// The queue message contract between LiveStore's per-user event logs and the
-// system-plane D1 projection. The only module both sides import.
+// One validated LiveStore event per Queue message keeps every message below
+// the platform limit without splitting the canonical push.
 export type ProjectionMessage = {
   storeId: string;
-  events: {
+  event: {
     id: string;
     name: string;
     args: unknown;
     seqNum: number;
     clientId: string;
-  }[];
+  };
 };

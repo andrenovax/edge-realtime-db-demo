@@ -1,12 +1,24 @@
 {
   "compilerOptions": {
     "paths": {
+      "@ui/libs/*": ["./src/web/user/lib/*"],
+      "@ui/features/*": ["./src/web/user/features/*"],
+      "@ui/providers/*": ["./src/web/user/providers/*"],
+      "@ui/components/*": ["./src/web/user/components/*"],
+      "@ui/hooks/*": ["./src/web/user/hooks/*"],
+      "@ui/routes.context": ["./src/web/user/routes.context.ts"],
       "@infra/env": ["./infra/alchemy.run.ts"],
+      "@db/admin": ["./db/admin/schema.ts"],
+      "@db/auth": ["./db/auth/schema.ts"],
+      "@db/constants": ["./db/constants.ts"],
       "@db/livestore": ["./db/livestore/schema.ts"],
-      "@db/schema/*": ["./db/schema/*.ts"],
+      "@db/livestore/constants": ["./db/livestore/constants.ts"],
       "@workers/livestore/user-contract": ["./src/workers/livestore/user.contract.ts"],
       "@workers/livestore/user-schema": ["./src/workers/livestore/user.schema.ts"],
-      "@workers/admin/contract": ["./src/workers/admin/admin.contract.ts"]
+      "@workers/admin/contract": ["./src/workers/admin/admin.contract.ts"],
+      "@workers/agent/constants": ["./src/workers/agent/agent.constants.ts"],
+      "@workers/gateway/constants": ["./src/workers/gateway/gateway.constants.ts"],
+      "@workers/user/rpc": ["./src/workers/user/user.rpc.ts"]
     }
   }
 }

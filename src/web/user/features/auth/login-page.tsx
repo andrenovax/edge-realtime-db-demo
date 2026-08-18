@@ -1,22 +1,281 @@
+import { useForm } from "@tanstack/react-form";
+import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Sparkles } from "lucide-react";
-import { useState } from "react";
-import { GOOGLE_AUTH_ENABLED } from "../../config.ts";
-import { authClient } from "../../lib/auth.ts";
-import styles from "./login-page.module.css";
+import { type FormEvent, useState } from "react";
+import * as v from "valibot";
+import { APP_PATHS, GOOGLE_AUTH_ENABLED } from "../../config.ts";
+import { useGoogleSignin } from "@ui/features/auth/hooks/use-google-signin.ts";
+import { authSessionQueryKey } from "@ui/libs/auth.ts";
+import styles from "@ui/features/auth/login-page.module.css";
+import { useRootRouteContext } from "@ui/routes.context";
 
 type AuthMode = "in" | "up";
 
-const oauthErrorFromLocation = () => {
-  if (typeof window === "undefined") return null;
-  return new URLSearchParams(window.location.search).get("error");
-};
+const CredentialsSchema = v.object({
+  email: v.pipe(
+    v.string(),
+    v.nonEmpty("Enter your email address."),
+    v.email("Enter a valid email address."),
+  ),
+  password: v.pipe(
+    v.string(),
+    v.nonEmpty("Enter your password."),
+    v.minLength(8, "Password must be at least 8 characters."),
+  ),
+});
 
-const oauthErrorMessage = (code: string | null) => {
-  if (code === "account_not_linked") {
-    return "This email already has a password account. Sign in with your password once to securely connect Google.";
+function getFormErrorMessage({
+  searchError,
+  submitError,
+  googleError,
+}: {
+  searchError: string | undefined;
+  submitError: unknown;
+  googleError: Error | null;
+}) {
+  if (googleError) return googleError.message;
+  if (typeof submitError === "string") return submitError;
+  if (searchError === "account_not_linked") {
+    return "This email is registered with a password. Sign in with your email and password instead.";
   }
-  return code ? "Google sign-in failed. Please try again." : null;
-};
+  return searchError ? "Google sign-in failed. Please try again." : null;
+}
+
+export function LoginPage() {
+  const { auth, queryClient } = useRootRouteContext();
+  const { error: oauthError, redirect } = useSearch({ from: "/sign-in" });
+  const navigate = useNavigate({ from: "/sign-in" });
+  const router = useRouter();
+  const redirectTarget = redirect ?? APP_PATHS.home;
+
+  const [mode, setMode] = useState<AuthMode>("in");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const googleSignIn = useGoogleSignin(redirectTarget);
+  const clearOAuthError = () =>
+    oauthError
+      ? navigate({
+          search: (previous) => ({ ...previous, error: undefined }),
+          replace: true,
+        })
+      : Promise.resolve();
+
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: CredentialsSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      const result =
+        mode === "in"
+          ? await auth.signIn.email({ email: value.email, password: value.password })
+          : await auth.signUp.email({
+              email: value.email,
+              password: value.password,
+              name: value.email.split("@")[0],
+            });
+      if (result.error) {
+        formApi.setErrorMap({
+          onSubmit: {
+            form: result.error.message ?? "Authentication failed. Please try again.",
+            fields: {},
+          },
+        });
+        return;
+      }
+
+      queryClient.removeQueries({ queryKey: authSessionQueryKey });
+      router.history.replace(redirectTarget);
+    },
+  });
+
+  const selectMode = (nextMode: AuthMode) => {
+    googleSignIn.reset();
+    form.setErrorMap({ onSubmit: undefined });
+    setMode(nextMode);
+    setShowPassword(false);
+    void clearOAuthError();
+  };
+
+  const handleCredentialsSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (googleSignIn.isPending) return;
+
+    void clearOAuthError().then(() => {
+      googleSignIn.reset();
+      return form.handleSubmit();
+    });
+  };
+
+  const handleGoogleSignIn = () => {
+    if (form.state.isSubmitting) return;
+
+    void clearOAuthError().then(() => {
+      form.setErrorMap({ onSubmit: undefined });
+      googleSignIn.mutate();
+    });
+  };
+
+  return (
+    <form.Subscribe selector={(state) => [state.isSubmitting, state.errors[0]] as const}>
+      {([formBusy, submissionError]) => {
+        const isSignIn = mode === "in";
+        const busy = formBusy || googleSignIn.isPending;
+        const displayedError = getFormErrorMessage({
+          searchError: oauthError,
+          submitError: submissionError,
+          googleError: googleSignIn.error,
+        });
+
+        return (
+          <div className={styles.page}>
+            <div aria-hidden="true" className={styles.ambientLight} />
+            <main className={styles.panel}>
+              <div aria-hidden="true" className={styles.panelGlow} />
+              <div className={styles.content}>
+                <header className={styles.header}>
+                  <div className={styles.brand}>
+                    <span className={styles.brandMark}>
+                      <Sparkles aria-hidden="true" />
+                    </span>
+                    <span>Durable Notes</span>
+                  </div>
+                  <h1>{isSignIn ? "Welcome back" : "Create your account"}</h1>
+                  <p>
+                    {isSignIn
+                      ? "Sign in and continue where you left off."
+                      : "Start a calm space for your notes and ideas."}
+                  </p>
+                </header>
+
+                <form noValidate className={styles.form} onSubmit={handleCredentialsSubmit}>
+                  <form.Field name="email">
+                    {(field) => {
+                      const fieldError = field.state.meta.errors[0];
+
+                      return (
+                        <label className={styles.field} htmlFor="auth-email">
+                          <span>Email</span>
+                          <span className={styles.inputShell}>
+                            <Mail aria-hidden="true" />
+                            <input
+                              id="auth-email"
+                              type="email"
+                              autoComplete="email"
+                              placeholder="Enter your email"
+                              value={field.state.value}
+                              aria-invalid={Boolean(fieldError)}
+                              aria-describedby={fieldError ? "auth-email-error" : undefined}
+                              onBlur={field.handleBlur}
+                              onChange={(event) => field.handleChange(event.target.value)}
+                            />
+                          </span>
+                          {fieldError && (
+                            <span id="auth-email-error" role="alert" className={styles.fieldError}>
+                              {fieldError.message}
+                            </span>
+                          )}
+                        </label>
+                      );
+                    }}
+                  </form.Field>
+                  <form.Field name="password">
+                    {(field) => {
+                      const fieldError = field.state.meta.errors[0];
+
+                      return (
+                        <label className={styles.field} htmlFor="auth-password">
+                          <span>Password</span>
+                          <span className={styles.inputShell}>
+                            <LockKeyhole aria-hidden="true" />
+                            <input
+                              id="auth-password"
+                              type={showPassword ? "text" : "password"}
+                              autoComplete={isSignIn ? "current-password" : "new-password"}
+                              placeholder="Enter your password"
+                              value={field.state.value}
+                              aria-invalid={Boolean(fieldError)}
+                              aria-describedby={fieldError ? "auth-password-error" : undefined}
+                              onBlur={field.handleBlur}
+                              onChange={(event) => field.handleChange(event.target.value)}
+                            />
+                            <button
+                              type="button"
+                              className={styles.passwordToggle}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                              onClick={() => setShowPassword((visible) => !visible)}
+                            >
+                              {showPassword ? (
+                                <EyeOff aria-hidden="true" />
+                              ) : (
+                                <Eye aria-hidden="true" />
+                              )}
+                            </button>
+                          </span>
+                          {fieldError && (
+                            <span
+                              id="auth-password-error"
+                              role="alert"
+                              className={styles.fieldError}
+                            >
+                              {fieldError.message}
+                            </span>
+                          )}
+                        </label>
+                      );
+                    }}
+                  </form.Field>
+                  {displayedError && (
+                    <p role="alert" className={styles.error}>
+                      {displayedError}
+                    </p>
+                  )}
+                  <button type="submit" disabled={busy} className={styles.primaryAction}>
+                    <span>{busy ? "Please wait…" : isSignIn ? "Sign in" : "Create account"}</span>
+                    <ArrowRight aria-hidden="true" />
+                  </button>
+                </form>
+
+                {GOOGLE_AUTH_ENABLED && (
+                  <>
+                    <div className={styles.divider}>
+                      <span />
+                      <span>Or continue with</span>
+                      <span />
+                    </div>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={handleGoogleSignIn}
+                      className={styles.googleAction}
+                    >
+                      <GoogleIcon />
+                      <span>Continue with Google</span>
+                    </button>
+                  </>
+                )}
+
+                <p className={styles.modeSwitch}>
+                  {isSignIn ? "New here?" : "Already have an account?"}{" "}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => selectMode(isSignIn ? "up" : "in")}
+                  >
+                    {isSignIn ? "Create an account" : "Sign in"}
+                  </button>
+                </p>
+              </div>
+            </main>
+          </div>
+        );
+      }}
+    </form.Subscribe>
+  );
+}
 
 function GoogleIcon() {
   return (
@@ -38,174 +297,5 @@ function GoogleIcon() {
         d="M9 3.58c1.322 0 2.508.454 3.442 1.345l2.582-2.582C13.464.891 11.427 0 9 0A9 9 0 0 0 .956 4.963l3.007 2.332C4.672 5.166 6.656 3.58 9 3.58Z"
       />
     </svg>
-  );
-}
-
-export function LoginPage() {
-  const [oauthError] = useState(oauthErrorFromLocation);
-  const [mode, setMode] = useState<AuthMode>("in");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(() => oauthErrorMessage(oauthError));
-  const [busy, setBusy] = useState(false);
-  const shouldLinkGoogle = oauthError === "account_not_linked";
-
-  const runGoogle = async () => {
-    setBusy(true);
-    setError(null);
-    const result = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/",
-      errorCallbackURL: "/",
-    });
-    if (result.error) {
-      setError(result.error.message ?? "Google sign-in failed");
-      setBusy(false);
-    }
-  };
-
-  const run = async () => {
-    setBusy(true);
-    setError(null);
-    const result =
-      mode === "in"
-        ? await authClient.signIn.email({ email, password })
-        : await authClient.signUp.email({ email, password, name: email.split("@")[0] });
-    if (result.error) {
-      setError(result.error.message ?? "auth failed");
-      setBusy(false);
-      return;
-    }
-    if (mode === "in" && shouldLinkGoogle && GOOGLE_AUTH_ENABLED) {
-      const linkResult = await authClient.linkSocial({
-        provider: "google",
-        callbackURL: "/",
-        errorCallbackURL: "/",
-      });
-      if (linkResult.error) {
-        setError(linkResult.error.message ?? "Unable to connect Google");
-      }
-    }
-    setBusy(false);
-  };
-
-  const selectMode = (nextMode: AuthMode) => {
-    setMode(nextMode);
-    setError(null);
-    setShowPassword(false);
-  };
-
-  const isSignIn = mode === "in";
-
-  return (
-    <div className={styles.page}>
-      <div aria-hidden="true" className={styles.ambientLight} />
-      <main className={styles.panel}>
-        <div aria-hidden="true" className={styles.panelGlow} />
-        <div className={styles.content}>
-          <header className={styles.header}>
-            <div className={styles.brand}>
-              <span className={styles.brandMark}>
-                <Sparkles aria-hidden="true" />
-              </span>
-              <span>Durable Notes</span>
-            </div>
-            <h1>{isSignIn ? "Welcome back" : "Create your account"}</h1>
-            <p>
-              {isSignIn
-                ? "Sign in and continue where you left off."
-                : "Start a calm space for your notes and ideas."}
-            </p>
-          </header>
-
-          <form
-            className={styles.form}
-            onSubmit={(event) => {
-              event.preventDefault();
-              void run();
-            }}
-          >
-            <label className={styles.field} htmlFor="auth-email">
-              <span>Email</span>
-              <span className={styles.inputShell}>
-                <Mail aria-hidden="true" />
-                <input
-                  id="auth-email"
-                  required
-                  type="email"
-                  autoComplete="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </span>
-            </label>
-            <label className={styles.field} htmlFor="auth-password">
-              <span>Password</span>
-              <span className={styles.inputShell}>
-                <LockKeyhole aria-hidden="true" />
-                <input
-                  id="auth-password"
-                  required
-                  type={showPassword ? "text" : "password"}
-                  autoComplete={isSignIn ? "current-password" : "new-password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className={styles.passwordToggle}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  onClick={() => setShowPassword((visible) => !visible)}
-                >
-                  {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-                </button>
-              </span>
-            </label>
-            {error && (
-              <p role="alert" className={styles.error}>
-                {error}
-              </p>
-            )}
-            <button type="submit" disabled={busy} className={styles.primaryAction}>
-              <span>{busy ? "Please wait…" : isSignIn ? "Sign in" : "Create account"}</span>
-              <ArrowRight aria-hidden="true" />
-            </button>
-          </form>
-
-          {GOOGLE_AUTH_ENABLED && (
-            <>
-              <div className={styles.divider}>
-                <span />
-                <span>Or continue with</span>
-                <span />
-              </div>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void runGoogle()}
-                className={styles.googleAction}
-              >
-                <GoogleIcon />
-                <span>Continue with Google</span>
-              </button>
-            </>
-          )}
-
-          <p className={styles.modeSwitch}>
-            {isSignIn ? "New here?" : "Already have an account?"}{" "}
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => selectMode(isSignIn ? "up" : "in")}
-            >
-              {isSignIn ? "Create an account" : "Sign in"}
-            </button>
-          </p>
-        </div>
-      </main>
-    </div>
   );
 }

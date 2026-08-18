@@ -1,14 +1,40 @@
 import { createAuthClient } from "better-auth/react";
+import { jwtClient } from "better-auth/client/plugins";
+import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import { API_PATHS } from "@workers/gateway/constants";
 
-// Same-origin: the gateway routes /api/auth/* to the auth worker.
-export const authClient = createAuthClient();
+export const authClient = createAuthClient({
+  // Same-origin: the gateway routes this path to the auth worker.
+  basePath: API_PATHS.auth,
+  plugins: [jwtClient()],
+  sessionOptions: {
+    refetchInterval: 0,
+    refetchOnWindowFocus: true,
+    refetchWhenOffline: false,
+  },
+});
 
-// Short-lived JWT for the RPC/sync/agent lanes; the session cookie only
-// authenticates against the auth worker itself.
-export async function fetchJwt(): Promise<{ token: string; userId: string }> {
-  const res = await fetch("/api/auth/token");
-  if (!res.ok) throw new Error(`token fetch failed: ${res.status}`);
-  const { token } = (await res.json()) as { token: string };
-  const userId = JSON.parse(atob(token.split(".")[1])).sub as string;
-  return { token, userId };
+export type AuthClient = typeof authClient;
+
+export const authSessionQueryKey = ["auth", "session"] as const;
+
+export function authSessionQueryOptions(auth: AuthClient) {
+  return queryOptions({
+    queryKey: authSessionQueryKey,
+    queryFn: async () => {
+      const { data: session, error } = await auth.getSession();
+      if (error) throw new Error(error.message ?? `session fetch failed: ${error.status}`);
+      return session;
+    },
+    // The session is invalidated explicitly by auth mutations. Note selection
+    // only changes local workspace state and must never trigger get-session.
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+}
+
+export function ensureAuthSession(queryClient: QueryClient, auth: AuthClient) {
+  return queryClient.ensureQueryData(authSessionQueryOptions(auth));
 }

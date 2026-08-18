@@ -1,5 +1,6 @@
 import type { UserDO } from "./user.do.ts";
-import type { AgentConversation, AgentModelVariant } from "@db/schema/user";
+import type { AgentModelVariant } from "@db/constants";
+import type { AgentConversation } from "@db/livestore";
 
 export type { AgentConversation, AgentModelVariant };
 
@@ -7,7 +8,6 @@ export type { AgentConversation, AgentModelVariant };
 // Type-only seam — the DO class itself never leaves this worker.
 export type UserDoRpc = Pick<
   UserDO,
-  | "provisionUser"
   | "addNote"
   | "updateNote"
   | "ensureNote"

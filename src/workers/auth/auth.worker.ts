@@ -2,9 +2,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { admin, jwt } from "better-auth/plugins";
 import { drizzle } from "drizzle-orm/d1";
-import * as schema from "@db/schema/better-auth";
+import * as schema from "@db/auth";
 import type { AuthEnv } from "@infra/env";
-import type { UserCreatedV1 } from "./auth.events.ts";
 
 const publicOrigin = (request: Request) => {
   const url = new URL(request.url);
@@ -45,27 +44,6 @@ export default {
             },
           }
         : {},
-      databaseHooks: {
-        user: {
-          create: {
-            after: async (user) => {
-              const event = {
-                type: "user.created",
-                version: 1,
-                user: {
-                  id: user.id,
-                  email: user.email,
-                  name: user.name,
-                  createdAt: user.createdAt.toISOString(),
-                },
-              } satisfies UserCreatedV1;
-              // Better Auth awaits this hook. Signup cannot complete until
-              // Cloudflare has durably accepted the lifecycle event.
-              await env.USER_LIFECYCLE_EVENTS.send(event);
-            },
-          },
-        },
-      },
       plugins: [
         // Roles + ban/impersonation machinery, and auth.api.setRole /
         // admin endpoints for managing them.

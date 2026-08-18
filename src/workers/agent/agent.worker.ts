@@ -8,7 +8,11 @@ import {
   getAgentConversationPayloadSchema,
   type CreateConversationPayload,
 } from "@workers/livestore/user-schema";
+import { API_PATHS } from "@workers/gateway/constants";
+import { AgentName } from "./agent.constants.ts";
 import { Hello } from "./agents/hello.agent.ts";
+
+export { AgentName } from "./agent.constants.ts";
 
 type AppEnv = {
   Bindings: AgentEnv;
@@ -19,7 +23,7 @@ type AppEnv = {
   };
 };
 
-const agents = [["hello", Hello]] as const;
+const agents = [[AgentName.Hello, Hello]] as const;
 const defaultModelVariant = "workers-ai" satisfies AgentConversation["modelVariant"];
 type SupportedAgentName = (typeof agents)[number][0];
 
@@ -37,7 +41,6 @@ function withServerContext(
   serverContext: {
     userId: string;
     noteId: string;
-    modelVariant: AgentConversation["modelVariant"];
   },
   createOnly: boolean,
 ) {
@@ -68,10 +71,13 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
     const user = c.env.USER_DO.getByName(userId);
     const conversation = await user.getAgentConversation(conversationId.output);
     const mayCreate = c.req.method === "POST" && !c.req.path.endsWith("/abort");
-    if (
-      (!conversation && !mayCreate) ||
-      (conversation && (conversation.agentName !== name || conversation.status !== "active"))
-    ) {
+    // Flue treats a missing conversation history response as an observable
+    // `absent` state. This lets useFlueAgent stay mounted before the first
+    // message and refresh itself after that message creates the conversation.
+    if (!conversation && !mayCreate) {
+      return c.json({ error: "not found" }, 404);
+    }
+    if (conversation && (conversation.agentName !== name || conversation.status !== "active")) {
       return c.json({ error: "forbidden" }, 403);
     }
 
@@ -82,7 +88,7 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
   });
 
   // Flue creation data is server-owned. For message admission, overwrite any
-  // caller-provided value with the authenticated owner and server-selected model.
+  // caller-provided value with the authenticated owner and note identity.
   router.post("/:id", async (c, next) => {
     const conversation = c.get("conversation");
     const conversationId = c.get("conversationId");
@@ -102,7 +108,6 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
         {
           userId,
           noteId: conversationId,
-          modelVariant,
         },
         createOnly,
       );
@@ -141,7 +146,7 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
   return router;
 }
 
-// The gateway owns /api/agents and forwards that public URL unchanged.
+// The gateway owns the agents route and forwards that public URL unchanged.
 // Add an agent by importing it and adding one entry to the registry above.
 const agentRoutes = new Hono<AppEnv>();
 for (const [name, agent] of agents) {
@@ -149,6 +154,6 @@ for (const [name, agent] of agents) {
 }
 
 const app = new Hono<AppEnv>();
-app.route("/api/agents", agentRoutes);
+app.route(API_PATHS.agents, agentRoutes);
 
 export default app;

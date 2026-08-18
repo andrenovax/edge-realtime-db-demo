@@ -1,0 +1,77 @@
+diff --git a/dist/cf-worker/do/push.js b/dist/cf-worker/do/push.js
+--- a/dist/cf-worker/do/push.js
++++ b/dist/cf-worker/do/push.js
+@@ -14,13 +14,6 @@
+     if (pushRequest.batch.length === 0) {
+         return SyncMessage.PushAck.make({});
+     }
+-    if (options?.onPush !== undefined) {
+-        yield* Effect.tryAll(() => options.onPush(pushRequest, {
+-            storeId,
+-            ...(payload !== undefined ? { payload } : {}),
+-            ...(headers !== undefined ? { headers } : {}),
+-        })).pipe(UnknownError.mapToUnknownError);
+-    }
+     if (pushRequest.backendId._tag === 'Some' && pushRequest.backendId.value !== backendId) {
+         return yield* new BackendIdMismatchError({ expected: backendId, received: pushRequest.backendId.value });
+     }
+@@ -39,6 +32,13 @@
+             // })
+             return yield* new ServerAheadError({ minimumExpectedNum: currentHead, providedNum: firstEventParent });
+         }
++        if (options?.onPush !== undefined) {
++            yield* Effect.tryAll(() => options.onPush(pushRequest, {
++                storeId,
++                ...(payload !== undefined ? { payload } : {}),
++                ...(headers !== undefined ? { headers } : {}),
++            })).pipe(UnknownError.mapToUnknownError);
++        }
+         const createdAt = new Date().toISOString();
+         // TODO possibly model this as a queue in order to speed up subsequent pushes
+         yield* storage.appendEvents(pushRequest.batch, createdAt);
+@@ -135,4 +135,4 @@
+     const exit = yield* Effect.promise(() => ctx.blockConcurrencyWhile(() => eff.pipe(Effect.provide(runtime), Effect.runPromiseExit)));
+     return yield* exit;
+ });
+-//# sourceMappingURL=push.js.map
+\ No newline at end of file
++//# sourceMappingURL=push.js.map
+diff --git a/src/cf-worker/do/push.ts b/src/cf-worker/do/push.ts
+--- a/src/cf-worker/do/push.ts
++++ b/src/cf-worker/do/push.ts
+@@ -48,18 +48,6 @@
+         return SyncMessage.PushAck.make({})
+       }
+
+-      if (options?.onPush !== undefined) {
+-        yield* Effect.tryAll(() =>
+-          options.onPush!(pushRequest, {
+-            storeId,
+-            ...(payload !== undefined ? { payload } : {}),
+-            ...(headers !== undefined ? { headers } : {}),
+-          }),
+-        ).pipe(
+-          UnknownError.mapToUnknownError,
+-        )
+-      }
+-
+       if (pushRequest.backendId._tag === 'Some' && pushRequest.backendId.value !== backendId) {
+         return yield* new BackendIdMismatchError({ expected: backendId, received: pushRequest.backendId.value })
+       }
+@@ -81,6 +69,16 @@
+           return yield* new ServerAheadError({ minimumExpectedNum: currentHead, providedNum: firstEventParent })
+         }
+
++        if (options?.onPush !== undefined) {
++          yield* Effect.tryAll(() =>
++            options.onPush!(pushRequest, {
++              storeId,
++              ...(payload !== undefined ? { payload } : {}),
++              ...(headers !== undefined ? { headers } : {}),
++            }),
++          ).pipe(UnknownError.mapToUnknownError)
++        }
++
+         const createdAt = new Date().toISOString()
+
+         // TODO possibly model this as a queue in order to speed up subsequent pushes

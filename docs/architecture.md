@@ -15,26 +15,26 @@ one runtime concern: `livestore` is the durable state and synchronization
 plane. Every authenticated identity, including an administrator, may own
 application state in a per-user DO. Better Auth identity and the administrator's
 cross-user read model live in D1. The projection Queue is the one-way bridge
-from per-user application state into that read model; a separate lifecycle
-Queue carries identity events from `auth` to `user`.
+from per-user application state into that read model. Auth owns no application
+state bindings: the user plane deterministically maps an authenticated user ID
+to an opaque Durable Object ID when state is accessed.
 
-| Worker         | Actor / role                                                                                                                                            | Stores                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `gateway`      | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers             | —                                                            |
-| `auth`         | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                            | D1 (Better Auth tables)                                      |
-| `event-router` | asynchronous event routing — consumes the user-lifecycle queue and forwards producer-owned events to the Worker that owns each operation                | —                                                            |
-| `livestore`    | durable state — LiveStore sync plus all application DOs (`UserDO` client + `UserSyncBackendDO` event log); owns notes, items, and conversation metadata | DO SQLite, LiveStore schema                                  |
-| `user`         | authenticated viewer identity (`/api/data`); per-user application state flows directly through LiveStore                                                | —                                                            |
-| `admin`        | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                                       | D1 (`user_events`, note, item, and conversation projections) |
-| `agent`        | agents — Flue runtime (`/api/agents/*`); create-only admits first messages, catalogs them in `UserDO`, and authorizes later access                      | generated agent DO SQLite                                    |
+| Worker      | Actor / role                                                                                                                                            | Stores                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `gateway`   | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers             | —                                                            |
+| `auth`      | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                            | D1 (Better Auth tables)                                      |
+| `livestore` | durable state — LiveStore sync plus all application DOs (`UserDO` client + `UserSyncBackendDO` event log); owns notes, items, and conversation metadata | DO SQLite, LiveStore schema                                  |
+| `user`      | authenticated viewer identity (`/api/data`) and deterministic opaque store ID derivation; application state flows directly through LiveStore            | —                                                            |
+| `admin`     | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                                       | D1 (`user_events`, note, item, and conversation projections) |
+| `agent`     | agents — Flue runtime (`/api/agents/*`); create-only admits first messages, catalogs them in `UserDO`, and authorizes later access                      | generated agent DO SQLite                                    |
 
 ## Public ingress
 
 `gateway` is the application's **only public entry point**. It is the only
 Worker that may own a public URL, route, custom domain, or user-facing static
-assets. `auth`, `event-router`, `livestore`, `user`, `admin`, and `agent` are
-private Workers and set `workersDev: false`. Public HTTP reaches the HTTP-facing
-private Workers only through `gateway`; `event-router` is driven by its Queue.
+assets. `auth`, `livestore`, `user`, `admin`, and `agent` are private Workers
+and set `workersDev: false`. Public HTTP reaches the HTTP-facing private Workers
+only through `gateway`.
 Local development uses a loopback origin for the agent while preserving the
 gateway as the only public application surface.
 
@@ -62,10 +62,10 @@ src/
   web/user/           user-facing SPA (Vite root; deployed with gateway)
   web/admin/          admin SPA (future)
 db/
-  drizzle.config.ts   Drizzle migration target for D1
-  schema/             Drizzle source — user canonical + D1 projections/auth
-  livestore/          LiveStore events and materializers for per-user state
-  migrations/         D1 migrations (applied by alchemy on deploy)
+  constants.ts        enum values shared across storage planes
+  auth/               Auth D1 schema, Drizzle config, migrations, and local seeds
+  admin/              Admin D1 schema, Drizzle config, and migrations
+  livestore/          LiveStore tables, events, and materializers
 infra/alchemy.run.ts  the stack: workers, bindings, D1, queues, consumers
 scripts/              smoke tests + boundary lint (external consumers)
 ```
@@ -85,46 +85,52 @@ worker needs them.
 | `<name>.do.ts`           | an application Durable Object in `livestore/`, named by subject (`user.do.ts`, `user-sync-backend.do.ts`)                              |
 | `<w>.events.ts`          | producer-owned event types emitted by that worker; a cross-worker type-only seam                                                       |
 | `*.contract.ts`          | a receiver-owned command/capability type-only seam                                                                                     |
+| `*.constants.ts`         | owner-defined, dependency-free shared identifiers and route constants                                                                  |
 | `*.schema.ts`            | receiver-owned runtime validation contract; exports schemas plus inferred payload types                                                |
 | `*.util.ts`              | worker-private helper (`jwt.util.ts`)                                                                                                  |
 
 ## Hard rules (lint-enforced)
 
 - **`workers-encapsulated`** — workers never import each other's logic.
-  Cross-worker seams are type-only `.contract.ts`/`.events.ts` modules or
-  declarative `.schema.ts` validators. Command/capability contracts are
+  Cross-worker seams are dependency-free `.constants.ts` values, type-only
+  `.contract.ts`/`.events.ts` modules, or declarative `.schema.ts` validators.
+  Command/capability contracts are
   **receiver-owned**: the queue consumer owns `ProjectionMessage`
   ([admin.contract.ts](../src/workers/admin/admin.contract.ts), imported by the
   LiveStore producer), while the DO's home worker owns `UserDoRpc` and its
   Valibot payload schemas ([user.contract.ts](../src/workers/livestore/user.contract.ts),
   [user.schema.ts](../src/workers/livestore/user.schema.ts)).
+- **`constants-dependency-free`** — shared `.constants.ts` modules have no
+  internal imports. This lets another Worker or the SPA consume an owner's
+  identifiers without pulling in its runtime implementation.
 - **`contracts-type-only`** — importing a `.contract.ts` is `import type`;
   no runtime code crosses a worker boundary.
 - **`events-producer-owned`** — an emitted event is owned and versioned by
-  its producer. Its types live in exactly `<producer>/<producer>.events.ts`;
-  for example, Auth's `UserCreatedV1` lives in
-  [auth.events.ts](../src/workers/auth/auth.events.ts), never in the Event
-  Router or receiving User Worker. The Event Router owns routing only.
+  its producer. Its types live in exactly `<producer>/<producer>.events.ts`.
 - **`events-type-only`** — importing an `.events.ts` module is `import type`;
   event catalogs contain serializable types, never producer implementation.
-- **`db-schema-planes`** — [user.ts](../db/schema/user.ts) is the canonical
-  Drizzle schema for user-owned rows and event contracts. `livestore` uses its
-  per-user tables and `admin` consumes the same declarations alongside its own
-  [admin.ts](../db/schema/admin.ts) D1 read model; `auth` sees only
-  [better-auth.ts](../db/schema/better-auth.ts). [index.ts](../db/schema/index.ts)
-  exports only D1 tables for drizzle-kit and is never imported from `src/`.
-  LiveStore derives the per-user SQLite tables from these declarations; Drizzle
-  migrations apply only to D1. `nub run db:generate` updates the D1 stream.
+- **`db-never-import-workers`** — modules under `db/` never import from
+  `src/workers/`; database definitions are a lower-level dependency.
+- **`db-schema-planes`** — [constants.ts](../db/constants.ts) owns enum values
+  shared across storage planes. `livestore` owns the canonical user-row schemas,
+  derives their TypeScript types, and owns its event names in dependency-free
+  [constants.ts](../db/livestore/constants.ts). Admin's
+  [schema.ts](../db/admin/schema.ts) D1 read model checks its inferred row types
+  against the LiveStore-derived types at compile time.
+  `auth` sees only [schema.ts](../db/auth/schema.ts). Each D1 database owns its
+  adjacent Drizzle config and migrations; `db:generate` updates both streams.
 - **`application-dos-livestore-only`** — every application-owned `*.do.ts`
   lives in `src/workers/livestore/` and is exported by `livestore.worker.ts`.
   Framework-generated DOs are the sole exception and stay with their framework
   worker; Flue's generated agent DOs therefore remain hosted by `agent`.
 - **`livestore-schema-owner-only`** — `livestore` is the only Worker that may
-  import `db/livestore/`; the web client also imports the shared schema for its
-  own local store.
-- **`web-imports-types-only`** — `src/web/` may `import type` from
-  `.contract.ts`/`.events.ts`/`.rpc.ts` only; it reaches workers over HTTP,
-  never by import.
+  import the runtime `db/livestore/` schema; the web client imports it for its
+  local store. Other Workers may import its derived row types type-only and its
+  dependency-free constants at runtime.
+- **`web-imports-worker-seams`** — `src/web/` may import dependency-free values
+  from `.constants.ts` and may `import type` from
+  `.contract.ts`/`.events.ts`/`.rpc.ts`; it reaches Worker behavior over HTTP,
+  never by importing implementation.
 - **`workers-never-import-web`** — the SPA is a consumer, not a dependency.
 - **`no-circular`** — no import cycles; break one with a type seam
   (`.contract.ts` for cross-worker capabilities; Alchemy-inferred environment
@@ -134,10 +140,10 @@ Not lintable but held by convention: request-identity trust flows one way —
 only `gateway` verifies JWTs; downstream workers authorize against the stamped
 `x-user-*` headers and never re-verify. The `agent` Worker validates and
 normalizes external payloads before calling `UserDO`; `user` adapts stamped
-viewer identity for `UserApi` and forwards typed internal lifecycle events to
-the DO. The DO owns application state transitions, not transport validation.
+viewer identity for `UserApi` and derives its opaque store ID through the
+`USER_DO` namespace. The DO owns application state transitions, not transport validation.
 Local smoke tests sign in through Better Auth as users from
-`db/seeds/local.sql`.
+`db/auth/seeds/local.sql`.
 
 ## Runtime environment
 
@@ -174,11 +180,11 @@ declarations and types cannot drift apart.
   another Worker can consume it? → a narrowly scoped method on `UserApi`
   (`user/user.rpc.ts`) that may only call the caller's own DO.
 - New cross-user/system read? → a method on `AdminApi` (`admin/admin.rpc.ts`).
-- New read-model fold? → `admin/admin.queue.ts` + `db/schema/admin.ts`; enqueue
+- New read-model fold? → `admin/admin.queue.ts` + `db/admin/schema.ts`; enqueue
   its typed snapshot/event after the source write succeeds.
-- New synced state? → define its row/event contract once in
-  `db/schema/user.ts`, then add the LiveStore materializer in
-  `db/livestore/schema.ts`.
+- New synced state? → define its table, derived row type, event, and materializer
+  in `db/livestore/schema.ts`; add shared enum values to `db/constants.ts` and
+  assert any Admin D1 projection against the derived LiveStore row type.
 - A type another worker needs? → the receiver's `.contract.ts`, imported
   `import type`.
 - A new emitted event? → define and version it in the producer's

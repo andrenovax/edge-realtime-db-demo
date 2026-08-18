@@ -30,7 +30,10 @@ export default {
       ctx: ctx as unknown as CfTypes.ExecutionContext,
       syncBackendBinding: "USER_SYNC_BACKEND_DO",
       validatePayload: (_payload, { storeId, headers }) => {
-        if (headers.get("x-user-id") !== storeId) throw new Error("forbidden: not your store");
+        const userId = headers.get("x-user-id");
+        if (!userId || env.USER_DO.idFromName(userId).toString() !== storeId) {
+          throw new Error("forbidden: not your store");
+        }
       },
     })) as unknown as Response;
   },

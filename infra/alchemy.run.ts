@@ -2,6 +2,7 @@ import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as GitHub from "alchemy/GitHub";
 import * as Output from "alchemy/Output";
+import * as RemovalPolicy from "alchemy/RemovalPolicy";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -17,14 +18,14 @@ const deploymentConfig = {
     authWorker: "../src/workers/auth/auth.worker.ts",
     livestoreWorker: "../src/workers/livestore/livestore.worker.ts",
     userWorker: "../src/workers/user/user.worker.ts",
-    eventRouterWorker: "../src/workers/event-router/event-router.worker.ts",
     adminWorker: "../src/workers/admin/admin.worker.ts",
     agentRoot: "../src/workers/agent",
     agentEntry: "flue.alchemy.worker.ts",
     gatewayRoot: "../src/web/user",
     gatewayWorker: "../../workers/gateway/gateway.worker.ts",
-    databaseMigrations: "../db/migrations",
-    localDatabaseSeed: "../db/seeds/local.sql",
+    authDatabaseMigrations: "../db/auth/migrations",
+    adminDatabaseMigrations: "../db/admin/migrations",
+    localDatabaseSeed: "../db/auth/seeds/local.sql",
   },
   local: {
     agentOrigin: "http://127.0.0.1:8788",
@@ -42,12 +43,6 @@ const deploymentConfig = {
     batchSize: 25,
     maxWaitTimeMs: 2000,
   },
-  lifecycleConsumer: {
-    // Dispatch user lifecycle events as soon as they are enqueued. Delivery
-    // remains at-least-once, so destination operations must stay idempotent.
-    batchSize: 1,
-    maxWaitTimeMs: 0,
-  },
 };
 
 // Values come from the deploy process environment and are installed only on
@@ -59,17 +54,13 @@ const authEnv = {
   GOOGLE_CLIENT_SECRET: googleClientId ? Config.redacted("GOOGLE_CLIENT_SECRET") : "",
 };
 
-export const AuthWorker = (
-  db: Cloudflare.D1.Database,
-  userLifecycleEvents: Cloudflare.Queues.Queue,
-) =>
+export const AuthWorker = (db: Cloudflare.D1.Database) =>
   Cloudflare.Worker("auth", {
     main: deploymentConfig.paths.authWorker,
     workersDev: false,
     compatibility: deploymentConfig.compatibility,
     env: {
       DB: db,
-      USER_LIFECYCLE_EVENTS: userLifecycleEvents,
       ...authEnv,
     },
   });
@@ -110,19 +101,6 @@ export const UserWorker = (liveStoreWorkerName: Alchemy.Input<string>) =>
   });
 
 export type UserEnv = Cloudflare.InferEnv<ReturnType<typeof UserWorker>>;
-
-export const EventRouterWorker = (user: Cloudflare.Worker) =>
-  Cloudflare.Worker("event-router", {
-    main: deploymentConfig.paths.eventRouterWorker,
-    workersDev: false,
-    observability: { enabled: true, traces: { enabled: true } },
-    compatibility: deploymentConfig.compatibility,
-    env: {
-      USER: Cloudflare.WorkerEntrypoint(user),
-    },
-  });
-
-export type EventRouterEnv = Cloudflare.InferEnv<ReturnType<typeof EventRouterWorker>>;
 
 export const AdminWorker = (db: Cloudflare.D1.Database) =>
   Cloudflare.Worker("admin", {
@@ -208,10 +186,10 @@ export const GatewayWorker = ({
 
 export type GatewayEnv = Cloudflare.InferEnv<ReturnType<typeof GatewayWorker>>;
 
-// Seven workers: gateway (public), auth (Better Auth + D1), livestore
+// Six workers: gateway (public), auth (Better Auth + D1), livestore
 // (LiveStore DOs: UserDO + UserSyncBackendDO), user (capnweb + DO binding),
-// event-router (async lifecycle forwarding), admin (projection consumer + D1
-// read model), agent (flue + UserDO binding). Alchemy owns all seven workers;
+// admin (projection consumer + D1 read model), agent (flue + UserDO binding).
+// Alchemy owns all six workers;
 // its Vite source gives the Flue worker module-level hot reload in dev.
 export default Alchemy.Stack(
   "flue-demo",
@@ -222,6 +200,8 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const isLocalDev = yield* Alchemy.ALCHEMY_DEV;
     const stage = yield* Alchemy.Stage;
+    const isPreviewStage = /^preview-pr-\d+$/.test(stage);
+    const retainProductionState = RemovalPolicy.retain(stage === "production");
     const github = yield* GitHub.GitHubEnv;
     const cloudflareWorkerName = yield* Config.string("CLOUDFLARE_WORKER_NAME");
     const flueManifest = yield* Effect.promise(() =>
@@ -232,21 +212,27 @@ export default Alchemy.Stack(
       ),
     );
 
-    // Cross-user directory: Better Auth tables, JWKS keys, and projections.
-    const db = yield* Cloudflare.D1.Database("db", {
-      migrationsDir: deploymentConfig.paths.databaseMigrations,
+    // Latency-sensitive identity state is isolated from projection writes and
+    // from the admin Worker's database capability.
+    const authDb = yield* Cloudflare.D1.Database("auth-db", {
+      migrationsDir: deploymentConfig.paths.authDatabaseMigrations,
       migrationsTable: "drizzle_migrations",
       // Alchemy applies local seed data after migrations. Live deploys
       // intentionally never import demo identities.
       importFiles: isLocalDev ? [deploymentConfig.paths.localDatabaseSeed] : undefined,
-    });
+    }).pipe(retainProductionState);
 
-    // Both feeds are ordinary Cloudflare events. The lifecycle queue avoids a
-    // circular service-binding bootstrap and decouples Auth from its consumer.
-    const events = yield* Cloudflare.Queues.Queue("events");
-    const userLifecycleEvents = yield* Cloudflare.Queues.Queue("user-lifecycle-events");
+    const adminDb = yield* Cloudflare.D1.Database("admin-db", {
+      migrationsDir: deploymentConfig.paths.adminDatabaseMigrations,
+      migrationsTable: "drizzle_migrations",
+    }).pipe(retainProductionState);
 
-    const auth = yield* AuthWorker(db, userLifecycleEvents);
+    // Application events flow from LiveStore to the admin read model.
+    const events = yield* Cloudflare.Queues.Queue("events").pipe(retainProductionState);
+    const eventsDeadLetter =
+      yield* Cloudflare.Queues.Queue("events-dlq").pipe(retainProductionState);
+
+    const auth = yield* AuthWorker(authDb);
 
     // LiveStore worker — the stateful core: sync protocol + BOTH LiveStore
     // DOs (event-log backend + UserDO client). Self-hosting keeps the
@@ -258,21 +244,18 @@ export default Alchemy.Stack(
     const livestore = yield* LiveStoreWorker(
       events,
       isLocalDev ? deploymentConfig.local.livestoreWorkerName : undefined,
-    );
+    ).pipe(retainProductionState);
 
     // User plane: the small authenticated-viewer capnweb surface.
     const user = yield* UserWorker(livestore.workerName);
 
-    // Async routing is isolated from the public HTTP gateway. This Worker
-    // owns no lifecycle behavior; it only maps event contracts to services.
-    const eventRouter = yield* EventRouterWorker(user);
-
     // System plane: admin entry + projection fold.
-    const admin = yield* AdminWorker(db);
+    const admin = yield* AdminWorker(adminDb);
 
     yield* Cloudflare.Queues.Consumer("events-consumer", {
       queueId: events.queueId,
       scriptName: admin.workerName,
+      deadLetterQueue: eventsDeadLetter.queueName,
       settings: deploymentConfig.eventsConsumer,
     });
 
@@ -281,7 +264,9 @@ export default Alchemy.Stack(
     // Preserve the resource Output even when the local physical name is
     // stable. Alchemy uses this dependency to register LiveStore before
     // starting workers that consume its cross-script Durable Objects.
-    const agent = yield* AgentWorker(livestore.workerName, flueManifest);
+    const agent = yield* AgentWorker(livestore.workerName, flueManifest).pipe(
+      retainProductionState,
+    );
 
     // The only public worker: a prefix-routing proxy with JWT validation.
     const gateway = yield* GatewayWorker({
@@ -295,7 +280,7 @@ export default Alchemy.Stack(
           ? cloudflareWorkerName
           : stage === "staging"
             ? `${cloudflareWorkerName}-staging`
-            : /^preview-pr-\d+$/.test(stage)
+            : isPreviewStage
               ? stage.replace("preview-", `${cloudflareWorkerName}-`)
               : undefined,
       auth,
@@ -303,12 +288,6 @@ export default Alchemy.Stack(
       user,
       admin,
       livestore,
-    });
-
-    yield* Cloudflare.Queues.Consumer("user-lifecycle-events-consumer", {
-      queueId: userLifecycleEvents.queueId,
-      scriptName: eventRouter.workerName,
-      settings: deploymentConfig.lifecycleConsumer,
     });
 
     if (github?.pr) {
@@ -329,6 +308,10 @@ export default Alchemy.Stack(
       });
     }
 
-    return { url: gateway.url, database: db.databaseName };
+    return {
+      url: gateway.url,
+      authDatabase: authDb.databaseName,
+      adminDatabase: adminDb.databaseName,
+    };
   }),
 );

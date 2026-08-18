@@ -1,79 +1,85 @@
 import { Events, makeSchema, Schema, State } from "@livestore/livestore";
-import { agentConversations, eventNames, items, notes } from "../schema/user.ts";
-import { liveStoreModelFromDrizzle } from "./from-drizzle.ts";
+import { agentConversationStatuses, agentModelVariants, noteStatuses } from "../constants.ts";
+import { eventNames } from "./constants.ts";
 
 // Per-user local-first state: client and UserDO SQLite are materialized views
 // of the event log stored in the user's SyncBackendDO SQLite.
-const models = {
-  notes: liveStoreModelFromDrizzle(notes),
-  items: liveStoreModelFromDrizzle(items),
-  agentConversations: liveStoreModelFromDrizzle(agentConversations),
-};
-
-const noteContentEventSchema = Schema.Struct({
-  id: Schema.String,
-  text: Schema.String,
-  updatedAt: Schema.Int,
-});
-
-const noteRenamedEventSchema = Schema.Struct({
-  id: Schema.String,
-  title: Schema.String,
-  updatedAt: Schema.Int,
-});
-
-const noteStatusChangedEventSchema = Schema.Struct({
-  id: Schema.String,
-  status: Schema.Literal("active", "archived", "deleted"),
-  updatedAt: Schema.Int,
-});
-
 export const tables = {
-  notes: models.notes.table,
-  items: models.items.table,
-  agentConversations: models.agentConversations.table,
+  notes: State.SQLite.table({
+    name: "notes",
+    columns: {
+      id: State.SQLite.text({ primaryKey: true }),
+      title: State.SQLite.text({ default: "" }),
+      text: State.SQLite.text({ default: "" }),
+      status: State.SQLite.text({
+        schema: Schema.Literal(...noteStatuses),
+        default: "active",
+      }),
+      updatedAt: State.SQLite.integer({ default: 0 }),
+    },
+  }),
+  items: State.SQLite.table({
+    name: "items",
+    columns: {
+      id: State.SQLite.text({ primaryKey: true }),
+      title: State.SQLite.text({ default: "" }),
+      createdAt: State.SQLite.integer({ default: 0 }),
+    },
+  }),
+  agentConversations: State.SQLite.table({
+    name: "agent_conversations",
+    columns: {
+      id: State.SQLite.text({ primaryKey: true }),
+      agentName: State.SQLite.text(),
+      modelVariant: State.SQLite.text({ schema: Schema.Literal(...agentModelVariants) }),
+      title: State.SQLite.text(),
+      status: State.SQLite.text({ schema: Schema.Literal(...agentConversationStatuses) }),
+      createdAt: State.SQLite.integer(),
+      updatedAt: State.SQLite.integer(),
+    },
+    indexes: [
+      {
+        name: "agent_conversations_updated_at",
+        columns: ["updatedAt"],
+        isUnique: false,
+      },
+    ],
+  }),
 };
+
+export type NoteEventArgs = (typeof tables.notes)["Type"];
+export type ItemEventArgs = (typeof tables.items)["Type"];
+export type AgentConversation = (typeof tables.agentConversations)["Type"];
 
 export const events = {
   noteCreated: Events.synced({
     name: eventNames.noteCreated,
-    schema: noteContentEventSchema,
+    schema: tables.notes.rowSchema,
   }),
   noteUpdated: Events.synced({
     name: eventNames.noteUpdated,
-    schema: noteContentEventSchema,
-  }),
-  noteRenamed: Events.synced({
-    name: eventNames.noteRenamed,
-    schema: noteRenamedEventSchema,
-  }),
-  noteStatusChanged: Events.synced({
-    name: eventNames.noteStatusChanged,
-    schema: noteStatusChangedEventSchema,
+    schema: tables.notes.rowSchema,
   }),
   itemAdded: Events.synced({
     name: eventNames.itemAdded,
-    schema: models.items.schema,
+    schema: tables.items.rowSchema,
   }),
   agentConversationCreated: Events.synced({
     name: eventNames.agentConversationCreated,
-    schema: models.agentConversations.schema,
+    schema: tables.agentConversations.rowSchema,
   }),
   agentConversationUpdated: Events.synced({
     name: eventNames.agentConversationUpdated,
-    schema: models.agentConversations.schema,
+    schema: tables.agentConversations.rowSchema,
   }),
 };
 
 const materializers = State.SQLite.materializers(events, {
-  [eventNames.noteCreated]: ({ id, text, updatedAt }) =>
-    tables.notes.insert({ id, title: "", text, status: "active", updatedAt }),
-  [eventNames.noteUpdated]: ({ id, text, updatedAt }) =>
-    tables.notes.update({ text, updatedAt }).where({ id }),
-  [eventNames.noteRenamed]: ({ id, title, updatedAt }) =>
-    tables.notes.update({ title, updatedAt }).where({ id }),
-  [eventNames.noteStatusChanged]: ({ id, status, updatedAt }) =>
-    tables.notes.update({ status, updatedAt }).where({ id }),
+  // A fresh browser note and the agent's server-side ensure can race before
+  // either replica observes the other. Both represent the same durable note;
+  // keep the first row and let the following NoteUpdated event apply content.
+  [eventNames.noteCreated]: (note) => tables.notes.insert(note).onConflict("id", "ignore"),
+  [eventNames.noteUpdated]: ({ id, ...note }) => tables.notes.update(note).where({ id }),
   [eventNames.itemAdded]: ({ id, title, createdAt }) =>
     tables.items.insert({ id, title, createdAt }),
   [eventNames.agentConversationCreated]: (conversation) =>

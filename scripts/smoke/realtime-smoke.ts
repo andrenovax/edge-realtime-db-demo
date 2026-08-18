@@ -5,16 +5,20 @@ import { createStorePromise } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { createFlueClient } from "@flue/sdk";
 import { events, schema } from "../../db/livestore/schema.ts";
-import { signInDemoUser } from "./auth.ts";
+import { AgentName } from "../../src/workers/agent/agent.constants.ts";
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
+import { getDemoUserStoreId, signInDemoUser } from "./auth.ts";
 import { gatewayOrigin, gatewayWebSocketOrigin } from "./config.ts";
 
 const dataDir = ".realtime-smoke";
 
 export async function runRealtimeSmoke() {
   rmSync(dataDir, { recursive: true, force: true });
-  const { token, userId } = await signInDemoUser(gatewayOrigin);
+  const { token } = await signInDemoUser(gatewayOrigin);
+  const storeId = await getDemoUserStoreId(gatewayOrigin, token);
   const conversationId = crypto.randomUUID();
-  const anonymous = await fetch(`${gatewayOrigin}/api/agents/hello/${conversationId}`, {
+  const agentPath = API_PATHS.agent(AgentName.Hello, conversationId);
+  const anonymous = await fetch(`${gatewayOrigin}${agentPath}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ kind: "user", body: "hi" }),
@@ -22,7 +26,7 @@ export async function runRealtimeSmoke() {
   assert.equal(anonymous.status, 401, "agent admission without a token should be rejected");
 
   const ownConversation = await createFlueClient({
-    url: `${gatewayOrigin}/api/agents/hello/${conversationId}`,
+    url: `${gatewayOrigin}${agentPath}`,
     token,
   }).send({
     message: { kind: "user", body: "hi" },
@@ -35,9 +39,9 @@ export async function runRealtimeSmoke() {
     schema,
     adapter: makeAdapter({
       storage: { type: "fs", baseDirectory: dataDir },
-      sync: { backend: makeWsSync({ url: `${gatewayWebSocketOrigin}/api/sync` }) },
+      sync: { backend: makeWsSync({ url: `${gatewayWebSocketOrigin}${API_PATHS.sync}` }) },
     }),
-    storeId: userId,
+    storeId,
     syncPayload: { authToken: token },
   });
 
@@ -62,4 +66,7 @@ export async function runRealtimeSmoke() {
   }
 }
 
-if (import.meta.main) await runRealtimeSmoke();
+if (import.meta.main) {
+  await runRealtimeSmoke();
+  process.exit(0);
+}

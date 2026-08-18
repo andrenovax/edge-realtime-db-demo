@@ -9,8 +9,10 @@
   },
   "devDependencies": {
     "@effect/platform-node": "4.0.0-beta.107",
+    "@flue/vite": "^2.0.3",
     "alchemy": "2.0.0-beta.72",
-    "effect": "4.0.0-beta.107"
+    "effect": "4.0.0-beta.107",
+    "vite": "^8.0.14"
   },
   "devEngines": {
     "packageManager": {

@@ -2,6 +2,7 @@ import { RpcTarget } from "capnweb";
 
 export type Viewer = {
   id: string;
+  storeId: string;
   email: string | null;
   role: string | null;
 };

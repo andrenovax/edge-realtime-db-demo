@@ -6,9 +6,6 @@ import { notesTools } from "../tools/notes.tool.ts";
 const agentContextSchema = v.object({
   userId: v.pipe(v.string(), v.trim(), v.minLength(1)),
   noteId: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(128)),
-  // `openai` remains accepted so conversations created during the GPT-4o
-  // experiment can resume; every execution now uses Workers AI.
-  modelVariant: v.picklist(["openai", "workers-ai"]),
 });
 
 // Every exported capitalized function in a 'use agent' module is an agent,
