@@ -14,6 +14,10 @@ const router = createRouter({
   context: { auth },
   defaultNotFoundComponent: () => <Navigate to="/" replace />,
 });
+const devtoolsRouter = new Proxy(router, {
+  get: (target, key, receiver) =>
+    key === "options" ? { ...target.options, context: {} } : Reflect.get(target, key, receiver),
+});
 
 declare module "@tanstack/react-router" {
   interface Register {
@@ -31,7 +35,7 @@ root.render(
       {import.meta.env.DEV && (
         <>
           <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
-          <TanStackRouterDevtools router={router} position="bottom-left" />
+          <TanStackRouterDevtools router={devtoolsRouter} position="bottom-left" />
         </>
       )}
     </QueryClientProvider>
