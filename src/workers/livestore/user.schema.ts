@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { AgentName } from "@workers/agent/constants";
 import { agentModelVariants } from "../../../db/schema/user.ts";
 
 const requiredText = (label: string, maxLength: number) =>
@@ -49,7 +50,7 @@ export type ListNotesPayload = v.InferOutput<typeof listNotesPayloadSchema>;
 
 export const createConversationPayloadSchema = v.strictObject({
   id: conversationId,
-  agentName: v.literal("hello"),
+  agentName: v.literal(AgentName.Hello),
   modelVariant: v.picklist(agentModelVariants),
   title: requiredText("conversation title", 80),
 });

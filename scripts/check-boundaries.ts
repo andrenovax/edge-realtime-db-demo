@@ -3,14 +3,15 @@
 // (tsgo) environment yet — swap back to it when its TS7 support lands.
 //
 // Rules (each mirrors a named rule in architecture.md):
-//   workers-encapsulated        cross-worker imports only via .contract.ts/.events.ts/.schema.ts
+//   workers-encapsulated        cross-worker imports only via declarative seam modules
+//   constants-dependency-free  shared .constants.ts modules have no internal dependencies
 //   contracts-type-only         importing a .contract.ts is `import type`
 //   events-producer-owned       emitted events live in <producer>.events.ts
 //   events-type-only            importing an .events.ts is `import type`
 //   db-schema-planes            auth sees auth.ts; admin sees admin.ts + canonical user.ts
 //   application-dos-livestore-only application *.do.ts files live in and export from livestore
 //   livestore-schema-owner-only db/livestore only from the livestore worker
-//   web-imports-types-only      src/web -> workers: .contract/.rpc, type-only
+//   web-imports-worker-seams    src/web -> workers: type surfaces or shared constants only
 //   workers-never-import-web    workers never import src/web
 //   no-circular                 no import cycles under src/
 import { readdirSync, readFileSync } from "node:fs";
@@ -37,6 +38,8 @@ const EXACT_ALIASES: Record<string, string> = {
   "@workers/livestore/user-contract": "src/workers/livestore/user.contract.ts",
   "@workers/livestore/user-schema": "src/workers/livestore/user.schema.ts",
   "@workers/admin/contract": "src/workers/admin/admin.contract.ts",
+  "@workers/agent/constants": "src/workers/agent/agent.constants.ts",
+  "@workers/gateway/constants": "src/workers/gateway/gateway.constants.ts",
   "@workers/user/rpc": "src/workers/user/user.rpc.ts",
 };
 
@@ -134,6 +137,15 @@ for (const edge of edges) {
   const toContract = edge.to.endsWith(".contract.ts");
   const toEvents = edge.to.endsWith(".events.ts");
   const toSharedSchema = edge.to.endsWith(".schema.ts");
+  const toConstants = edge.to.endsWith(".constants.ts");
+
+  if (edge.from.endsWith(".constants.ts")) {
+    fail(
+      "constants-dependency-free",
+      edge,
+      "shared constants must remain dependency-free so consumers never pull in Worker runtime code",
+    );
+  }
 
   if (
     fromWorker &&
@@ -141,12 +153,13 @@ for (const edge of edges) {
     fromWorker !== toWorker &&
     !toContract &&
     !toEvents &&
-    !toSharedSchema
+    !toSharedSchema &&
+    !toConstants
   ) {
     fail(
       "workers-encapsulated",
       edge,
-      "workers never import each other's logic; cross-worker seams are type-only .contract.ts/.events.ts modules or declarative .schema.ts validators",
+      "workers never import each other's logic; cross-worker seams are .constants.ts values, type-only .contract.ts/.events.ts modules, or declarative .schema.ts validators",
     );
   }
   if (toContract && !edge.typeOnly) {
@@ -180,14 +193,14 @@ for (const edge of edges) {
     );
   }
   if (edge.from.startsWith("src/web/") && toWorker) {
-    if (!toContract && !toEvents && !edge.to.endsWith(".rpc.ts")) {
+    if (!toContract && !toEvents && !edge.to.endsWith(".rpc.ts") && !toConstants) {
       fail(
-        "web-imports-types-only",
+        "web-imports-worker-seams",
         edge,
-        "the SPA reaches workers over HTTP, never by import; only .contract.ts/.events.ts/.rpc.ts type surfaces cross",
+        "the SPA reaches workers over HTTP; only dependency-free .constants.ts values or .contract.ts/.events.ts/.rpc.ts type surfaces cross",
       );
-    } else if (!edge.typeOnly) {
-      fail("web-imports-types-only", edge, "worker type surfaces cross into the SPA type-only");
+    } else if (!toConstants && !edge.typeOnly) {
+      fail("web-imports-worker-seams", edge, "worker type surfaces cross into the SPA type-only");
     }
   }
   if (fromWorker && edge.to.startsWith("src/web/")) {

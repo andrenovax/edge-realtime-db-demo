@@ -1,3 +1,5 @@
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
+
 export const demoUsers = {
   admin: {
     id: "demo-admin",
@@ -15,7 +17,7 @@ export async function signInDemoUser(
   origin: string,
   credentials: { email: string; password: string } = demoUsers.admin,
 ) {
-  const login = await fetch(`${origin}/api/auth/sign-in/email`, {
+  const login = await fetch(`${origin}${API_PATHS.auth}/sign-in/email`, {
     method: "POST",
     headers: { "content-type": "application/json", origin },
     body: JSON.stringify(credentials),
@@ -25,7 +27,7 @@ export async function signInDemoUser(
   const cookie = login.headers.get("set-cookie")?.split(";")[0];
   if (!cookie) throw new Error("login did not return a session cookie");
 
-  const tokenResponse = await fetch(`${origin}/api/auth/token`, { headers: { cookie } });
+  const tokenResponse = await fetch(`${origin}${API_PATHS.auth}/token`, { headers: { cookie } });
   if (!tokenResponse.ok) {
     throw new Error(`token failed: ${tokenResponse.status} ${await tokenResponse.text()}`);
   }

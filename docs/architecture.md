@@ -85,19 +85,24 @@ worker needs them.
 | `<name>.do.ts`           | an application Durable Object in `livestore/`, named by subject (`user.do.ts`, `user-sync-backend.do.ts`)                              |
 | `<w>.events.ts`          | producer-owned event types emitted by that worker; a cross-worker type-only seam                                                       |
 | `*.contract.ts`          | a receiver-owned command/capability type-only seam                                                                                     |
+| `*.constants.ts`         | owner-defined, dependency-free shared identifiers and route constants                                                                  |
 | `*.schema.ts`            | receiver-owned runtime validation contract; exports schemas plus inferred payload types                                                |
 | `*.util.ts`              | worker-private helper (`jwt.util.ts`)                                                                                                  |
 
 ## Hard rules (lint-enforced)
 
 - **`workers-encapsulated`** — workers never import each other's logic.
-  Cross-worker seams are type-only `.contract.ts`/`.events.ts` modules or
-  declarative `.schema.ts` validators. Command/capability contracts are
+  Cross-worker seams are dependency-free `.constants.ts` values, type-only
+  `.contract.ts`/`.events.ts` modules, or declarative `.schema.ts` validators.
+  Command/capability contracts are
   **receiver-owned**: the queue consumer owns `ProjectionMessage`
   ([admin.contract.ts](../src/workers/admin/admin.contract.ts), imported by the
   LiveStore producer), while the DO's home worker owns `UserDoRpc` and its
   Valibot payload schemas ([user.contract.ts](../src/workers/livestore/user.contract.ts),
   [user.schema.ts](../src/workers/livestore/user.schema.ts)).
+- **`constants-dependency-free`** — shared `.constants.ts` modules have no
+  internal imports. This lets another Worker or the SPA consume an owner's
+  identifiers without pulling in its runtime implementation.
 - **`contracts-type-only`** — importing a `.contract.ts` is `import type`;
   no runtime code crosses a worker boundary.
 - **`events-producer-owned`** — an emitted event is owned and versioned by
@@ -122,9 +127,10 @@ worker needs them.
 - **`livestore-schema-owner-only`** — `livestore` is the only Worker that may
   import `db/livestore/`; the web client also imports the shared schema for its
   own local store.
-- **`web-imports-types-only`** — `src/web/` may `import type` from
-  `.contract.ts`/`.events.ts`/`.rpc.ts` only; it reaches workers over HTTP,
-  never by import.
+- **`web-imports-worker-seams`** — `src/web/` may import dependency-free values
+  from `.constants.ts` and may `import type` from
+  `.contract.ts`/`.events.ts`/`.rpc.ts`; it reaches Worker behavior over HTTP,
+  never by importing implementation.
 - **`workers-never-import-web`** — the SPA is a consumer, not a dependency.
 - **`no-circular`** — no import cycles; break one with a type seam
   (`.contract.ts` for cross-worker capabilities; Alchemy-inferred environment

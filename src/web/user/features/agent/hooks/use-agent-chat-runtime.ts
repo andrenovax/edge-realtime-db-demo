@@ -4,8 +4,9 @@ import {
   isRenderableAgentMessage,
   toThreadMessage,
 } from "@ui/features/agent/agent-message-adapter.ts";
-import { AgentName, useCurrentUserAgent } from "@ui/features/agent/hooks/use-current-user-agent";
+import { useCurrentUserAgent } from "@ui/features/agent/hooks/use-current-user-agent";
 import { useOnline } from "@ui/providers/online-provider.tsx";
+import { AgentName } from "@workers/agent/constants";
 
 export type AgentChatOptions = {
   noteId: string;

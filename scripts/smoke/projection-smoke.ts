@@ -1,6 +1,8 @@
 import { createFlueClient } from "@flue/sdk";
 import { newHttpBatchRpcSession } from "capnweb";
+import { AgentName } from "../../src/workers/agent/agent.constants.ts";
 import type { AdminApi } from "../../src/workers/admin/admin.rpc.ts";
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
 import { signInDemoUser } from "./auth.ts";
 import { gatewayOrigin } from "./config.ts";
 
@@ -10,14 +12,14 @@ type ProjectedEvent = { id: string; storeId: string; name: string; args: string;
 
 export async function runProjectionSmoke() {
   const { token } = await signInDemoUser(gatewayOrigin);
-  const adminUrl = `${gatewayOrigin}/api/admin?auth=${encodeURIComponent(token)}`;
+  const adminUrl = `${gatewayOrigin}${API_PATHS.admin}?auth=${encodeURIComponent(token)}`;
   const sentAt = Date.now();
   const conversation: Conversation = {
     id: crypto.randomUUID(),
     title: `Projection smoke ${new Date().toISOString()}`,
   };
   await createFlueClient({
-    url: `${gatewayOrigin}/api/agents/hello/${conversation.id}`,
+    url: `${gatewayOrigin}${API_PATHS.agent(AgentName.Hello, conversation.id)}`,
     token,
   }).send({
     message: { kind: "user", body: conversation.title },

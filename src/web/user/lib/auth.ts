@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import { jwtClient } from "better-auth/client/plugins";
-import { API_PATHS } from "../config.ts";
+import { API_PATHS } from "@workers/gateway/constants";
 
 export const authClient = createAuthClient({
   // Same-origin: the gateway routes this path to the auth worker.

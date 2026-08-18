@@ -8,7 +8,11 @@ import {
   getAgentConversationPayloadSchema,
   type CreateConversationPayload,
 } from "@workers/livestore/user-schema";
+import { API_PATHS } from "@workers/gateway/constants";
+import { AgentName } from "./agent.constants.ts";
 import { Hello } from "./agents/hello.agent.ts";
+
+export { AgentName } from "./agent.constants.ts";
 
 type AppEnv = {
   Bindings: AgentEnv;
@@ -19,7 +23,7 @@ type AppEnv = {
   };
 };
 
-const agents = [["hello", Hello]] as const;
+const agents = [[AgentName.Hello, Hello]] as const;
 const defaultModelVariant = "workers-ai" satisfies AgentConversation["modelVariant"];
 type SupportedAgentName = (typeof agents)[number][0];
 
@@ -144,7 +148,7 @@ function userAgentRouter(name: SupportedAgentName, agent: Agent) {
   return router;
 }
 
-// The gateway owns /api/agents and forwards that public URL unchanged.
+// The gateway owns the agents route and forwards that public URL unchanged.
 // Add an agent by importing it and adding one entry to the registry above.
 const agentRoutes = new Hono<AppEnv>();
 for (const [name, agent] of agents) {
@@ -152,6 +156,6 @@ for (const [name, agent] of agents) {
 }
 
 const app = new Hono<AppEnv>();
-app.route("/api/agents", agentRoutes);
+app.route(API_PATHS.agents, agentRoutes);
 
 export default app;

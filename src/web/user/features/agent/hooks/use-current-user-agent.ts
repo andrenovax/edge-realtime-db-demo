@@ -2,11 +2,8 @@ import { useFlueAgent } from "@flue/react";
 import { createFlueClient } from "@flue/sdk";
 import { useMemo } from "react";
 import { useAuthToken } from "@ui/features/auth/hooks/use-auth-token.ts";
-import { API_PATHS } from "../../../config.ts";
-
-export enum AgentName {
-  Hello = "hello",
-}
+import { AgentName } from "@workers/agent/constants";
+import { API_PATHS } from "@workers/gateway/constants";
 
 export const useCurrentUserAgent = ({
   agent: agentName,

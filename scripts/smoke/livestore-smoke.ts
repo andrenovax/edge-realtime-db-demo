@@ -4,6 +4,7 @@ import { makeAdapter } from "@livestore/adapter-node";
 import { createStorePromise, nanoid } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { events, schema, tables } from "../../db/livestore/schema.ts";
+import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
 import { signInDemoUser } from "./auth.ts";
 import { gatewayOrigin, gatewayWebSocketOrigin } from "./config.ts";
 
@@ -25,7 +26,7 @@ export async function runLivestoreSmoke() {
   const syncedAdapter = (dir: string) =>
     makeAdapter({
       storage: { type: "fs", baseDirectory: `${dataDir}/${dir}` },
-      sync: { backend: makeWsSync({ url: `${gatewayWebSocketOrigin}/api/sync` }) },
+      sync: { backend: makeWsSync({ url: `${gatewayWebSocketOrigin}${API_PATHS.sync}` }) },
     });
   const makeStore = (dir: string) =>
     createStorePromise({

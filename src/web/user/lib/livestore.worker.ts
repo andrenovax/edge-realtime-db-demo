@@ -1,7 +1,7 @@
 import { makeWorker } from "@livestore/adapter-web/worker";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { schema } from "@db/livestore";
-import { API_PATHS } from "../config.ts";
+import { API_PATHS } from "@workers/gateway/constants";
 
 // LiveStore leader worker: owns the local SQLite (OPFS) and the sync
 // connection to the user's SyncBackendDO through the configured gateway route.

@@ -1,5 +1,6 @@
 import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
 import type { GatewayEnv } from "@infra/env";
+import { API_PATHS } from "./gateway.constants.ts";
 
 // Any worker holding a service binding to the auth worker can verify.
 export type AuthEnv = Pick<GatewayEnv, "AUTH">;
@@ -17,7 +18,7 @@ const JWKS_TTL_MS = 10 * 60 * 1000;
 async function getJwks(env: AuthEnv) {
   if (!jwks || Date.now() - fetchedAt > JWKS_TTL_MS) {
     // Host is never dialed; the binding routes to the auth worker.
-    const res = await env.AUTH.fetch("https://auth.internal/api/auth/jwks");
+    const res = await env.AUTH.fetch(`https://auth.internal${API_PATHS.auth}/jwks`);
     if (!res.ok) throw new Error(`jwks fetch failed: ${res.status}`);
     jwks = createLocalJWKSet((await res.json()) as JSONWebKeySet);
     fetchedAt = Date.now();
