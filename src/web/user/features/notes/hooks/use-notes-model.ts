@@ -20,7 +20,15 @@ export function useNotesModel() {
   const createNote = useCallback(
     (text = "") => {
       const id = crypto.randomUUID();
-      store.commit(events.noteCreated({ id, text, updatedAt: Date.now() }));
+      store.commit(
+        events.noteCreated({
+          id,
+          title: "",
+          text,
+          status: "active",
+          updatedAt: Date.now(),
+        }),
+      );
       return id;
     },
     [store],
@@ -30,9 +38,11 @@ export function useNotesModel() {
     (id: string, draft: string) => {
       const title = draft.trim().slice(0, 70);
       if (!title) return false;
+      const note = notes.find((item) => item.id === id);
+      if (!note) return false;
 
       const updatedAt = Date.now();
-      store.commit(events.noteRenamed({ id, title, updatedAt }));
+      store.commit(events.noteUpdated({ ...note, title, updatedAt }));
 
       const conversation = activeConversations.find((item) => item.id === id);
       if (conversation) {
@@ -47,13 +57,16 @@ export function useNotesModel() {
 
       return true;
     },
-    [activeConversations, store],
+    [activeConversations, notes, store],
   );
 
   const changeNoteStatus = useCallback(
     (id: string, status: NoteStatus) => {
+      const note = notes.find((item) => item.id === id);
+      if (!note) return;
+
       const updatedAt = Date.now();
-      store.commit(events.noteStatusChanged({ id, status, updatedAt }));
+      store.commit(events.noteUpdated({ ...note, status, updatedAt }));
 
       const conversation = activeConversations.find((item) => item.id === id);
       if (conversation) {
@@ -66,16 +79,17 @@ export function useNotesModel() {
         );
       }
     },
-    [activeConversations, store],
+    [activeConversations, notes, store],
   );
 
   const saveNote = useCallback(
     (id: string, text: string) => {
       const updatedAt = Date.now();
-      if (notes.some((note) => note.id === id)) {
-        store.commit(events.noteUpdated({ id, text, updatedAt }));
+      const note = notes.find((item) => item.id === id);
+      if (note) {
+        store.commit(events.noteUpdated({ ...note, text, updatedAt }));
       } else if (text.trim()) {
-        store.commit(events.noteCreated({ id, text, updatedAt }));
+        store.commit(events.noteCreated({ id, title: "", text, status: "active", updatedAt }));
       }
     },
     [notes, store],

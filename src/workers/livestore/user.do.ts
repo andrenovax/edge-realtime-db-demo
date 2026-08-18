@@ -99,7 +99,7 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
     const store = await this.#getStore();
     const id = crypto.randomUUID();
     const updatedAt = Date.now();
-    store.commit(events.noteCreated({ id, text, updatedAt }));
+    store.commit(events.noteCreated({ id, title: "", text, status: "active", updatedAt }));
     return { id, text, updatedAt };
   }
 
@@ -109,7 +109,7 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
     if (!existing) throw new Error("note not found");
 
     const updatedAt = Date.now();
-    store.commit(events.noteUpdated({ id, text, updatedAt }));
+    store.commit(events.noteUpdated({ ...existing, text, updatedAt }));
     return { id, text, updatedAt };
   }
 
@@ -119,7 +119,7 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
     if (existing) return existing;
 
     const updatedAt = Date.now();
-    store.commit(events.noteCreated({ id, text, updatedAt }));
+    store.commit(events.noteCreated({ id, title: "", text, status: "active", updatedAt }));
     return { id, title: "", text, status: "active" as const, updatedAt };
   }
 
@@ -135,8 +135,8 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
 
     store.commit(
       existing
-        ? events.noteUpdated({ id, text, updatedAt })
-        : events.noteCreated({ id, text, updatedAt }),
+        ? events.noteUpdated({ ...existing, text, updatedAt })
+        : events.noteCreated({ id, title: "", text, status: "active", updatedAt }),
     );
     return { id, text, updatedAt };
   }

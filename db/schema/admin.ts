@@ -10,7 +10,7 @@ export const userEvents = snakeCase.table(
   "user_events",
   {
     // `${storeId}:${seqNum}` — stable across queue redeliveries.
-    id: text().primaryKey(),
+    id: text().notNull().primaryKey(),
     storeId: text().notNull(),
     name: text().notNull(),
     args: text().notNull(),
@@ -18,11 +18,15 @@ export const userEvents = snakeCase.table(
     clientId: text().notNull(),
     projectedAt: integer().notNull(),
   },
-  (table) => [index("user_events_storeId_idx").on(table.storeId)],
+  (table) => [
+    index("user_events_projected_at_seq_num_idx").on(table.projectedAt, table.seqNum),
+    index("user_events_store_id_seq_num_idx").on(table.storeId, table.seqNum),
+  ],
 );
 
 // Entity ids are unique only within a store, hence the composite keys.
-// seqNum protects mutable projections from out-of-order queue batches.
+// Every mutable event carries a complete entity snapshot, so one seqNum
+// protects the whole row from out-of-order queue batches.
 export const adminNotes = snakeCase.table(
   "admin_notes",
   {
@@ -30,7 +34,11 @@ export const adminNotes = snakeCase.table(
     ...noteColumns(),
     seqNum: integer().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.storeId, table.id] })],
+  (table) => [
+    primaryKey({ columns: [table.storeId, table.id] }),
+    index("admin_notes_updated_at_idx").on(table.updatedAt),
+    index("admin_notes_store_id_updated_at_idx").on(table.storeId, table.updatedAt),
+  ],
 );
 
 export const adminItems = snakeCase.table(
@@ -39,7 +47,11 @@ export const adminItems = snakeCase.table(
     storeId: text().notNull(),
     ...itemColumns(),
   },
-  (table) => [primaryKey({ columns: [table.storeId, table.id] })],
+  (table) => [
+    primaryKey({ columns: [table.storeId, table.id] }),
+    index("admin_items_created_at_idx").on(table.createdAt),
+    index("admin_items_store_id_created_at_idx").on(table.storeId, table.createdAt),
+  ],
 );
 
 export const adminAgentConversations = snakeCase.table(
@@ -52,5 +64,6 @@ export const adminAgentConversations = snakeCase.table(
   (table) => [
     primaryKey({ columns: [table.storeId, table.id] }),
     index("admin_agent_conversations_updated_at_idx").on(table.updatedAt),
+    index("admin_agent_conversations_store_id_updated_at_idx").on(table.storeId, table.updatedAt),
   ],
 );

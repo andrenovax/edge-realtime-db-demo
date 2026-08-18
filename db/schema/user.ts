@@ -57,16 +57,11 @@ export const agentConversations = sqliteTable(
 export const eventNames = {
   noteCreated: "v1.NoteCreated",
   noteUpdated: "v1.NoteUpdated",
-  noteRenamed: "v1.NoteRenamed",
-  noteStatusChanged: "v1.NoteStatusChanged",
   itemAdded: "v1.ItemAdded",
   agentConversationCreated: "v1.AgentConversationCreated",
   agentConversationUpdated: "v1.AgentConversationUpdated",
 } as const;
 
 export type NoteEventArgs = InferSelectModel<typeof notes>;
-export type NoteContentEventArgs = Pick<NoteEventArgs, "id" | "text" | "updatedAt">;
-export type NoteRenamedEventArgs = Pick<NoteEventArgs, "id" | "title" | "updatedAt">;
-export type NoteStatusChangedEventArgs = Pick<NoteEventArgs, "id" | "status" | "updatedAt">;
 export type ItemEventArgs = InferSelectModel<typeof items>;
 export type AgentConversation = InferSelectModel<typeof agentConversations>;

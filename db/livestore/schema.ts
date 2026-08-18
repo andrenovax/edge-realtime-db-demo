@@ -1,4 +1,4 @@
-import { Events, makeSchema, Schema, State } from "@livestore/livestore";
+import { Events, makeSchema, State } from "@livestore/livestore";
 import { agentConversations, eventNames, items, notes } from "../schema/user.ts";
 import { liveStoreModelFromDrizzle } from "./from-drizzle.ts";
 
@@ -10,24 +10,6 @@ const models = {
   agentConversations: liveStoreModelFromDrizzle(agentConversations),
 };
 
-const noteContentEventSchema = Schema.Struct({
-  id: Schema.String,
-  text: Schema.String,
-  updatedAt: Schema.Int,
-});
-
-const noteRenamedEventSchema = Schema.Struct({
-  id: Schema.String,
-  title: Schema.String,
-  updatedAt: Schema.Int,
-});
-
-const noteStatusChangedEventSchema = Schema.Struct({
-  id: Schema.String,
-  status: Schema.Literal("active", "archived", "deleted"),
-  updatedAt: Schema.Int,
-});
-
 export const tables = {
   notes: models.notes.table,
   items: models.items.table,
@@ -37,19 +19,11 @@ export const tables = {
 export const events = {
   noteCreated: Events.synced({
     name: eventNames.noteCreated,
-    schema: noteContentEventSchema,
+    schema: models.notes.schema,
   }),
   noteUpdated: Events.synced({
     name: eventNames.noteUpdated,
-    schema: noteContentEventSchema,
-  }),
-  noteRenamed: Events.synced({
-    name: eventNames.noteRenamed,
-    schema: noteRenamedEventSchema,
-  }),
-  noteStatusChanged: Events.synced({
-    name: eventNames.noteStatusChanged,
-    schema: noteStatusChangedEventSchema,
+    schema: models.notes.schema,
   }),
   itemAdded: Events.synced({
     name: eventNames.itemAdded,
@@ -66,14 +40,8 @@ export const events = {
 };
 
 const materializers = State.SQLite.materializers(events, {
-  [eventNames.noteCreated]: ({ id, text, updatedAt }) =>
-    tables.notes.insert({ id, title: "", text, status: "active", updatedAt }),
-  [eventNames.noteUpdated]: ({ id, text, updatedAt }) =>
-    tables.notes.update({ text, updatedAt }).where({ id }),
-  [eventNames.noteRenamed]: ({ id, title, updatedAt }) =>
-    tables.notes.update({ title, updatedAt }).where({ id }),
-  [eventNames.noteStatusChanged]: ({ id, status, updatedAt }) =>
-    tables.notes.update({ status, updatedAt }).where({ id }),
+  [eventNames.noteCreated]: (note) => tables.notes.insert(note),
+  [eventNames.noteUpdated]: ({ id, ...note }) => tables.notes.update(note).where({ id }),
   [eventNames.itemAdded]: ({ id, title, createdAt }) =>
     tables.items.insert({ id, title, createdAt }),
   [eventNames.agentConversationCreated]: (conversation) =>

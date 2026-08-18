@@ -31,8 +31,8 @@ export async function runProjectionSmoke() {
   for (;;) {
     const admin = newHttpBatchRpcSession<AdminApi>(adminUrl);
     const [{ events }, { conversations }] = (await Promise.all([
-      admin.recentEvents(25),
-      admin.agentConversations(undefined, 25),
+      admin.recentEvents(),
+      admin.agentConversations(),
     ])) as [{ events: ProjectedEvent[] }, { conversations: ProjectedConversation[] }];
     const eventHit = events.find(
       (event) =>

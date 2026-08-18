@@ -10,7 +10,7 @@ import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
-  id: text("id").primaryKey(),
+  id: text("id").notNull().primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: integer("email_verified", { mode: "boolean" }).default(false).notNull(),
@@ -33,7 +33,7 @@ export const user = sqliteTable("user", {
 export const session = sqliteTable(
   "session",
   {
-    id: text("id").primaryKey(),
+    id: text("id").notNull().primaryKey(),
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
     token: text("token").notNull().unique(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
@@ -56,7 +56,7 @@ export const session = sqliteTable(
 export const account = sqliteTable(
   "account",
   {
-    id: text("id").primaryKey(),
+    id: text("id").notNull().primaryKey(),
     accountId: text("account_id").notNull(),
     issuer: text("issuer").notNull(),
     providerId: text("provider_id").notNull(),
@@ -90,7 +90,7 @@ export const account = sqliteTable(
 export const verification = sqliteTable(
   "verification",
   {
-    id: text("id").primaryKey(),
+    id: text("id").notNull().primaryKey(),
     identifier: text("identifier").notNull(),
     value: text("value").notNull(),
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
@@ -106,7 +106,7 @@ export const verification = sqliteTable(
 );
 
 export const jwks = sqliteTable("jwks", {
-  id: text("id").primaryKey(),
+  id: text("id").notNull().primaryKey(),
   publicKey: text("public_key").notNull(),
   privateKey: text("private_key").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),

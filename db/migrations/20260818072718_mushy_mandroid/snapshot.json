@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "3d03123f-374f-43aa-b75a-4c8b7e71e73e",
+  "id": "495447ab-53f2-4287-97ce-50129ac91cb9",
   "prevIds": [
-    "469eb370-7469-4415-bce7-84033161d1d2"
+    "34290644-adbd-40d2-a753-8ad6a9dbb6c5"
   ],
   "ddl": [
     {
@@ -699,6 +699,36 @@
       "default": "0",
       "generated": null,
       "name": "updated_at",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "text_seq_num",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "title_seq_num",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "status_seq_num",
       "entityType": "columns",
       "table": "admin_notes"
     },

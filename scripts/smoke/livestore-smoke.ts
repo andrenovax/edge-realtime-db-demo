@@ -41,7 +41,15 @@ export async function runLivestoreSmoke() {
   let storeC2: Awaited<ReturnType<typeof makeStore>> | undefined;
   try {
     const noteId = nanoid();
-    storeA.commit(events.noteCreated({ id: noteId, text: "hello from A", updatedAt: Date.now() }));
+    storeA.commit(
+      events.noteCreated({
+        id: noteId,
+        title: "",
+        text: "hello from A",
+        status: "active",
+        updatedAt: Date.now(),
+      }),
+    );
     await poll("B sees A's note", () =>
       storeB.query(tables.notes.select()).find((note) => note.id === noteId),
     );
@@ -53,7 +61,13 @@ export async function runLivestoreSmoke() {
     const offlineNoteId = nanoid();
     try {
       storeC.commit(
-        events.noteCreated({ id: offlineNoteId, text: "written offline", updatedAt: Date.now() }),
+        events.noteCreated({
+          id: offlineNoteId,
+          title: "",
+          text: "written offline",
+          status: "active",
+          updatedAt: Date.now(),
+        }),
       );
       assert.ok(
         storeC.query(tables.notes.select()).some((note) => note.id === offlineNoteId),

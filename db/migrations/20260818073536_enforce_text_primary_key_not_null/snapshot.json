@@ -1,10 +1,10 @@
 {
+  "id": "93789125-7a35-4e7d-9cde-a6ce429d1cd0",
+  "prevIds": [
+    "1407237d-9d50-4e4c-aa51-f7a92641a11f"
+  ],
   "version": "7",
   "dialect": "sqlite",
-  "id": "469eb370-7469-4415-bce7-84033161d1d2",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
   "ddl": [
     {
       "name": "account",
@@ -668,7 +668,27 @@
       "autoincrement": false,
       "default": "''",
       "generated": null,
+      "name": "title",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
       "name": "text",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'active'",
+      "generated": null,
+      "name": "status",
       "entityType": "columns",
       "table": "admin_notes"
     },
@@ -679,6 +699,36 @@
       "default": "0",
       "generated": null,
       "name": "updated_at",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "text_seq_num",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "title_seq_num",
+      "entityType": "columns",
+      "table": "admin_notes"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "status_seq_num",
       "entityType": "columns",
       "table": "admin_notes"
     },
@@ -955,12 +1005,116 @@
         {
           "value": "store_id",
           "isExpression": false
+        },
+        {
+          "value": "updated_at",
+          "isExpression": false
         }
       ],
       "isUnique": false,
       "where": null,
       "origin": "manual",
-      "name": "user_events_storeId_idx",
+      "name": "admin_agent_conversations_store_id_updated_at_idx",
+      "entityType": "indexes",
+      "table": "admin_agent_conversations"
+    },
+    {
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "admin_items_created_at_idx",
+      "entityType": "indexes",
+      "table": "admin_items"
+    },
+    {
+      "columns": [
+        {
+          "value": "store_id",
+          "isExpression": false
+        },
+        {
+          "value": "created_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "admin_items_store_id_created_at_idx",
+      "entityType": "indexes",
+      "table": "admin_items"
+    },
+    {
+      "columns": [
+        {
+          "value": "updated_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "admin_notes_updated_at_idx",
+      "entityType": "indexes",
+      "table": "admin_notes"
+    },
+    {
+      "columns": [
+        {
+          "value": "store_id",
+          "isExpression": false
+        },
+        {
+          "value": "updated_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "admin_notes_store_id_updated_at_idx",
+      "entityType": "indexes",
+      "table": "admin_notes"
+    },
+    {
+      "columns": [
+        {
+          "value": "projected_at",
+          "isExpression": false
+        },
+        {
+          "value": "seq_num",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "user_events_projected_at_seq_num_idx",
+      "entityType": "indexes",
+      "table": "user_events"
+    },
+    {
+      "columns": [
+        {
+          "value": "store_id",
+          "isExpression": false
+        },
+        {
+          "value": "seq_num",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "user_events_store_id_seq_num_idx",
       "entityType": "indexes",
       "table": "user_events"
     },
