@@ -1,15 +1,23 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
+import { RouteError, RoutePending } from "@ui/components/route-status.tsx";
 import { LiveStoreProvider } from "@ui/providers/livestore-provider.tsx";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, location }) => {
     const { data: session, error } = await context.auth.getSession();
     if (error) throw new Error(error.message ?? `session fetch failed: ${error.status}`);
-    if (!session) throw redirect({ to: "/sign-in" });
+    if (!session) {
+      throw redirect({
+        to: "/sign-in",
+        search: { redirect: location.href },
+      });
+    }
     return { session };
   },
   component: AppShell,
+  errorComponent: RouteError,
+  pendingComponent: RoutePending,
 });
 
 function AppShell() {

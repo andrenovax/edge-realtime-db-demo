@@ -1,9 +1,9 @@
 import { useForm } from "@tanstack/react-form";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import * as v from "valibot";
-import { GOOGLE_AUTH_ENABLED } from "../../config.ts";
+import { APP_PATHS, GOOGLE_AUTH_ENABLED } from "../../config.ts";
 import { useGoogleSignin } from "@ui/features/auth/hooks/use-google-signin.ts";
 import styles from "@ui/features/auth/login-page.module.css";
 import { useRootRouteContext } from "@ui/routes.context";
@@ -42,13 +42,15 @@ function getFormErrorMessage({
 
 export function LoginPage() {
   const { auth } = useRootRouteContext();
-  const { error: oauthError } = useSearch({ from: "/sign-in" });
+  const { error: oauthError, redirect } = useSearch({ from: "/sign-in" });
   const navigate = useNavigate({ from: "/sign-in" });
+  const router = useRouter();
+  const redirectTarget = redirect ?? APP_PATHS.home;
 
   const [mode, setMode] = useState<AuthMode>("in");
   const [showPassword, setShowPassword] = useState(false);
 
-  const googleSignIn = useGoogleSignin();
+  const googleSignIn = useGoogleSignin(redirectTarget);
   const clearOAuthError = () =>
     oauthError
       ? navigate({
@@ -84,7 +86,7 @@ export function LoginPage() {
         return;
       }
 
-      await navigate({ to: "/", replace: true });
+      router.history.replace(redirectTarget);
     },
   });
 

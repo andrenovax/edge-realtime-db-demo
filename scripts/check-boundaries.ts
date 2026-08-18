@@ -41,6 +41,7 @@ const EXACT_ALIASES: Record<string, string> = {
   "@workers/agent/constants": "src/workers/agent/agent.constants.ts",
   "@workers/gateway/constants": "src/workers/gateway/gateway.constants.ts",
   "@workers/user/rpc": "src/workers/user/user.rpc.ts",
+  "@ui/routes.context": "src/web/user/routes.context.ts",
 };
 
 const PREFIX_ALIASES: Record<string, string> = {

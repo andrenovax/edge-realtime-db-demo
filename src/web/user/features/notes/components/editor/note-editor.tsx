@@ -1,6 +1,6 @@
 import { BlockNoteView } from "@blocknote/ariakit";
 import { useCreateBlockNote } from "@blocknote/react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import styles from "@ui/features/notes/components/editor/note-editor.module.css";
 
 type NoteEditorProps = {
@@ -23,11 +23,27 @@ export function NoteEditor({ noteId, markdown, onSave }: NoteEditorProps) {
   );
   const applyingExternal = useRef(false);
   const lastEditorMarkdown = useRef<string | undefined>(undefined);
+  const onSaveRef = useRef(onSave);
+  const pendingSave = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  onSaveRef.current = onSave;
+
+  const flushPendingSave = useCallback(() => {
+    if (!pendingSave.current) return;
+
+    pendingSave.current = false;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = undefined;
+
+    const nextMarkdown = editor.blocksToMarkdownLossy(editor.document);
+    if (nextMarkdown === lastEditorMarkdown.current) return;
+    lastEditorMarkdown.current = nextMarkdown;
+    onSaveRef.current(nextMarkdown);
+  }, [editor]);
 
   useEffect(() => {
     if (markdown === lastEditorMarkdown.current) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
+    flushPendingSave();
 
     applyingExternal.current = true;
     const blocks = editor.tryParseMarkdownToBlocks(markdown);
@@ -36,24 +52,15 @@ export function NoteEditor({ noteId, markdown, onSave }: NoteEditorProps) {
     queueMicrotask(() => {
       applyingExternal.current = false;
     });
-  }, [editor, markdown]);
+  }, [editor, flushPendingSave, markdown]);
 
-  useEffect(
-    () => () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    },
-    [],
-  );
+  useEffect(() => () => flushPendingSave(), [flushPendingSave]);
 
   const handleChange = () => {
     if (applyingExternal.current) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      const nextMarkdown = editor.blocksToMarkdownLossy(editor.document);
-      if (nextMarkdown === lastEditorMarkdown.current) return;
-      lastEditorMarkdown.current = nextMarkdown;
-      onSave(nextMarkdown);
-    }, 250);
+    pendingSave.current = true;
+    saveTimer.current = setTimeout(flushPendingSave, 250);
   };
 
   return (

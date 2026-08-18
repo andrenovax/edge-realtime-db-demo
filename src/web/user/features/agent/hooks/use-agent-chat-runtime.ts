@@ -1,4 +1,5 @@
 import { useExternalStoreRuntime, type AppendMessage } from "@assistant-ui/react";
+import { useMemo } from "react";
 import {
   getAppendMessageText,
   isRenderableAgentMessage,
@@ -18,6 +19,17 @@ export function useAgentChatRuntime({ noteId }: AgentChatOptions) {
 
   const isWorking = isOnline && (agent.status === "submitted" || agent.status === "streaming");
 
+  const messages = useMemo(
+    () =>
+      agent.messages.filter(
+        (message) =>
+          message.display === "visible" &&
+          (message.role === "user" || message.role === "assistant") &&
+          isRenderableAgentMessage(message),
+      ),
+    [agent.messages],
+  );
+
   const onNew = async (message: AppendMessage) => {
     if (!isOnline) return;
     const body = getAppendMessageText(message);
@@ -25,20 +37,17 @@ export function useAgentChatRuntime({ noteId }: AgentChatOptions) {
     await agent.sendMessage(body);
   };
 
+  const onCancel = async () => {
+    await client.abort();
+  };
+
   const runtime = useExternalStoreRuntime({
-    messages: agent.messages.filter(
-      (message) =>
-        message.display === "visible" &&
-        (message.role === "user" || message.role === "assistant") &&
-        isRenderableAgentMessage(message),
-    ),
+    messages,
     convertMessage: toThreadMessage,
     isLoading: !agent.historyReady,
     isRunning: isWorking,
     onNew,
-    onCancel: async () => {
-      await client.abort();
-    },
+    onCancel,
   });
 
   // Going offline is already represented by the disabled composer. Transport

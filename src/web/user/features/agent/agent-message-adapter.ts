@@ -2,6 +2,7 @@ import type { AppendMessage, ThreadMessageLike } from "@assistant-ui/react";
 import type { FlueConversationMessage } from "@flue/react";
 
 type MessageContent = Exclude<ThreadMessageLike["content"], string>;
+const messageContentCache = new WeakMap<FlueConversationMessage, MessageContent>();
 
 const toolLabels: Record<string, string> = {
   read_note: "Reading note",
@@ -31,6 +32,9 @@ function stripToolLabelFragment(text: string) {
 }
 
 function toMessageContent(message: FlueConversationMessage) {
+  const cached = messageContentCache.get(message);
+  if (cached) return cached;
+
   const content: Array<MessageContent[number]> = [];
 
   for (const part of message.parts) {
@@ -65,6 +69,7 @@ function toMessageContent(message: FlueConversationMessage) {
     }
   }
 
+  messageContentCache.set(message, content);
   return content;
 }
 

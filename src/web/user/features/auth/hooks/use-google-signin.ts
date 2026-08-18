@@ -1,17 +1,22 @@
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { useRootRouteContext } from "@ui/routes.context";
-import { APP_PATHS } from "../../../config.ts";
 
-export function useGoogleSignin() {
+export function useGoogleSignin(redirectTarget: string) {
   const { auth } = useRootRouteContext();
+  const router = useRouter();
 
   return useMutation({
-    mutationKey: ["auth", "google-sign-in"],
+    mutationKey: ["auth", "google-sign-in", redirectTarget],
     mutationFn: async () => {
+      const errorCallbackURL = router.buildLocation({
+        to: "/sign-in",
+        search: { redirect: redirectTarget },
+      }).href;
       const result = await auth.signIn.social({
         provider: "google",
-        callbackURL: APP_PATHS.home,
-        errorCallbackURL: APP_PATHS.signIn,
+        callbackURL: redirectTarget,
+        errorCallbackURL,
       });
       if (result.error) {
         throw new Error(result.error.message ?? "Google sign-in failed. Please try again.");
