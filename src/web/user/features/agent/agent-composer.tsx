@@ -1,5 +1,11 @@
 import { AuiIf, ComposerPrimitive } from "@assistant-ui/react";
-import { ArrowUp, AudioLines, Mic, Plus, Square } from "lucide-react";
+import {
+  ArrowUp,
+  // AudioLines,
+  // Mic,
+  Plus,
+  Square,
+} from "lucide-react";
 import { useOnline } from "@ui/providers/online-provider.tsx";
 
 type AgentComposerProps = {
@@ -54,6 +60,7 @@ export function AgentComposer({ error }: AgentComposerProps) {
                 <ArrowUp className="size-6" />
               </ComposerPrimitive.Send>
             </AuiIf>
+            {/* Audio input is not supported yet. Keep this UI ready for when it is.
             <AuiIf condition={(state) => !state.thread.isRunning && state.composer.isEmpty}>
               <ComposerPrimitive.Dictate asChild>
                 <button
@@ -76,6 +83,7 @@ export function AgentComposer({ error }: AgentComposerProps) {
                 <AudioLines className="size-5" />
               </button>
             </AuiIf>
+            */}
           </div>
         </div>
       </ComposerPrimitive.Root>
