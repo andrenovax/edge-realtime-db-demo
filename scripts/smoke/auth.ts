@@ -1,4 +1,6 @@
+import { newHttpBatchRpcSession } from "capnweb";
 import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
+import type { UserApi } from "../../src/workers/user/user.rpc.ts";
 
 export const demoUsers = {
   admin: {
@@ -38,4 +40,12 @@ export async function signInDemoUser(
   if (!userId) throw new Error("token did not contain a subject");
 
   return { cookie, token, userId };
+}
+
+export async function getDemoUserStoreId(origin: string, token: string) {
+  const api = newHttpBatchRpcSession<UserApi>(
+    `${origin}${API_PATHS.data}?auth=${encodeURIComponent(token)}`,
+  );
+  const viewer = await api.viewer();
+  return viewer.storeId;
 }

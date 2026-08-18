@@ -1,6 +1,7 @@
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { IS_DEV } from "../config.ts";
 
 export function RouteError({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
@@ -24,7 +25,7 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
           <p className="mt-1 text-sm text-default-500">
             Your local data is still available. Retry the route when you are ready.
           </p>
-          {import.meta.env.DEV && <p className="mt-2 text-xs text-danger">{error.message}</p>}
+          {IS_DEV && <p className="mt-2 text-xs text-danger">{error.message}</p>}
         </div>
         <button
           type="button"

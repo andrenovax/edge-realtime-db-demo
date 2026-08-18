@@ -6,6 +6,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./app.css";
+import { IS_DEV } from "./config.ts";
 import { authClient } from "@ui/libs/auth.ts";
 import { queryClient } from "@ui/libs/query.ts";
 import { rpcClient } from "@ui/libs/rpc.ts";
@@ -35,7 +36,7 @@ root.render(
   <StrictMode>
     <AppProviders queryClient={queryClient}>
       <RouterProvider router={router} />
-      {import.meta.env.DEV && (
+      {IS_DEV && (
         <TanStackDevtools
           plugins={[
             {

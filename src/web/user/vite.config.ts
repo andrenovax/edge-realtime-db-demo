@@ -13,6 +13,7 @@ export default defineConfig({
   envPrefix: ["VITE_", "GOOGLE_CLIENT_ID"],
   optimizeDeps: {
     exclude: ["@livestore/wa-sqlite"],
+    include: ["@tanstack/react-form"],
   },
   plugins: [
     DevTools({ visibility: "passive" }),

@@ -5,7 +5,7 @@ import { createStorePromise, nanoid } from "@livestore/livestore";
 import { makeWsSync } from "@livestore/sync-cf/client";
 import { events, schema, tables } from "../../db/livestore/schema.ts";
 import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
-import { signInDemoUser } from "./auth.ts";
+import { getDemoUserStoreId, signInDemoUser } from "./auth.ts";
 import { gatewayOrigin, gatewayWebSocketOrigin } from "./config.ts";
 
 const dataDir = ".livestore-smoke";
@@ -22,7 +22,8 @@ const poll = async <T>(label: string, fn: () => T | undefined, timeoutMs = 20_00
 
 export async function runLivestoreSmoke() {
   rmSync(dataDir, { recursive: true, force: true });
-  const { token, userId } = await signInDemoUser(gatewayOrigin);
+  const { token } = await signInDemoUser(gatewayOrigin);
+  const storeId = await getDemoUserStoreId(gatewayOrigin, token);
   const syncedAdapter = (dir: string) =>
     makeAdapter({
       storage: { type: "fs", baseDirectory: `${dataDir}/${dir}` },
@@ -32,7 +33,7 @@ export async function runLivestoreSmoke() {
     createStorePromise({
       schema,
       adapter: syncedAdapter(dir),
-      storeId: userId,
+      storeId,
       syncPayload: { authToken: token },
     });
 
@@ -54,10 +55,22 @@ export async function runLivestoreSmoke() {
       storeB.query(tables.notes.select()).find((note) => note.id === noteId),
     );
 
+    // Prime device C once before it goes offline. The durable backend persists
+    // across smoke runs, so a brand-new offline database would otherwise write
+    // from sequence zero without ever having observed the current server head.
+    const primedStoreC = await makeStore("c");
+    try {
+      await poll("C catches up before going offline", () =>
+        primedStoreC.query(tables.notes.select()).find((note) => note.id === noteId),
+      );
+    } finally {
+      await primedStoreC.shutdownPromise();
+    }
+
     const offlineAdapter = makeAdapter({
       storage: { type: "fs", baseDirectory: `${dataDir}/c` },
     });
-    const storeC = await createStorePromise({ schema, adapter: offlineAdapter, storeId: userId });
+    const storeC = await createStorePromise({ schema, adapter: offlineAdapter, storeId });
     const offlineNoteId = nanoid();
     try {
       storeC.commit(
@@ -97,4 +110,7 @@ export async function runLivestoreSmoke() {
   }
 }
 
-if (import.meta.main) await runLivestoreSmoke();
+if (import.meta.main) {
+  await runLivestoreSmoke();
+  process.exit(0);
+}

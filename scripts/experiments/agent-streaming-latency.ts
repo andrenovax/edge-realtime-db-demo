@@ -29,7 +29,10 @@ for (let trial = 1; trial <= rounds; trial++) {
   let firstTextAt: number | undefined;
   let settledAt: number | undefined;
 
-  const reply = await conversation.read(admission, {
+  // Reattach through the client's public gateway URL. Local Flue admissions
+  // are created by the loopback-hosted worker and therefore advertise that
+  // internal origin in streamUrl.
+  const reply = await conversation.read(admission.submissionId, {
     onEvent(event) {
       const now = performance.now();
       firstEventAt ??= now;

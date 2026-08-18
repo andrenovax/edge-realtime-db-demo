@@ -7,7 +7,7 @@
     "build": "vite build src/web/user",
     "deploy": "varlock run -- nub --cwd infra run deploy",
     "env:check": "varlock load --agent",
-    "env:audit": "varlock audit src scripts infra db --ignore infra/.alchemy",
+    "env:audit": "varlock audit --path .env.schema src infra db --ignore infra/.alchemy",
     "env:scan": "varlock scan",
     "css:types": "tcm --pattern '**/*.module.css' src/web/user",
     "check:css-types": "tcm --listDifferent --pattern '**/*.module.css' src/web/user",

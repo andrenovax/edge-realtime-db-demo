@@ -43,8 +43,7 @@ function useLiveStoreSyncStore(liveStore: StoreSyncSource) {
   // state here so the shared store reflects the actual backend backlog.
   useEffect(() => {
     let active = true;
-    const leaderSyncState =
-      liveStore[StoreInternalsSymbol].clientSession.leaderThread.syncState;
+    const leaderSyncState = liveStore[StoreInternalsSymbol].clientSession.leaderThread.syncState;
 
     const publishSyncState = (pendingCount: number, upstreamHead: string) => {
       if (!active) return;
@@ -53,8 +52,7 @@ function useLiveStoreSyncStore(liveStore: StoreSyncSource) {
         isLoading: false,
         isSynced: pendingCount === 0,
         lastSyncedAt:
-          state.upstreamHead !== undefined &&
-          state.upstreamHead !== upstreamHead
+          state.upstreamHead !== undefined && state.upstreamHead !== upstreamHead
             ? Date.now()
             : state.lastSyncedAt,
         pendingCount,
@@ -95,9 +93,7 @@ function useLiveStoreSyncStore(liveStore: StoreSyncSource) {
               if (update.kind === "sync") {
                 publishSyncState(
                   update.syncState.pending.length,
-                  EventSequenceNumber.Client.toString(
-                    update.syncState.upstreamHead,
-                  ),
+                  EventSequenceNumber.Client.toString(update.syncState.upstreamHead),
                 );
               } else {
                 publishNetworkStatus(update.networkStatus.isConnected);
@@ -134,9 +130,7 @@ export function createLiveStoreSyncContext() {
     const syncStore = useLiveStoreSyncStore(store);
 
     return (
-      <LiveStoreSyncContextProvider value={syncStore}>
-        {children}
-      </LiveStoreSyncContextProvider>
+      <LiveStoreSyncContextProvider value={syncStore}>{children}</LiveStoreSyncContextProvider>
     );
   }
 

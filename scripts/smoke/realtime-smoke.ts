@@ -7,14 +7,15 @@ import { createFlueClient } from "@flue/sdk";
 import { events, schema } from "../../db/livestore/schema.ts";
 import { AgentName } from "../../src/workers/agent/agent.constants.ts";
 import { API_PATHS } from "../../src/workers/gateway/gateway.constants.ts";
-import { signInDemoUser } from "./auth.ts";
+import { getDemoUserStoreId, signInDemoUser } from "./auth.ts";
 import { gatewayOrigin, gatewayWebSocketOrigin } from "./config.ts";
 
 const dataDir = ".realtime-smoke";
 
 export async function runRealtimeSmoke() {
   rmSync(dataDir, { recursive: true, force: true });
-  const { token, userId } = await signInDemoUser(gatewayOrigin);
+  const { token } = await signInDemoUser(gatewayOrigin);
+  const storeId = await getDemoUserStoreId(gatewayOrigin, token);
   const conversationId = crypto.randomUUID();
   const agentPath = API_PATHS.agent(AgentName.Hello, conversationId);
   const anonymous = await fetch(`${gatewayOrigin}${agentPath}`, {
@@ -40,7 +41,7 @@ export async function runRealtimeSmoke() {
       storage: { type: "fs", baseDirectory: dataDir },
       sync: { backend: makeWsSync({ url: `${gatewayWebSocketOrigin}${API_PATHS.sync}` }) },
     }),
-    storeId: userId,
+    storeId,
     syncPayload: { authToken: token },
   });
 
@@ -65,4 +66,7 @@ export async function runRealtimeSmoke() {
   }
 }
 
-if (import.meta.main) await runRealtimeSmoke();
+if (import.meta.main) {
+  await runRealtimeSmoke();
+  process.exit(0);
+}

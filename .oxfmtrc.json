@@ -3,7 +3,7 @@
   "ignorePatterns": [
     ".agents/**",
     ".claude/settings.local.json",
-    "db/migrations/**/snapshot.json",
+    "db/**/migrations/**/snapshot.json",
     "env.d.ts",
     "src/web/user/lib/routeTree.gen.ts",
     "**/*.module.css.d.ts"

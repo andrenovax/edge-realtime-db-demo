@@ -21,4 +21,8 @@ export async function runAllSmoke() {
   console.log("\nPASS smoke: all public surfaces");
 }
 
-if (import.meta.main) await runAllSmoke();
+if (import.meta.main) {
+  await runAllSmoke();
+  // LiveStore's Node adapter retains background handles after shutdown.
+  process.exit(0);
+}
