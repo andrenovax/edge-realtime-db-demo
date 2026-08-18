@@ -41,9 +41,9 @@ key. Alchemy injects the resolved auth secret only into the auth Worker.
 nub run dev
 ```
 
-Alchemy runs seven Workers: gateway, auth, LiveStore, user, event router, admin,
-and the Flue agent. It also manages the D1 database, the projection queue, and
-the user-lifecycle queue. The agent is an Alchemy-managed Vite Worker in the
+Alchemy runs six Workers: gateway, auth, LiveStore, user, admin, and the Flue
+agent. It also manages the D1 database and the projection queue. The agent is
+an Alchemy-managed Vite Worker in the
 same development loop, so agent edits retain Vite HMR. In local development the
 gateway reaches it through a deterministic loopback origin; deployed stacks use
 the agent service binding. The gateway remains the only public entry at

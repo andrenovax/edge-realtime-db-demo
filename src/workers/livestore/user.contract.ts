@@ -7,7 +7,6 @@ export type { AgentConversation, AgentModelVariant };
 // Type-only seam — the DO class itself never leaves this worker.
 export type UserDoRpc = Pick<
   UserDO,
-  | "provisionUser"
   | "addNote"
   | "updateNote"
   | "ensureNote"

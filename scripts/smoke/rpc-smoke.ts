@@ -23,6 +23,7 @@ export async function runRpcSmoke() {
     const [viewer, repeatedViewer] = await Promise.all([firstViewer, secondViewer]);
 
     assert.deepEqual(repeatedViewer, viewer, "batched viewer calls should agree");
+    assert.match(viewer.storeId, /^[0-9a-f]{64}$/, "viewer should expose an opaque DO id");
     assert.equal(fetches, 1, "two calls made before awaiting should use one HTTP request");
     console.log(`PASS rpc: 2 viewer calls used ${fetches} HTTP request`);
   } finally {

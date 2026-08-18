@@ -25,7 +25,7 @@ export class AdminApi extends RpcTarget {
     return { count: rows.length, events: rows };
   }
 
-  // One user's slice of the projection, by storeId (= userId).
+  // One user's slice of the projection, by opaque storeId.
   async storeEvents(storeId: string) {
     const rows = await drizzle(this.#env.DB)
       .select()

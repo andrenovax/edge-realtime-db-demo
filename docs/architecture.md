@@ -15,26 +15,26 @@ one runtime concern: `livestore` is the durable state and synchronization
 plane. Every authenticated identity, including an administrator, may own
 application state in a per-user DO. Better Auth identity and the administrator's
 cross-user read model live in D1. The projection Queue is the one-way bridge
-from per-user application state into that read model; a separate lifecycle
-Queue carries identity events from `auth` to `user`.
+from per-user application state into that read model. Auth owns no application
+state bindings: the user plane deterministically maps an authenticated user ID
+to an opaque Durable Object ID when state is accessed.
 
-| Worker         | Actor / role                                                                                                                                            | Stores                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `gateway`      | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers             | —                                                            |
-| `auth`         | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                            | D1 (Better Auth tables)                                      |
-| `event-router` | asynchronous event routing — consumes the user-lifecycle queue and forwards producer-owned events to the Worker that owns each operation                | —                                                            |
-| `livestore`    | durable state — LiveStore sync plus all application DOs (`UserDO` client + `UserSyncBackendDO` event log); owns notes, items, and conversation metadata | DO SQLite, LiveStore schema                                  |
-| `user`         | authenticated viewer identity (`/api/data`); per-user application state flows directly through LiveStore                                                | —                                                            |
-| `admin`        | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                                       | D1 (`user_events`, note, item, and conversation projections) |
-| `agent`        | agents — Flue runtime (`/api/agents/*`); create-only admits first messages, catalogs them in `UserDO`, and authorizes later access                      | generated agent DO SQLite                                    |
+| Worker      | Actor / role                                                                                                                                            | Stores                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `gateway`   | public entry — prefix-routing proxy; the ONLY place JWTs are verified; stamps `x-user-id/-email/-role` and strips smuggled identity headers             | —                                                            |
+| `auth`      | identity — Better Auth (+ admin plugin) sessions, JWTs, JWKS                                                                                            | D1 (Better Auth tables)                                      |
+| `livestore` | durable state — LiveStore sync plus all application DOs (`UserDO` client + `UserSyncBackendDO` event log); owns notes, items, and conversation metadata | DO SQLite, LiveStore schema                                  |
+| `user`      | authenticated viewer identity (`/api/data`) and deterministic opaque store ID derivation; application state flows directly through LiveStore            | —                                                            |
+| `admin`     | system plane — projection queue consumer (sole writer of the read model) + capnweb RPC (`/api/admin`), role-gated                                       | D1 (`user_events`, note, item, and conversation projections) |
+| `agent`     | agents — Flue runtime (`/api/agents/*`); create-only admits first messages, catalogs them in `UserDO`, and authorizes later access                      | generated agent DO SQLite                                    |
 
 ## Public ingress
 
 `gateway` is the application's **only public entry point**. It is the only
 Worker that may own a public URL, route, custom domain, or user-facing static
-assets. `auth`, `event-router`, `livestore`, `user`, `admin`, and `agent` are
-private Workers and set `workersDev: false`. Public HTTP reaches the HTTP-facing
-private Workers only through `gateway`; `event-router` is driven by its Queue.
+assets. `auth`, `livestore`, `user`, `admin`, and `agent` are private Workers
+and set `workersDev: false`. Public HTTP reaches the HTTP-facing private Workers
+only through `gateway`.
 Local development uses a loopback origin for the agent while preserving the
 gateway as the only public application surface.
 
@@ -106,10 +106,7 @@ worker needs them.
 - **`contracts-type-only`** — importing a `.contract.ts` is `import type`;
   no runtime code crosses a worker boundary.
 - **`events-producer-owned`** — an emitted event is owned and versioned by
-  its producer. Its types live in exactly `<producer>/<producer>.events.ts`;
-  for example, Auth's `UserCreatedV1` lives in
-  [auth.events.ts](../src/workers/auth/auth.events.ts), never in the Event
-  Router or receiving User Worker. The Event Router owns routing only.
+  its producer. Its types live in exactly `<producer>/<producer>.events.ts`.
 - **`events-type-only`** — importing an `.events.ts` module is `import type`;
   event catalogs contain serializable types, never producer implementation.
 - **`db-schema-planes`** — [user.ts](../db/schema/user.ts) is the canonical
@@ -140,8 +137,8 @@ Not lintable but held by convention: request-identity trust flows one way —
 only `gateway` verifies JWTs; downstream workers authorize against the stamped
 `x-user-*` headers and never re-verify. The `agent` Worker validates and
 normalizes external payloads before calling `UserDO`; `user` adapts stamped
-viewer identity for `UserApi` and forwards typed internal lifecycle events to
-the DO. The DO owns application state transitions, not transport validation.
+viewer identity for `UserApi` and derives its opaque store ID through the
+`USER_DO` namespace. The DO owns application state transitions, not transport validation.
 Local smoke tests sign in through Better Auth as users from
 `db/seeds/local.sql`.
 

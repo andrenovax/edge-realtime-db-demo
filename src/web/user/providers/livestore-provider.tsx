@@ -2,6 +2,7 @@ import { makePersistedAdapter } from "@livestore/adapter-web";
 import LiveStoreSharedWorker from "@livestore/adapter-web/shared-worker?sharedworker";
 import { StoreRegistry } from "@livestore/livestore";
 import { storeOptions, StoreRegistryProvider, useStore } from "@livestore/react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
 import { unstable_batchedUpdates as batchUpdates } from "react-dom";
 import { schema } from "@db/livestore";
@@ -22,17 +23,22 @@ const currentUserLiveStoreSyncContext = createLiveStoreSyncContext();
 
 export const useCurrentUserLiveStoreSync = currentUserLiveStoreSyncContext.useLiveStoreSyncContext;
 
-// storeId = JWT sub: the same id addresses the UserDO and sync backend.
+// The User Worker derives the opaque storeId from the authenticated user.
 // Each note id is also its Flue conversation id. LiveStore owns the note and
 // conversation catalog; Flue stores the transcript in its generated agent DO.
 export function useCurrentUserLiveStore() {
-  const { session } = useAuthenticatedRouteContext();
+  const { rpc, session } = useAuthenticatedRouteContext();
   const token = useAuthToken();
+  const viewer = useSuspenseQuery({
+    queryKey: ["viewer", session.user.id],
+    queryFn: () => rpc.batch(token).viewer(),
+    staleTime: Infinity,
+  });
 
   return useStore(
     storeOptions({
       schema,
-      storeId: session.user.id,
+      storeId: viewer.data.storeId,
       adapter,
       syncPayload: { authToken: token },
     }),

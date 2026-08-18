@@ -7,7 +7,7 @@ import type { ProjectionMessage } from "@workers/admin/contract";
 // is safe.
 let doEnv: LiveStoreEnv | undefined;
 
-// Event-log store, one per storeId (= userId). Events persist in this
+// Event-log store, one per opaque UserDO ID. Events persist in this
 // DO's own SQLite (sync-cf default). All transports enabled: ws/http for
 // browsers and Node, do-rpc for the UserDO LiveStore client.
 export class UserSyncBackendDO extends makeDurableObject({
