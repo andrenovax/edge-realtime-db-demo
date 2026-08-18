@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
-import { RouteError, RoutePending } from "@ui/components/route-status.tsx";
+import { RouteError } from "@ui/components/route-status.tsx";
 import { LiveStoreProvider } from "@ui/providers/livestore-provider.tsx";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -17,23 +17,22 @@ export const Route = createFileRoute("/_authenticated")({
   },
   component: AppShell,
   errorComponent: RouteError,
-  pendingComponent: RoutePending,
 });
 
 function AppShell() {
   return (
-    <main className="h-dvh min-h-0 overflow-hidden bg-transparent text-foreground">
-      <Suspense
-        fallback={
-          <div className="flex min-h-dvh items-center justify-center">
-            <span>Loading…</span>
-          </div>
-        }
-      >
-        <LiveStoreProvider>
+    <LiveStoreProvider>
+      <main className="h-dvh min-h-0 overflow-hidden bg-transparent text-foreground">
+        <Suspense
+          fallback={
+            <div className="flex min-h-dvh items-center justify-center">
+              <span>Loading…</span>
+            </div>
+          }
+        >
           <Outlet />
-        </LiveStoreProvider>
-      </Suspense>
-    </main>
+        </Suspense>
+      </main>
+    </LiveStoreProvider>
   );
 }

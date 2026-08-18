@@ -2,14 +2,6 @@ import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
-export function RoutePending() {
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-surface text-foreground">
-      <span>Loading…</span>
-    </div>
-  );
-}
-
 export function RouteError({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   const queryErrorResetBoundary = useQueryErrorResetBoundary();
