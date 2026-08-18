@@ -1,8 +1,7 @@
-import type { NoteEventArgs } from "@db/schema/user";
+import type { NoteEventArgs, NoteStatus } from "@db/schema/user";
 import { Archive, Ellipsis, Pencil, Trash2 } from "lucide-react";
-import type { NoteStatus } from "../notes.types.ts";
-import { useActionMenu } from "./use-action-menu.ts";
-import { useNoteRename } from "./use-note-rename.ts";
+import { useNoteRename } from "@ui/features/notes/components/sidebar/use-note-rename.ts";
+import { useActionMenu } from "@ui/hooks/use-action-menu.ts";
 
 export function getNoteTitle(note: Pick<NoteEventArgs, "title">) {
   return note.title || "Untitled note";

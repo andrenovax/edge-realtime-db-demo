@@ -1,7 +1,7 @@
 import { BlockNoteView } from "@blocknote/ariakit";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useEffect, useRef } from "react";
-import styles from "./note-editor.module.css";
+import styles from "@ui/features/notes/components/editor/note-editor.module.css";
 
 type NoteEditorProps = {
   noteId: string;

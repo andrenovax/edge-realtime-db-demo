@@ -1,28 +1,28 @@
 import type { CSSProperties } from "react";
-import { EditorPanel } from "./editor/editor-panel.tsx";
-import { useNoteSelection } from "./hooks/use-note-selection.ts";
-import { useNotesLayout } from "./hooks/use-notes-layout.ts";
-import { useNotesModel } from "./hooks/use-notes-model.ts";
-import { useNotesSync } from "./hooks/use-notes-sync.ts";
-import styles from "./notes-workspace.module.css";
-import type { NoteStatus } from "./notes.types.ts";
-import { NotesSidebar } from "./sidebar/notes-sidebar.tsx";
-import { ChatPanel } from "./workspace/chat-panel.tsx";
-import { MobilePanelNav } from "./workspace/mobile-panel-nav.tsx";
-import { PanelResizeHandle } from "./workspace/panel-resize-handle.tsx";
-import { WorkspaceControls } from "./workspace/workspace-controls.tsx";
+import type { NoteStatus } from "@db/schema/user";
+import { useSignOut } from "@ui/features/auth/hooks/use-sign-out.ts";
+import { ChatPanel } from "@ui/features/notes/components/chat-panel.tsx";
+import { MobilePanelNav } from "@ui/features/notes/components/controls/mobile-panel-nav.tsx";
+import { PanelResizeHandle } from "@ui/features/notes/components/controls/panel-resize-handle.tsx";
+import { WorkspaceControls } from "@ui/features/notes/components/controls/workspace-controls.tsx";
+import { EditorPanel } from "@ui/features/notes/components/editor/index.ts";
+import { NotesSidebar } from "@ui/features/notes/components/sidebar/index.ts";
+import { useNoteSelection } from "@ui/features/notes/hooks/use-note-selection.ts";
+import { useNotesLayout } from "@ui/features/notes/hooks/use-notes-layout.ts";
+import { useNotesModel } from "@ui/features/notes/hooks/use-notes-model.ts";
+import styles from "@ui/features/notes/notes-workspace.module.css";
+import { useOnline } from "@ui/providers/online-provider.tsx";
+import { useCurrentUser } from "../auth/hooks/use-current-user";
+import { useSearch } from "@tanstack/react-router";
 
-type NotesPageProps = {
-  userId: string;
-  email: string;
-  onSignOut: () => Promise<void>;
-};
-
-export function NotesPage({ email, onSignOut }: NotesPageProps) {
+export function NotesPage() {
   const notes = useNotesModel();
-  const { isOffline, syncDisplay } = useNotesSync(notes.store);
-  const selection = useNoteSelection({ activeNotes: notes.activeNotes, notes: notes.notes });
-  const layout = useNotesLayout(isOffline);
+  const isOnline = useOnline();
+  const signOut = useSignOut();
+  const { note: selectedId } = useSearch({ from: "/_authenticated/" });
+  const selection = useNoteSelection({ activeNotes: notes.activeNotes, notes: notes.notes, noteId: selectedId });
+  const layout = useNotesLayout();
+  const { email } = useCurrentUser();
 
   const openNote = (id: string) => {
     layout.revealNotePanel();
@@ -40,7 +40,7 @@ export function NotesPage({ email, onSignOut }: NotesPageProps) {
     <div
       className={`${styles.workspace} relative grid h-full min-h-0 overflow-hidden p-0 md:p-3 ${
         layout.panelsReversed ? styles.panelsReversed : ""
-      } ${layout.rightPanelOpen ? "" : styles.rightCollapsed} ${isOffline ? styles.offline : ""}`}
+      } ${layout.rightPanelOpen ? "" : styles.rightCollapsed} ${isOnline ? "" : styles.offline}`}
       style={
         {
           "--notes-nav-width": layout.sidebarOpen ? `${layout.navWidth}px` : "3rem",
@@ -51,7 +51,6 @@ export function NotesPage({ email, onSignOut }: NotesPageProps) {
       }
     >
       <WorkspaceControls
-        isOffline={isOffline}
         rightPanelOpen={layout.rightPanelOpen}
         onSwapPanels={layout.swapPanels}
         onToggleRightPanel={layout.toggleRightPanel}
@@ -63,11 +62,10 @@ export function NotesPage({ email, onSignOut }: NotesPageProps) {
         mobileVisible={layout.mobilePanel === "nav"}
         selectedNoteId={selection.selected?.id}
         sidebarOpen={layout.sidebarOpen}
-        sync={syncDisplay}
         onCreateNote={startNewNote}
         onOpenNote={openNote}
         onRenameNote={notes.renameNote}
-        onSignOut={onSignOut}
+        onSignOut={signOut}
         onStatusChange={handleNoteStatusChange}
         onToggleSidebar={layout.toggleSidebar}
       />
@@ -82,7 +80,6 @@ export function NotesPage({ email, onSignOut }: NotesPageProps) {
       <ChatPanel
         activeNoteId={selection.activeNoteId}
         collapsed={layout.chatPanelCollapsed}
-        isOffline={isOffline}
         mobileVisible={layout.mobilePanel === "chat"}
         panelsReversed={layout.panelsReversed}
         onCreateNote={startNewNote}

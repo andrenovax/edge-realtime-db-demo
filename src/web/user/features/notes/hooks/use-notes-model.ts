@@ -1,6 +1,7 @@
+import type { NoteStatus } from "@db/schema/user";
 import { useCallback, useMemo } from "react";
-import { events, tables, useCurrentUserLiveStore } from "../../../lib/livestore.tsx";
-import type { NoteStatus } from "../notes.types.ts";
+import { events, tables } from "@ui/libs/livestore.tsx";
+import { useCurrentUserLiveStore } from "@ui/providers/livestore-provider.tsx";
 
 // Reads are local: useQuery hits the in-browser SQLite, kept converged with
 // the user's SyncBackendDO event log. Writes are synced LiveStore events.
@@ -35,7 +36,13 @@ export function useNotesModel() {
 
       const conversation = activeConversations.find((item) => item.id === id);
       if (conversation) {
-        store.commit(events.agentConversationUpdated({ ...conversation, title, updatedAt }));
+        store.commit(
+          events.agentConversationUpdated({
+            ...conversation,
+            title,
+            updatedAt,
+          }),
+        );
       }
 
       return true;
@@ -81,6 +88,5 @@ export function useNotesModel() {
     notes,
     renameNote,
     saveNote,
-    store,
   };
 }

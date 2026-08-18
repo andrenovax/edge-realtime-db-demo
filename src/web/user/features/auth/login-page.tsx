@@ -4,8 +4,9 @@ import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Sparkles } from "lucide-rea
 import { type FormEvent, useState } from "react";
 import * as v from "valibot";
 import { GOOGLE_AUTH_ENABLED } from "../../config.ts";
-import { authClient, useGoogleSignin } from "../../lib/auth.ts";
-import styles from "./login-page.module.css";
+import { useGoogleSignin } from "@ui/features/auth/hooks/use-google-signin.ts";
+import styles from "@ui/features/auth/login-page.module.css";
+import { useRootRouteContext } from "@ui/routes.context";
 
 type AuthMode = "in" | "up";
 
@@ -39,7 +40,8 @@ function getFormErrorMessage({
   return searchError ? "Google sign-in failed. Please try again." : null;
 }
 
-export function LoginPage({ onAuthenticated }: { onAuthenticated: () => Promise<void> }) {
+export function LoginPage() {
+  const { auth } = useRootRouteContext();
   const { error: oauthError } = useSearch({ from: "/sign-in" });
   const navigate = useNavigate({ from: "/sign-in" });
 
@@ -66,8 +68,8 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: () => Promise<
     onSubmit: async ({ value, formApi }) => {
       const result =
         mode === "in"
-          ? await authClient.signIn.email({ email: value.email, password: value.password })
-          : await authClient.signUp.email({
+          ? await auth.signIn.email({ email: value.email, password: value.password })
+          : await auth.signUp.email({
               email: value.email,
               password: value.password,
               name: value.email.split("@")[0],
@@ -81,7 +83,8 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: () => Promise<
         });
         return;
       }
-      await onAuthenticated();
+
+      await navigate({ to: "/", replace: true });
     },
   });
 

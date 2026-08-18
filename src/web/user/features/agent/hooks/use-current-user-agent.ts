@@ -1,7 +1,8 @@
 import { useFlueAgent } from "@flue/react";
 import { createFlueClient } from "@flue/sdk";
 import { useMemo } from "react";
-import { useAuthToken } from "./auth";
+import { useAuthToken } from "@ui/features/auth/hooks/use-auth-token.ts";
+import { API_PATHS } from "../../../config.ts";
 
 export enum AgentName {
   Hello = "hello",
@@ -19,7 +20,7 @@ export const useCurrentUserAgent = ({
   const client = useMemo(
     () =>
       createFlueClient({
-        url: `/api/agents/${encodeURIComponent(agentName)}/${encodeURIComponent(conversationId)}`,
+        url: API_PATHS.agent(agentName, conversationId),
         token,
       }),
     [agentName, conversationId, token],

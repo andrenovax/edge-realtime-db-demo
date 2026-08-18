@@ -1,7 +1,15 @@
 import { newHttpBatchRpcSession } from "capnweb";
-import type { UserApi } from "../../../workers/user/user.rpc.ts";
+import type { UserApi } from "@workers/user/rpc";
+import { API_PATHS } from "../config.ts";
 
-// One batch session per call site: methods invoked before the first await are
-// sent in a single HTTP request.
-export const rpc = (token: string) =>
-  newHttpBatchRpcSession<UserApi>(`/api/data?auth=${encodeURIComponent(token)}`);
+export const rpcClient = {
+  // Each call creates a one-shot session. Calls made on the returned stub
+  // before the next I/O tick are sent in one HTTP request.
+  batch(token: string) {
+    return newHttpBatchRpcSession<UserApi>(
+      `${API_PATHS.data}?auth=${encodeURIComponent(token)}`,
+    );
+  },
+};
+
+export type RpcClient = typeof rpcClient;

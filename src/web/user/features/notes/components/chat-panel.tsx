@@ -1,12 +1,12 @@
 import { ArrowUp, Plus } from "lucide-react";
-import { OfflineIllustration } from "../../../components/offline-illustration.tsx";
-import { AgentPanel } from "../../agent/agent-panel.tsx";
-import styles from "../notes-workspace.module.css";
+import { OfflineIllustration } from "@ui/components/offline-illustration.tsx";
+import { AgentPanel } from "@ui/features/agent/agent-panel.tsx";
+import styles from "@ui/features/notes/notes-workspace.module.css";
+import { useOnline } from "@ui/providers/online-provider.tsx";
 
 type ChatPanelProps = {
   activeNoteId: string | undefined;
   collapsed: boolean;
-  isOffline: boolean;
   mobileVisible: boolean;
   panelsReversed: boolean;
   onCreateNote: () => void;
@@ -15,11 +15,12 @@ type ChatPanelProps = {
 export function ChatPanel({
   activeNoteId,
   collapsed,
-  isOffline,
   mobileVisible,
   panelsReversed,
   onCreateNote,
 }: ChatPanelProps) {
+  const isOnline = useOnline();
+
   return (
     <section
       id="mobile-panel-chat"
@@ -27,11 +28,11 @@ export function ChatPanel({
     >
       <div className={`h-full min-h-0 ${collapsed ? "invisible pointer-events-none" : ""}`}>
         {activeNoteId ? (
-          <AgentPanel key={activeNoteId} noteId={activeNoteId} isOffline={isOffline} />
-        ) : isOffline ? (
-          <OfflineChatEmptyState onCreateNote={onCreateNote} />
-        ) : (
+          <AgentPanel key={activeNoteId} noteId={activeNoteId} />
+        ) : isOnline ? (
           <OnlineChatEmptyState onCreateNote={onCreateNote} />
+        ) : (
+          <OfflineChatEmptyState onCreateNote={onCreateNote} />
         )}
       </div>
     </section>

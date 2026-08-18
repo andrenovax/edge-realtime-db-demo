@@ -1,7 +1,9 @@
 import { useState } from "react";
-import type { MobilePanel } from "../notes.types.ts";
+import type { MobilePanel } from "@ui/features/notes/notes.types.ts";
+import { useOnline } from "@ui/providers/online-provider.tsx";
 
-export function useNotesLayout(isOffline: boolean) {
+export function useNotesLayout() {
+  const isOnline = useOnline();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("chat");
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -17,7 +19,7 @@ export function useNotesLayout(isOffline: boolean) {
   const chatPanelCollapsed = !rightPanelOpen && panelsReversed;
 
   const revealNotePanel = () => {
-    if (isOffline) {
+    if (!isOnline) {
       setPanelsReversed(true);
       setRightPanelOpen(true);
     }

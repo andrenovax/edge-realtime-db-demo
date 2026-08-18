@@ -1,6 +1,8 @@
 import type { AppendMessage, ThreadMessageLike } from "@assistant-ui/react";
 import type { FlueConversationMessage } from "@flue/react";
 
+type MessageContent = Exclude<ThreadMessageLike["content"], string>;
+
 const toolLabels: Record<string, string> = {
   read_note: "Reading note",
   write_note: "Updating note",
@@ -18,17 +20,26 @@ function isIncompleteToolLabel(text: string) {
   );
 }
 
-export function toThreadMessage(message: FlueConversationMessage): ThreadMessageLike {
-  type MessageContent = Exclude<ThreadMessageLike["content"], string>;
+function stripToolLabelFragment(text: string) {
+  const lines = text.split("\n");
+  const firstContentLine = lines.findIndex((line) => line.trim().length > 0);
+  if (firstContentLine < 0 || !isIncompleteToolLabel(lines[firstContentLine]!)) return text;
+  return lines
+    .slice(firstContentLine + 1)
+    .join("\n")
+    .trimStart();
+}
+
+function toMessageContent(message: FlueConversationMessage) {
   const content: Array<MessageContent[number]> = [];
-  const hasToolPart = message.parts.some((part) => part.type === "dynamic-tool");
 
   for (const part of message.parts) {
     if (part.type === "text") {
-      if (message.role === "assistant" && hasToolPart && isIncompleteToolLabel(part.text)) continue;
+      const text = message.role === "assistant" ? stripToolLabelFragment(part.text) : part.text;
+      if (!text) continue;
       content.push({
         type: "text",
-        text: part.text,
+        text,
         status:
           part.state === "streaming"
             ? ({ type: "running" } as const)
@@ -38,12 +49,13 @@ export function toThreadMessage(message: FlueConversationMessage): ThreadMessage
     }
 
     if (part.type === "dynamic-tool") {
-      const failed = part.state === "output-error";
-      const complete = part.state === "output-available";
+      // Completed tool calls are durable transcript details, not chat content.
+      // Keep only live activity visible; history hydration must stay clean.
+      if (part.state !== "input-available") continue;
       const label = toolLabels[part.toolName] ?? part.toolName.replaceAll("_", " ");
       content.push({
         type: "text",
-        text: `_${failed ? `${label} failed` : complete ? `${label} done` : `${label}…`}_`,
+        text: `_${label}…_`,
       });
       continue;
     }
@@ -52,6 +64,16 @@ export function toThreadMessage(message: FlueConversationMessage): ThreadMessage
       content.push({ type: "image", image: part.url, filename: part.filename });
     }
   }
+
+  return content;
+}
+
+export function isRenderableAgentMessage(message: FlueConversationMessage) {
+  return toMessageContent(message).length > 0;
+}
+
+export function toThreadMessage(message: FlueConversationMessage): ThreadMessageLike {
+  const content = toMessageContent(message);
 
   const isRunning = message.parts.some(
     (part) =>

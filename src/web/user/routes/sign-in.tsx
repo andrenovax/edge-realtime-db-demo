@@ -1,6 +1,6 @@
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import * as v from "valibot";
-import { LoginPage } from "../features/auth/login-page.tsx";
+import { LoginPage } from "@ui/features/auth/login-page.tsx";
 
 const SignInSearch = v.object({
   error: v.optional(v.string()),
@@ -13,10 +13,5 @@ export const Route = createFileRoute("/sign-in")({
     if (error) throw new Error(error.message ?? `session fetch failed: ${error.status}`);
     if (session) throw redirect({ to: "/" });
   },
-  component: SignInRoute,
+  component: LoginPage,
 });
-
-function SignInRoute() {
-  const router = useRouter();
-  return <LoginPage onAuthenticated={() => router.navigate({ to: "/" })} />;
-}

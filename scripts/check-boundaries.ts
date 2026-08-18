@@ -37,6 +37,15 @@ const EXACT_ALIASES: Record<string, string> = {
   "@workers/livestore/user-contract": "src/workers/livestore/user.contract.ts",
   "@workers/livestore/user-schema": "src/workers/livestore/user.schema.ts",
   "@workers/admin/contract": "src/workers/admin/admin.contract.ts",
+  "@workers/user/rpc": "src/workers/user/user.rpc.ts",
+};
+
+const PREFIX_ALIASES: Record<string, string> = {
+  "@ui/libs/": "src/web/user/lib/",
+  "@ui/features/": "src/web/user/features/",
+  "@ui/providers/": "src/web/user/providers/",
+  "@ui/components/": "src/web/user/components/",
+  "@ui/hooks/": "src/web/user/hooks/",
 };
 
 const resolveInternalImport = (file: string, specifier: string) => {
@@ -45,6 +54,9 @@ const resolveInternalImport = (file: string, specifier: string) => {
   }
   if (specifier.startsWith("@db/schema/")) {
     return `db/schema/${specifier.slice("@db/schema/".length)}.ts`;
+  }
+  for (const [alias, target] of Object.entries(PREFIX_ALIASES)) {
+    if (specifier.startsWith(alias)) return `${target}${specifier.slice(alias.length)}`;
   }
   return EXACT_ALIASES[specifier] ?? null;
 };

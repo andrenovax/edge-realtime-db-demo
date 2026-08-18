@@ -1,12 +1,15 @@
 import { AuiIf, ComposerPrimitive } from "@assistant-ui/react";
 import { ArrowUp, AudioLines, Mic, Plus, Square } from "lucide-react";
+import { useOnline } from "@ui/providers/online-provider.tsx";
 
 type AgentComposerProps = {
   error?: string;
-  isOffline: boolean;
 };
 
-export function AgentComposer({ error, isOffline }: AgentComposerProps) {
+export function AgentComposer({ error }: AgentComposerProps) {
+  const isOnline = useOnline();
+  const isOffline = !isOnline;
+
   return (
     <div className="w-full">
       {error && <p className="mb-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>}

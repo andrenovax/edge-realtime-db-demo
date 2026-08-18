@@ -1,25 +1,26 @@
 import { ArrowLeftRight, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { useOnline } from "@ui/providers/online-provider.tsx";
 
 type WorkspaceControlsProps = {
-  isOffline: boolean;
   rightPanelOpen: boolean;
   onSwapPanels: () => void;
   onToggleRightPanel: () => void;
 };
 
 export function WorkspaceControls({
-  isOffline,
   rightPanelOpen,
   onSwapPanels,
   onToggleRightPanel,
 }: WorkspaceControlsProps) {
+  const isOnline = useOnline();
+
   return (
     <div
       className={`absolute top-6 z-50 hidden items-center gap-1 md:flex ${
         rightPanelOpen ? "right-6 flex-row" : "right-5 flex-col-reverse"
       }`}
     >
-      {!isOffline && rightPanelOpen && (
+      {isOnline && rightPanelOpen && (
         <button
           type="button"
           aria-label="Swap chat and note panels"

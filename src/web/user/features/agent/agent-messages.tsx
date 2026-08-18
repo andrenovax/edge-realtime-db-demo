@@ -7,7 +7,7 @@ import {
 import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import { Check, Copy } from "lucide-react";
 import remarkGfm from "remark-gfm";
-import styles from "./agent-panel.module.css";
+import styles from "@ui/features/agent/agent-panel.module.css";
 
 const actionClassName =
   "flex size-8 items-center justify-center rounded-lg text-[#5d5d5d] transition-colors hover:bg-black/[0.07] disabled:opacity-35";

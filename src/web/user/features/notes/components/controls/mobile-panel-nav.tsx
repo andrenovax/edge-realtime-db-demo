@@ -1,5 +1,5 @@
 import { FileText, MessageCircle, PanelLeft } from "lucide-react";
-import type { MobilePanel } from "../notes.types.ts";
+import type { MobilePanel } from "@ui/features/notes/notes.types.ts";
 
 type MobilePanelNavProps = {
   activePanel: MobilePanel;

@@ -1,10 +1,12 @@
-import type { NoteEventArgs } from "@db/schema/user";
+import type { NoteEventArgs, NoteStatus } from "@db/schema/user";
 import { LogOut, PanelLeft, Plus, Search } from "lucide-react";
 import { type ChangeEvent, useMemo, useState } from "react";
-import styles from "../notes-workspace.module.css";
-import type { NotesSyncDisplay, NoteStatus } from "../notes.types.ts";
-import { getNoteTitle, NoteListItem } from "./note-list-item.tsx";
-import { SyncStatus } from "./sync-status.tsx";
+import {
+  getNoteTitle,
+  NoteListItem,
+} from "@ui/features/notes/components/sidebar/note-list-item.tsx";
+import { SyncStatus } from "@ui/features/notes/components/sidebar/sync-status.tsx";
+import styles from "@ui/features/notes/notes-workspace.module.css";
 
 type NotesSidebarProps = {
   activeNotes: readonly NoteEventArgs[];
@@ -12,7 +14,6 @@ type NotesSidebarProps = {
   mobileVisible: boolean;
   selectedNoteId: string | undefined;
   sidebarOpen: boolean;
-  sync: NotesSyncDisplay;
   onCreateNote: () => void;
   onOpenNote: (id: string) => void;
   onRenameNote: (id: string, title: string) => void;
@@ -27,7 +28,6 @@ export function NotesSidebar({
   mobileVisible,
   selectedNoteId,
   sidebarOpen,
-  sync,
   onCreateNote,
   onOpenNote,
   onRenameNote,
@@ -133,7 +133,7 @@ export function NotesSidebar({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs text-[#5d5d5d]">{email}</p>
-              <SyncStatus sync={sync} />
+              <SyncStatus />
             </div>
             <button
               type="button"

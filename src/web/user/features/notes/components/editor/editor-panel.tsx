@@ -1,8 +1,10 @@
 import { lazy, Suspense } from "react";
-import styles from "../notes-workspace.module.css";
+import styles from "@ui/features/notes/notes-workspace.module.css";
 
 const NoteEditor = lazy(() =>
-  import("./note-editor.tsx").then((module) => ({ default: module.NoteEditor })),
+  import("@ui/features/notes/components/editor/note-editor.tsx").then((module) => ({
+    default: module.NoteEditor,
+  })),
 );
 
 type EditorPanelProps = {

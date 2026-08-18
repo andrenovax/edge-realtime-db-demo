@@ -1,6 +1,6 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import * as v from "valibot";
-import { NotesPage } from "../features/notes/notes-page.tsx";
+import { NotesPage } from "@ui/features/notes/notes-page";
 
 const NotesSearch = v.object({
   note: v.optional(v.string()),
@@ -8,21 +8,5 @@ const NotesSearch = v.object({
 
 export const Route = createFileRoute("/_authenticated/")({
   validateSearch: NotesSearch,
-  component: NotesRoute,
+  component: NotesPage,
 });
-
-function NotesRoute() {
-  const { auth, session } = Route.useRouteContext();
-  const router = useRouter();
-
-  return (
-    <NotesPage
-      userId={session.user.id}
-      email={session.user.email}
-      onSignOut={async () => {
-        await auth.signOut();
-        await router.invalidate();
-      }}
-    />
-  );
-}

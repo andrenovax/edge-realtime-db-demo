@@ -1,48 +1,21 @@
-import { makePersistedAdapter } from "@livestore/adapter-web";
-import LiveStoreSharedWorker from "@livestore/adapter-web/shared-worker?sharedworker";
-import { EventSequenceNumber, StoreInternalsSymbol, StoreRegistry } from "@livestore/livestore";
-import { storeOptions, StoreRegistryProvider } from "@livestore/react";
+import {
+  EventSequenceNumber,
+  Store as LiveStore,
+  StoreInternalsSymbol,
+  type StoreInternals,
+} from "@livestore/livestore";
+import {
+  createStoreContext,
+  useCreateStore,
+  useSelector,
+  type Store as TanStackStore,
+} from "@tanstack/react-store";
 import { Effect, Fiber, Stream } from "effect";
-import { useEffect, useState } from "react";
-import { unstable_batchedUpdates as batchUpdates } from "react-dom";
-import { schema } from "@db/livestore";
-import LiveStoreWorker from "./livestore.worker.ts?worker";
-import { useStore } from "@livestore/react";
-import { useAuthenticateRouteContext } from "./router";
-import { useAuthToken } from "./auth";
+import { type PropsWithChildren, useEffect } from "react";
 
 export { events, tables } from "@db/livestore";
 
-const storeRegistry = new StoreRegistry({ defaultOptions: { batchUpdates } });
-
-const adapter = makePersistedAdapter({
-  storage: { type: "opfs" },
-  worker: LiveStoreWorker,
-  sharedWorker: LiveStoreSharedWorker,
-});
-
-export function LiveStoreProvider({ children }: { children: React.ReactNode }) {
-  return <StoreRegistryProvider storeRegistry={storeRegistry}>{children}</StoreRegistryProvider>;
-}
-
-// storeId = JWT sub: the same id addresses the UserDO and sync backend.
-// Each note id is also its Flue conversation id. LiveStore owns the note and
-// conversation catalog; Flue stores the transcript in its generated agent DO.
-export const useCurrentUserLiveStore = () => {
-  const { session } = useAuthenticateRouteContext();
-  const token = useAuthToken();
-
-  return useStore(
-    storeOptions({
-      schema,
-      storeId: session.user.id,
-      adapter,
-      syncPayload: { authToken: token },
-    }),
-  );
-};
-
-export type StoreSyncState = {
+type StoreSyncState = {
   isConnected: boolean | undefined;
   isLoading: boolean;
   isSynced: boolean;
@@ -51,34 +24,39 @@ export type StoreSyncState = {
   upstreamHead: string | undefined;
 };
 
-// LiveStore 0.4's public sync status covers the page-to-leader hop only.
-// The leader sync state is owned by the web worker and tracks the actual
-// leader-to-backend backlog. Keep this internal-API dependency isolated here
-// until LiveStore exposes backend sync status publicly.
-export function useStoreSyncState(store: ReturnType<typeof useCurrentUserLiveStore>) {
-  const [state, setState] = useState<StoreSyncState>(() => ({
+type StoreSyncSource = {
+  readonly networkStatus: LiveStore["networkStatus"];
+  readonly [StoreInternalsSymbol]: StoreInternals;
+};
+
+function useLiveStoreSyncStore(liveStore: StoreSyncSource) {
+  const syncStore = useCreateStore<StoreSyncState>({
     isConnected: undefined,
     isLoading: true,
     isSynced: false,
     lastSyncedAt: Date.now(),
     pendingCount: 0,
     upstreamHead: undefined,
-  }));
+  });
 
+  // LiveStore's public status covers the page-to-leader hop. Read the leader
+  // state here so the shared store reflects the actual backend backlog.
   useEffect(() => {
     let active = true;
-    const leaderSyncState = store[StoreInternalsSymbol].clientSession.leaderThread.syncState;
+    const leaderSyncState =
+      liveStore[StoreInternalsSymbol].clientSession.leaderThread.syncState;
 
     const publishSyncState = (pendingCount: number, upstreamHead: string) => {
       if (!active) return;
-      setState((current) => ({
-        ...current,
+      syncStore.setState((state) => ({
+        ...state,
         isLoading: false,
         isSynced: pendingCount === 0,
         lastSyncedAt:
-          current.upstreamHead !== undefined && current.upstreamHead !== upstreamHead
+          state.upstreamHead !== undefined &&
+          state.upstreamHead !== upstreamHead
             ? Date.now()
-            : current.lastSyncedAt,
+            : state.lastSyncedAt,
         pendingCount,
         upstreamHead,
       }));
@@ -86,14 +64,14 @@ export function useStoreSyncState(store: ReturnType<typeof useCurrentUserLiveSto
 
     const publishNetworkStatus = (isConnected: boolean) => {
       if (!active) return;
-      setState((current) => ({ ...current, isConnected }));
+      syncStore.setState((state) => ({ ...state, isConnected }));
     };
 
     const fiber = Effect.runFork(
       Effect.gen(function* () {
         const [initialSyncState, initialNetworkStatus] = yield* Effect.all([
           leaderSyncState,
-          store.networkStatus,
+          liveStore.networkStatus,
         ]);
         publishSyncState(
           initialSyncState.pending.length,
@@ -105,8 +83,11 @@ export function useStoreSyncState(store: ReturnType<typeof useCurrentUserLiveSto
           leaderSyncState.changes.pipe(
             Stream.map((syncState) => ({ kind: "sync" as const, syncState })),
           ),
-          store.networkStatus.changes.pipe(
-            Stream.map((networkStatus) => ({ kind: "network" as const, networkStatus })),
+          liveStore.networkStatus.changes.pipe(
+            Stream.map((networkStatus) => ({
+              kind: "network" as const,
+              networkStatus,
+            })),
           ),
         ).pipe(
           Stream.runForEach((update) =>
@@ -114,7 +95,9 @@ export function useStoreSyncState(store: ReturnType<typeof useCurrentUserLiveSto
               if (update.kind === "sync") {
                 publishSyncState(
                   update.syncState.pending.length,
-                  EventSequenceNumber.Client.toString(update.syncState.upstreamHead),
+                  EventSequenceNumber.Client.toString(
+                    update.syncState.upstreamHead,
+                  ),
                 );
               } else {
                 publishNetworkStatus(update.networkStatus.isConnected);
@@ -129,7 +112,37 @@ export function useStoreSyncState(store: ReturnType<typeof useCurrentUserLiveSto
       active = false;
       Effect.runFork(Fiber.interrupt(fiber));
     };
-  }, [store]);
+  }, [liveStore, syncStore]);
 
-  return state;
+  return syncStore;
+}
+
+export function useLiveStoreSync(liveStore: StoreSyncSource) {
+  return useSelector(useLiveStoreSyncStore(liveStore));
+}
+
+export function createLiveStoreSyncContext() {
+  const {
+    StoreProvider: LiveStoreSyncContextProvider,
+    useStoreContext: useLiveStoreSyncContextStore,
+  } = createStoreContext<TanStackStore<StoreSyncState>>();
+
+  function LiveStoreSyncProvider({
+    children,
+    store,
+  }: PropsWithChildren<{ store: StoreSyncSource }>) {
+    const syncStore = useLiveStoreSyncStore(store);
+
+    return (
+      <LiveStoreSyncContextProvider value={syncStore}>
+        {children}
+      </LiveStoreSyncContextProvider>
+    );
+  }
+
+  function useLiveStoreSyncContext() {
+    return useSelector(useLiveStoreSyncContextStore());
+  }
+
+  return { LiveStoreSyncProvider, useLiveStoreSyncContext };
 }

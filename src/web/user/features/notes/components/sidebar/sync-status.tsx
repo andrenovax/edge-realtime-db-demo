@@ -1,27 +1,46 @@
 import { Check, Circle, LoaderCircle } from "lucide-react";
-import type { NotesSyncDisplay } from "../notes.types.ts";
+import { useMemo } from "react";
+import { useCurrentUserLiveStoreSync } from "@ui/providers/livestore-provider.tsx";
+import { useOnlineState } from "@ui/providers/online-provider.tsx";
 
-export function SyncStatus({ sync }: { sync: NotesSyncDisplay }) {
+export function SyncStatus() {
   const {
-    isOffline,
-    isReconnectSyncing,
-    isSyncDisconnected,
-    lastSyncedLabel,
-    onlineTransition,
-    syncTooltip,
-    unsavedChangeCount,
-  } = sync;
+    isConnected,
+    isLoading,
+    isSynced,
+    lastSyncedAt,
+    pendingCount: unsavedChangeCount,
+  } = useCurrentUserLiveStoreSync();
+  const { isBrowserOnline, isOffline, onlineTransition } = useOnlineState();
+  const hasUnsavedChanges = unsavedChangeCount > 0;
+  const isSyncDisconnected = isBrowserOnline && isConnected === false && hasUnsavedChanges;
+  const isReconnectSyncing = isLoading || !isSynced;
+  const lastSyncedLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(lastSyncedAt),
+    [lastSyncedAt],
+  );
+  const syncTooltip = isOffline
+    ? hasUnsavedChanges
+      ? `Offline — ${unsavedChangeCount} unsaved ${unsavedChangeCount === 1 ? "change" : "changes"}`
+      : "Offline — everything is saved locally"
+    : isSyncDisconnected
+      ? `Reconnecting — ${unsavedChangeCount} ${unsavedChangeCount === 1 ? "change is" : "changes are"} waiting to sync`
+      : isReconnectSyncing
+        ? "Syncing changes"
+        : "Everything is synced";
   const statusKey = isOffline
     ? "offline"
     : `online-${onlineTransition}-${isSyncDisconnected ? "reconnecting" : isReconnectSyncing ? "syncing" : "synced"}`;
   const statusText =
     isOffline && unsavedChangeCount > 0
       ? `${unsavedChangeCount} unsaved ${unsavedChangeCount === 1 ? "change" : "changes"} · Last synced at ${lastSyncedLabel}`
-      : isSyncDisconnected && unsavedChangeCount > 0
+      : isSyncDisconnected
         ? `${unsavedChangeCount} waiting to sync · Last synced at ${lastSyncedLabel}`
-        : isSyncDisconnected
-          ? `Reconnecting · Last synced at ${lastSyncedLabel}`
-          : `Last synced at ${lastSyncedLabel}`;
+        : `Last synced at ${lastSyncedLabel}`;
 
   return (
     <div

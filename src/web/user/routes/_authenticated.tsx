@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
-import { LiveStoreProvider } from "../lib/livestore.tsx";
+import { LiveStoreProvider } from "@ui/providers/livestore-provider.tsx";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ context }) => {
@@ -14,18 +14,18 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AppShell() {
   return (
-    <LiveStoreProvider>
-      <main className="h-dvh min-h-0 overflow-hidden bg-transparent text-foreground">
-        <Suspense
-          fallback={
-            <div className="flex min-h-dvh items-center justify-center">
-              <span>Loading…</span>
-            </div>
-          }
-        >
+    <main className="h-dvh min-h-0 overflow-hidden bg-transparent text-foreground">
+      <Suspense
+        fallback={
+          <div className="flex min-h-dvh items-center justify-center">
+            <span>Loading…</span>
+          </div>
+        }
+      >
+        <LiveStoreProvider>
           <Outlet />
-        </Suspense>
-      </main>
-    </LiveStoreProvider>
+        </LiveStoreProvider>
+      </Suspense>
+    </main>
   );
 }
