@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "495447ab-53f2-4287-97ce-50129ac91cb9",
+  "id": "0b8105d0-c15c-48ab-a5ff-2d8d143936d1",
   "prevIds": [
-    "34290644-adbd-40d2-a753-8ad6a9dbb6c5"
+    "00000000-0000-0000-0000-000000000000"
   ],
   "ddl": [
     {
@@ -24,22 +24,6 @@
     },
     {
       "name": "verification",
-      "entityType": "tables"
-    },
-    {
-      "name": "admin_agent_conversations",
-      "entityType": "tables"
-    },
-    {
-      "name": "admin_items",
-      "entityType": "tables"
-    },
-    {
-      "name": "admin_notes",
-      "entityType": "tables"
-    },
-    {
-      "name": "user_events",
       "entityType": "tables"
     },
     {
@@ -513,306 +497,6 @@
       "table": "verification"
     },
     {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "store_id",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "agent_name",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "model_variant",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "title",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "status",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "seq_num",
-      "entityType": "columns",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "store_id",
-      "entityType": "columns",
-      "table": "admin_items"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "admin_items"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "''",
-      "generated": null,
-      "name": "title",
-      "entityType": "columns",
-      "table": "admin_items"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "admin_items"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "store_id",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "''",
-      "generated": null,
-      "name": "title",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "''",
-      "generated": null,
-      "name": "text",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'active'",
-      "generated": null,
-      "name": "status",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "text_seq_num",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "title_seq_num",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "status_seq_num",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "seq_num",
-      "entityType": "columns",
-      "table": "admin_notes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "user_events"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "store_id",
-      "entityType": "columns",
-      "table": "user_events"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "name",
-      "entityType": "columns",
-      "table": "user_events"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "args",
-      "entityType": "columns",
-      "table": "user_events"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "seq_num",
-      "entityType": "columns",
-      "table": "user_events"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_id",
-      "entityType": "columns",
-      "table": "user_events"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "projected_at",
-      "entityType": "columns",
-      "table": "user_events"
-    },
-    {
       "columns": [
         "user_id"
       ],
@@ -841,36 +525,6 @@
       "name": "fk_session_user_id_user_id_fk",
       "entityType": "fks",
       "table": "session"
-    },
-    {
-      "columns": [
-        "store_id",
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "admin_agent_conversations_pk",
-      "entityType": "pks",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "columns": [
-        "store_id",
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "admin_items_pk",
-      "entityType": "pks",
-      "table": "admin_items"
-    },
-    {
-      "columns": [
-        "store_id",
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "admin_notes_pk",
-      "entityType": "pks",
-      "table": "admin_notes"
     },
     {
       "columns": [
@@ -915,15 +569,6 @@
       "nameExplicit": false,
       "name": "verification_pk",
       "table": "verification",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "user_events_pk",
-      "table": "user_events",
       "entityType": "pks"
     },
     {
@@ -985,34 +630,6 @@
       "name": "verification_identifier_idx",
       "entityType": "indexes",
       "table": "verification"
-    },
-    {
-      "columns": [
-        {
-          "value": "updated_at",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "admin_agent_conversations_updated_at_idx",
-      "entityType": "indexes",
-      "table": "admin_agent_conversations"
-    },
-    {
-      "columns": [
-        {
-          "value": "store_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "user_events_storeId_idx",
-      "entityType": "indexes",
-      "table": "user_events"
     },
     {
       "columns": [

@@ -23,7 +23,8 @@ const deploymentConfig = {
     agentEntry: "flue.alchemy.worker.ts",
     gatewayRoot: "../src/web/user",
     gatewayWorker: "../../workers/gateway/gateway.worker.ts",
-    databaseMigrations: "../db/migrations",
+    authDatabaseMigrations: "../db/migrations/auth",
+    adminDatabaseMigrations: "../db/migrations/admin",
     localDatabaseSeed: "../db/seeds/local.sql",
   },
   local: {
@@ -211,13 +212,19 @@ export default Alchemy.Stack(
       ),
     );
 
-    // Cross-user directory: Better Auth tables, JWKS keys, and projections.
-    const db = yield* Cloudflare.D1.Database("db", {
-      migrationsDir: deploymentConfig.paths.databaseMigrations,
+    // Latency-sensitive identity state is isolated from projection writes and
+    // from the admin Worker's database capability.
+    const authDb = yield* Cloudflare.D1.Database("auth-db", {
+      migrationsDir: deploymentConfig.paths.authDatabaseMigrations,
       migrationsTable: "drizzle_migrations",
       // Alchemy applies local seed data after migrations. Live deploys
       // intentionally never import demo identities.
       importFiles: isLocalDev ? [deploymentConfig.paths.localDatabaseSeed] : undefined,
+    }).pipe(retainProductionState);
+
+    const adminDb = yield* Cloudflare.D1.Database("admin-db", {
+      migrationsDir: deploymentConfig.paths.adminDatabaseMigrations,
+      migrationsTable: "drizzle_migrations",
     }).pipe(retainProductionState);
 
     // Application events flow from LiveStore to the admin read model.
@@ -225,7 +232,7 @@ export default Alchemy.Stack(
     const eventsDeadLetter =
       yield* Cloudflare.Queues.Queue("events-dlq").pipe(retainProductionState);
 
-    const auth = yield* AuthWorker(db);
+    const auth = yield* AuthWorker(authDb);
 
     // LiveStore worker — the stateful core: sync protocol + BOTH LiveStore
     // DOs (event-log backend + UserDO client). Self-hosting keeps the
@@ -243,7 +250,7 @@ export default Alchemy.Stack(
     const user = yield* UserWorker(livestore.workerName);
 
     // System plane: admin entry + projection fold.
-    const admin = yield* AdminWorker(db);
+    const admin = yield* AdminWorker(adminDb);
 
     yield* Cloudflare.Queues.Consumer("events-consumer", {
       queueId: events.queueId,
@@ -301,6 +308,10 @@ export default Alchemy.Stack(
       });
     }
 
-    return { url: gateway.url, database: db.databaseName };
+    return {
+      url: gateway.url,
+      authDatabase: authDb.databaseName,
+      adminDatabase: adminDb.databaseName,
+    };
   }),
 );

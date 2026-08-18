@@ -1,5 +1,5 @@
 -- Local development seed data. infra/alchemy.run.ts imports this file only
--- during `alchemy dev`, after the regular D1 migrations have been applied.
+-- to the auth database during `alchemy dev`, after its migrations are applied.
 -- Both users authenticate through Better Auth with: demo-password-123
 INSERT INTO `user` (
   `id`, `name`, `email`, `email_verified`, `role`, `created_at`, `updated_at`

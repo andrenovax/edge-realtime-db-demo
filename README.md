@@ -42,7 +42,7 @@ nub run dev
 ```
 
 Alchemy runs six Workers: gateway, auth, LiveStore, user, admin, and the Flue
-agent. It also manages the D1 database and the projection queue. The agent is
+agent. It also manages the separate auth/admin D1 databases and the projection queue. The agent is
 an Alchemy-managed Vite Worker in the
 same development loop, so agent edits retain Vite HMR. In local development the
 gateway reaches it through a deterministic loopback origin; deployed stacks use
@@ -53,8 +53,8 @@ The first run may ask to bootstrap Alchemy's Cloudflare-backed state store.
 State is shared for deploys but remains isolated by each developer's default
 Alchemy stage.
 
-D1 migrations and `db/seeds/local.sql` are applied automatically; the local
-database persists between runs and is separate from deployed D1 data.
+D1 migrations and the auth-only `db/seeds/local.sql` are applied automatically;
+the local databases persist between runs and are separate from deployed D1 data.
 
 Notes, items, and the per-user conversation catalog are LiveStore tables backed
 by each user's event log. In the web app, one note ID is also one Flue
@@ -63,7 +63,7 @@ in the center, and BlockNote edits its Markdown on the right. BlockNote's slash
 menu includes tables, while the agent can create the same structures with GFM
 Markdown. Accepted events flow through one projection queue into the admin D1
 read model. After changing a D1 projection or auth schema, run
-`nub run db:generate`; Alchemy applies the generated D1 migrations.
+`nub run db:generate`; Alchemy applies the independent auth and admin migrations.
 
 Alchemy's local D1 seed creates two real Better Auth credential users:
 
