@@ -1,4 +1,4 @@
-import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
+import { createLocalJWKSet, errors, jwtVerify, type JSONWebKeySet } from "jose";
 import type { GatewayEnv } from "@infra/env";
 import { API_PATHS } from "./gateway.constants.ts";
 
@@ -12,18 +12,37 @@ export type VerifiedUser = { userId: string; email: string | null; role: string 
 // JWKS via service binding, cached per isolate. Signature check is
 // CPU-only after that — no auth-worker or DB hop per request.
 let jwks: ReturnType<typeof createLocalJWKSet> | null = null;
+let jwksFetch: Promise<ReturnType<typeof createLocalJWKSet>> | null = null;
 let fetchedAt = 0;
 const JWKS_TTL_MS = 10 * 60 * 1000;
 
-async function getJwks(env: AuthEnv) {
-  if (!jwks || Date.now() - fetchedAt > JWKS_TTL_MS) {
-    // Host is never dialed; the binding routes to the auth worker.
-    const res = await env.AUTH.fetch(`https://auth.internal${API_PATHS.auth}/jwks`);
-    if (!res.ok) throw new Error(`jwks fetch failed: ${res.status}`);
-    jwks = createLocalJWKSet((await res.json()) as JSONWebKeySet);
-    fetchedAt = Date.now();
+async function fetchJwks(env: AuthEnv) {
+  if (!jwksFetch) {
+    jwksFetch = (async () => {
+      // Host is never dialed; the binding routes to the auth worker.
+      const res = await env.AUTH.fetch(`https://auth.internal${API_PATHS.auth}/jwks`);
+      if (!res.ok) throw new Error(`jwks fetch failed: ${res.status}`);
+      const next = createLocalJWKSet((await res.json()) as JSONWebKeySet);
+      jwks = next;
+      fetchedAt = Date.now();
+      return next;
+    })().finally(() => {
+      jwksFetch = null;
+    });
   }
-  return jwks;
+  return jwksFetch;
+}
+
+async function getJwks(env: AuthEnv) {
+  if (jwks && Date.now() - fetchedAt <= JWKS_TTL_MS) return jwks;
+  return fetchJwks(env);
+}
+
+async function refreshJwks(env: AuthEnv, stale: ReturnType<typeof createLocalJWKSet>) {
+  // Another request may already have replaced the stale set. Otherwise all
+  // concurrent rotation misses share one auth-worker subrequest.
+  if (jwks && jwks !== stale) return jwks;
+  return fetchJwks(env);
 }
 
 function toVerifiedUser(payload: Record<string, unknown>): VerifiedUser | null {
@@ -37,14 +56,18 @@ function toVerifiedUser(payload: Record<string, unknown>): VerifiedUser | null {
 
 // Returns the verified identity, or null when the token is invalid.
 export async function verifyToken(env: AuthEnv, token: string) {
+  let current: ReturnType<typeof createLocalJWKSet> | null = null;
   try {
-    const { payload } = await jwtVerify(token, await getJwks(env));
+    current = await getJwks(env);
+    const { payload } = await jwtVerify(token, current);
     return toVerifiedUser(payload);
-  } catch {
-    // Key rotation: refetch JWKS once, then give up.
-    jwks = null;
+  } catch (error) {
+    if (!(error instanceof errors.JWKSNoMatchingKey) || !current) return null;
+
+    // A missing kid can indicate key rotation. Refresh once; malformed,
+    // expired, or incorrectly signed tokens never invalidate the cache.
     try {
-      const { payload } = await jwtVerify(token, await getJwks(env));
+      const { payload } = await jwtVerify(token, await refreshJwks(env, current));
       return toVerifiedUser(payload);
     } catch {
       return null;
