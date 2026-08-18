@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 import * as v from "valibot";
 import { APP_PATHS, GOOGLE_AUTH_ENABLED } from "../../config.ts";
 import { useGoogleSignin } from "@ui/features/auth/hooks/use-google-signin.ts";
+import { authSessionQueryKey } from "@ui/libs/auth.ts";
 import styles from "@ui/features/auth/login-page.module.css";
 import { useRootRouteContext } from "@ui/routes.context";
 
@@ -41,7 +42,7 @@ function getFormErrorMessage({
 }
 
 export function LoginPage() {
-  const { auth } = useRootRouteContext();
+  const { auth, queryClient } = useRootRouteContext();
   const { error: oauthError, redirect } = useSearch({ from: "/sign-in" });
   const navigate = useNavigate({ from: "/sign-in" });
   const router = useRouter();
@@ -86,6 +87,7 @@ export function LoginPage() {
         return;
       }
 
+      queryClient.removeQueries({ queryKey: authSessionQueryKey });
       router.history.replace(redirectTarget);
     },
   });

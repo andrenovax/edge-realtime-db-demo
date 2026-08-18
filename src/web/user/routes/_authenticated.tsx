@@ -1,12 +1,12 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { RouteError } from "@ui/components/route-status.tsx";
+import { ensureAuthSession } from "@ui/libs/auth.ts";
 import { LiveStoreProvider } from "@ui/providers/livestore-provider.tsx";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ context, location }) => {
-    const { data: session, error } = await context.auth.getSession();
-    if (error) throw new Error(error.message ?? `session fetch failed: ${error.status}`);
+    const session = await ensureAuthSession(context.queryClient, context.auth);
     if (!session) {
       throw redirect({
         to: "/sign-in",

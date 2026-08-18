@@ -75,7 +75,10 @@ export const events = {
 };
 
 const materializers = State.SQLite.materializers(events, {
-  [eventNames.noteCreated]: (note) => tables.notes.insert(note),
+  // A fresh browser note and the agent's server-side ensure can race before
+  // either replica observes the other. Both represent the same durable note;
+  // keep the first row and let the following NoteUpdated event apply content.
+  [eventNames.noteCreated]: (note) => tables.notes.insert(note).onConflict("id", "ignore"),
   [eventNames.noteUpdated]: ({ id, ...note }) => tables.notes.update(note).where({ id }),
   [eventNames.itemAdded]: ({ id, title, createdAt }) =>
     tables.items.insert({ id, title, createdAt }),

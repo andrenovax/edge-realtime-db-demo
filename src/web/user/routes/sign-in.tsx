@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import * as v from "valibot";
 import { APP_PATHS } from "../config.ts";
 import { LoginPage } from "@ui/features/auth/login-page.tsx";
+import { ensureAuthSession } from "@ui/libs/auth.ts";
 
 const RedirectPath = v.fallback(
   v.pipe(
@@ -29,8 +30,7 @@ const SignInSearch = v.object({
 export const Route = createFileRoute("/sign-in")({
   validateSearch: SignInSearch,
   beforeLoad: async ({ context, search }) => {
-    const { data: session, error } = await context.auth.getSession();
-    if (error) throw new Error(error.message ?? `session fetch failed: ${error.status}`);
+    const session = await ensureAuthSession(context.queryClient, context.auth);
     if (session) throw redirect({ href: search.redirect ?? APP_PATHS.home });
   },
   component: LoginPage,

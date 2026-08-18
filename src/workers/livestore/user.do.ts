@@ -99,13 +99,20 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
   async writeNote({ id, text }: WriteNotePayload) {
     const store = await this.#getStore();
     const existing = store.query(tables.notes.select()).find((note) => note.id === id);
-    const updatedAt = Date.now();
+    const base = existing ?? {
+      id,
+      title: "",
+      text: "",
+      status: "active" as const,
+      updatedAt: Date.now(),
+    };
+    if (!existing) store.commit(events.noteCreated(base));
 
-    store.commit(
-      existing
-        ? events.noteUpdated({ ...existing, text, updatedAt })
-        : events.noteCreated({ id, title: "", text, status: "active", updatedAt }),
-    );
+    // Always write content as an update. NoteCreated is intentionally
+    // idempotent across replicas, so using it to carry the agent's Markdown
+    // could lose that Markdown when the browser's local create wins the race.
+    const updatedAt = Math.max(Date.now(), base.updatedAt + 1);
+    store.commit(events.noteUpdated({ ...base, text, updatedAt }));
     return { id, text, updatedAt };
   }
 
