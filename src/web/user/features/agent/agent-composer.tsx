@@ -36,11 +36,11 @@ export function AgentComposer({ error }: AgentComposerProps) {
             autoFocus={!isOffline}
             aria-label="Message the note assistant"
             disabled={isOffline}
-            className="max-h-52 min-h-9 min-w-0 flex-1 resize-none bg-transparent py-1.5 pl-1 pr-2 text-base text-[#0d0d0d] outline-none placeholder:text-[#8e8e8e] disabled:cursor-not-allowed disabled:text-[#8e8e8e]"
+            className="max-h-52 min-h-9 flex-1 resize-none bg-transparent py-1.5 pl-1 pr-2 text-base text-[#0d0d0d] outline-none placeholder:text-[#8e8e8e] disabled:cursor-not-allowed disabled:text-[#8e8e8e]"
             placeholder={isOffline ? "Chat is unavailable while you're offline" : "Ask anything"}
             rows={1}
           />
-          <div className="flex min-h-9 min-w-9 shrink-0 items-center justify-end gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <AuiIf condition={(state) => state.thread.isRunning}>
               <ComposerPrimitive.Cancel
                 aria-label="Stop"

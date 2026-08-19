@@ -17,22 +17,9 @@ export function useNotesModel() {
     [syncedConversations],
   );
 
-  const createNote = useCallback(
-    (text = "") => {
-      const id = crypto.randomUUID();
-      store.commit(
-        events.noteCreated({
-          id,
-          title: "",
-          text,
-          status: "active",
-          updatedAt: Date.now(),
-        }),
-      );
-      return id;
-    },
-    [store],
-  );
+  // A new-note click starts a URL-addressable draft. Persistence is deferred
+  // until the editor saves content or the first chat message is admitted.
+  const createDraft = useCallback(() => crypto.randomUUID(), []);
 
   const renameNote = useCallback(
     (id: string, draft: string) => {
@@ -98,7 +85,7 @@ export function useNotesModel() {
   return {
     activeNotes,
     changeNoteStatus,
-    createNote,
+    createDraft,
     notes,
     renameNote,
     saveNote,
