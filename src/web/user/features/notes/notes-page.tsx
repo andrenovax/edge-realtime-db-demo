@@ -32,7 +32,7 @@ export function NotesPage() {
     layout.revealNotePanel();
     selection.selectNote(id);
   };
-  const startNewNote = () => openNote(notes.createNote());
+  const startNewNote = () => openNote(notes.createDraft());
   const handleNoteStatusChange = (id: string, status: NoteStatus) => {
     notes.changeNoteStatus(id, status);
     if (selection.selected?.id === id) {
