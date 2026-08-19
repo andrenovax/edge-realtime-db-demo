@@ -4,12 +4,5 @@
     "correctness": "error",
     "suspicious": "warn"
   },
-  "ignorePatterns": [
-    "dist",
-    "node_modules",
-    ".alchemy",
-    ".flue-vite",
-    "db/migrations",
-    "db/migrations-do"
-  ]
+  "ignorePatterns": ["dist", "node_modules", ".alchemy", ".flue-vite", "db/**/migrations"]
 }
