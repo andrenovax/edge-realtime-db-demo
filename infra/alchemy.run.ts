@@ -28,9 +28,6 @@ const deploymentConfig = {
     localDatabaseSeed: "../db/auth/seeds/local.sql",
   },
   local: {
-    agentOrigin: "http://127.0.0.1:8788",
-    agentPort: 8788,
-    gatewayPort: 8787,
     livestoreWorkerName: "flue-demo-livestore-local",
   },
   gateway: {
@@ -125,7 +122,7 @@ export const AgentWorker = (
       date: flueManifest.compatibilityDate,
       flags: flueManifest.compatibilityFlags,
     },
-    dev: { port: deploymentConfig.local.agentPort, strictPort: true },
+    dev: { port: 0 },
     env: {
       AI: Cloudflare.Workers.AI(),
       ...Object.fromEntries(
@@ -169,7 +166,7 @@ export const GatewayWorker = ({
     rootDir: deploymentConfig.paths.gatewayRoot,
     main: deploymentConfig.paths.gatewayWorker,
     compatibility: deploymentConfig.compatibility,
-    dev: { port: deploymentConfig.local.gatewayPort, strictPort: true },
+    dev: { port: 0 },
     assets: {
       runWorkerFirst: deploymentConfig.gateway.workerFirstRoutes,
       notFoundHandling: "single-page-application",
@@ -270,10 +267,9 @@ export default Alchemy.Stack(
 
     // The only public worker: a prefix-routing proxy with JWT validation.
     const gateway = yield* GatewayWorker({
-      // Alchemy's beta local registry can retain a stale service target while
-      // the larger agent bundle starts or hot-reloads. A fixed loopback origin
-      // keeps local routing deterministic; deployed stacks use the binding.
-      agentOrigin: isLocalDev ? deploymentConfig.local.agentOrigin : "",
+      // The dev registry resolves this service binding to the agent instance
+      // owned by the current Alchemy session, regardless of its dynamic port.
+      agentOrigin: "",
       name: isLocalDev
         ? undefined
         : stage === "production"
