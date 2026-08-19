@@ -1,0 +1,90 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "editor.tabSize": 2,
+  "js/ts.experimental.useTsgo": true,
+  "js/ts.tsdk.path": "./node_modules/typescript",
+  "files.exclude": {
+    "**/.alchemy": true,
+    "**/.cache": true,
+    "**/.DS_Store": true,
+    "**/.editorconfig": true,
+    "**/.git": true,
+    "**/.gitattributes": true,
+    "**/.husky": true,
+    "**/.wrangler": true,
+    "**/node_modules": true,
+    "**/.oxlintrc.json": true,
+    "**/.oxfmtrc.json": true,
+    "**/.npmrc": true,
+    ".node-version": true,
+    "env.d.ts": true,
+    "**/nub.lock": true,
+    "**/skills-lock.json": true
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true,
+    "**/env.d.ts": true
+  },
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true,
+    "**/env.d.ts": true
+  },
+  "search.exclude": {
+    "**/dist/": true,
+    "**/node_modules/": true,
+    "**/nub.lock": true,
+    "**/routeTree.gen.ts": true,
+    "**/env.d.ts": true
+  },
+  "tailwindCSS.experimental.configFile": "src/web/user/app.css",
+  "terminal.integrated.env.linux": {
+    "CACHE_DIR": "${workspaceFolder}/.cache"
+  },
+  "terminal.integrated.env.osx": {
+    "CACHE_DIR": "${workspaceFolder}/.cache"
+  },
+  "terminal.integrated.env.windows": {
+    "CACHE_DIR": "${workspaceFolder}\\.cache"
+  },
+  "cSpell.ignoreWords": [
+    "browserslist",
+    "nubx",
+    "cloudfunctions",
+    "corejs",
+    "corepack",
+    "endregion",
+    "entrypoint",
+    "envars",
+    "esmodules",
+    "esnext",
+    "execa",
+    "globby",
+    "hono",
+    "miniflare",
+    "nodenext",
+    "oidc",
+    "openai",
+    "pathinfo",
+    "pino",
+    "reactstarter",
+    "refetch",
+    "refetchable",
+    "relyingparty",
+    "signup",
+    "sourcemap",
+    "tslib",
+    "typechecking",
+    "vite",
+    "vitest"
+  ],
+  "cSpell.words": ["Agentic"]
+}

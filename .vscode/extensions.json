@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "bradlc.vscode-tailwindcss",
+    "dbcode.dbcode",
+    "editorconfig.editorconfig",
+    "github.vscode-github-actions",
+    "oxc.oxc-vscode",
+    "rphlmr.vscode-drizzle-orm",
+    "streetsidesoftware.code-spell-checker",
+    "TypeScriptTeam.native-preview",
+    "varlock.env-spec-language",
+    "vscode-icons-team.vscode-icons"
+  ]
+}
