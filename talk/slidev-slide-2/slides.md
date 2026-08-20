@@ -72,16 +72,16 @@ class: opening global-opening
 <div class="world-line"></div>
 
 <div class="edge-person edge-sf">
-  <div class="edge-halo"><div class="person-avatar">SF</div></div>
-  <strong>San Francisco</strong><span>edge compute</span>
+  <div class="edge-halo"><div class="person-avatar">SD</div></div>
+  <strong>San Diego</strong><span>edge compute</span>
 </div>
 <div class="edge-person edge-be">
-  <div class="edge-halo"><div class="person-avatar">BE</div></div>
-  <strong>Berlin</strong><span>edge compute</span>
+  <div class="edge-halo"><div class="person-avatar">KY</div></div>
+  <strong>Kyiv</strong><span>edge compute</span>
 </div>
 <div class="edge-person edge-sg">
-  <div class="edge-halo"><div class="person-avatar">SG</div></div>
-  <strong>Singapore</strong><span>edge compute</span>
+  <div class="edge-halo"><div class="person-avatar">BA</div></div>
+  <strong>Bali</strong><span>edge compute</span>
 </div>
 
 <div v-click="1" class="single-home">
@@ -112,9 +112,9 @@ class: opening tax-opening
     <i class="tax-line line-sf"></i><i class="tax-line line-be"></i><i class="tax-line line-sg"></i>
   </div>
 
-  <div class="tax-user tax-sf"><div>SF</div><span><b>San Francisco</b><small>user + edge</small></span></div>
-  <div class="tax-user tax-be"><div>BE</div><span><b>Berlin</b><small>user + edge</small></span></div>
-  <div class="tax-user tax-sg"><div>SG</div><span><b>Singapore</b><small>user + edge</small></span></div>
+  <div class="tax-user tax-sf"><div>SD</div><span><b>San Diego</b><small>user + edge</small></span></div>
+  <div class="tax-user tax-be"><div>KY</div><span><b>Kyiv</b><small>user + edge</small></span></div>
+  <div class="tax-user tax-sg"><div>BA</div><span><b>Bali</b><small>user + edge</small></span></div>
 
   <div class="tax-db">
     <small>ONE AUTHORITATIVE HOME</small>
@@ -191,9 +191,9 @@ class: opening reset-opening
     <path d="M244 504 C431 551 596 488 754 398" marker-end="url(#reset-arrow)" />
   </svg>
 
-  <div class="reset-user reset-sf"><div class="person-avatar">SF</div><b>San Francisco</b><span>user + compute</span></div>
-  <div class="reset-user reset-be"><div class="person-avatar">BE</div><b>Berlin</b><span>user + compute</span></div>
-  <div class="reset-user reset-sg"><div class="person-avatar">SG</div><b>Singapore</b><span>user + compute</span></div>
+  <div class="reset-user reset-sf"><div class="person-avatar">SD</div><b>San Diego</b><span>user + compute</span></div>
+  <div class="reset-user reset-be"><div class="person-avatar">KY</div><b>Kyiv</b><span>user + compute</span></div>
+  <div class="reset-user reset-sg"><div class="person-avatar">BA</div><b>Bali</b><span>user + compute</span></div>
 
   <div v-click.hide="1" class="reset-central-db db-icon db-orange"><span></span><b>POSTGRES</b><small>one global home</small></div>
 
@@ -225,9 +225,9 @@ class: opening fleet-opening
 <h1>A global database fleet.<br><span>Not one database copied everywhere.</span></h1>
 
 <div class="fleet-stage">
-  <div class="fleet-unit"><div class="mini-user">SF</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
-  <div class="fleet-unit"><div class="mini-user">BE</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
-  <div class="fleet-unit"><div class="mini-user">SG</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
+  <div class="fleet-unit"><div class="mini-user">SD</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
+  <div class="fleet-unit"><div class="mini-user">KY</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
+  <div class="fleet-unit"><div class="mini-user">BA</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
 </div>
 
 <div class="fleet-rule">
@@ -314,7 +314,7 @@ class: opening identity-opening
 </div>
 
 <div v-click="4" class="identity-callers">
-  <span><b>SF</b> request</span><span><b>BE</b> request</span><span><b>SG</b> request</span>
+  <span><b>SD</b> request</span><span><b>KY</b> request</span><span><b>BA</b> request</span>
   <strong>same user → same object</strong>
 </div>
 
@@ -513,7 +513,7 @@ class: opening trace-opening trace-first-request
 
 <div class="trace-section">FOLLOW THE REQUEST · 01</div>
 <h1>The first request needs no application code.</h1>
-<p class="trace-subtitle">One URL becomes static assets, then an executing React app in Bali.</p>
+<p class="trace-subtitle">One URL becomes static assets, then an executing React app in Ubud.</p>
 
 <ArchitectureCanvas canvas="first-request" />
 
@@ -521,8 +521,8 @@ class: opening trace-opening trace-first-request
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
-    <div class="trace-node node-browser active"><b>Browser</b><span>opens do.hello-o.workers.com</span><em>Bali</em></div>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
+    <div class="trace-node node-browser active"><b>Browser</b><span>opens do.hello-o.workers.com</span><em>Ubud</em></div>
   </div>
   <div class="trace-lane trace-edge-lane">
     <small class="trace-lane-label">CLOUDFLARE REQUEST EDGE</small>
@@ -546,7 +546,7 @@ class: opening trace-opening trace-first-request
 <div class="trace-footer"><a href="https://developers.cloudflare.com/workers/static-assets/routing/worker-script/">docs · asset routing ↗</a></div>
 
 <!--
-Click 1: the Bali browser requests do.hello-o.workers.com; reveal the asset connection and its deployment receipt together. Click 2: dismiss that receipt, dim the browser shell, and follow download + execute into the React SPA while revealing the React bootstrap receipt. Better Auth is intentionally not introduced yet.
+Click 1: the Ubud browser requests do.hello-o.workers.com; reveal the asset connection and its deployment receipt together. Click 2: dismiss that receipt, dim the browser shell, and follow download + execute into the React SPA while revealing the React bootstrap receipt. Better Auth is intentionally not introduced yet.
 
 The first request does not execute gateway.worker.ts. Cloudflare's asset layer serves the SPA because only /api/* is configured worker-first. Cloudflare currently lists a Denpasar location; the asterisk is important because Anycast routing can still select another colo. Confirm the actual venue path from the response's cf-ray header.
 
@@ -563,14 +563,14 @@ hide: true
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 02</div>
-<h1>The application now runs in Bali.</h1>
+<h1>The application now runs in Ubud.</h1>
 <p class="trace-subtitle">The downloaded frontend executes on the user’s device—not in another Cloudflare Worker.</p>
 
 <ArchitectureTrace step="browser" />
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser active"><b>React SPA</b><span>routes + UI</span></div>
     <div class="trace-node node-library active"><b>Better Auth client</b><span>same-origin /api/auth</span></div>
     <div class="trace-node node-browser-worker dim"><b>LiveStore worker</b><span>not started yet</span></div>
@@ -582,7 +582,7 @@ hide: true
   </div>
   <div class="trace-lane trace-user-state-lane"><small class="trace-lane-label">PER-USER STATE</small></div>
   <div class="trace-lane trace-shared-lane"><small class="trace-lane-label">SHARED STATE</small></div>
-  <div class="trace-path"><span>downloaded JS</span><i>executes inside</i><strong>the Bali browser</strong></div>
+  <div class="trace-path"><span>downloaded JS</span><i>executes inside</i><strong>the Ubud browser</strong></div>
 </div>
 
 <div class="trace-code">
@@ -616,7 +616,7 @@ class: opening trace-opening trace-authentication
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser dim"><b>React SPA</b><span>sign-in page</span></div>
     <div class="trace-node node-library active"><b>Better Auth client</b><span>signIn.social()</span></div>
   </div>
@@ -630,7 +630,7 @@ class: opening trace-opening trace-authentication
     <small class="trace-lane-label">SHARED STATE</small>
     <div class="trace-node node-external dim"><b>Google OAuth</b><span>external provider</span></div>
   </div>
-  <div class="trace-path"><span>Bali browser</span><i>POST /api/auth/…</i><strong>Gateway Worker · SIN observed</strong></div>
+  <div class="trace-path"><span>Ubud browser</span><i>POST /api/auth/…</i><strong>Gateway Worker · SIN observed</strong></div>
 </div>
 
 <div class="trace-code">
@@ -670,7 +670,7 @@ hide: true
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser dim"><b>Browser</b><span>waiting for redirect</span></div>
   </div>
   <div class="trace-lane trace-edge-lane">
@@ -715,7 +715,7 @@ hide: true
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser dim"><b>Browser</b><span>OAuth redirect</span></div>
   </div>
   <div class="trace-lane trace-edge-lane">
@@ -767,7 +767,7 @@ hide: true
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser active"><b>Browser</b><span>session cookie + JWT</span><em>Authorization: Bearer …</em></div>
   </div>
   <div class="trace-lane trace-edge-lane">
@@ -815,7 +815,7 @@ hide: true
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser active"><b>Browser</b><span>GET /api/data</span><em>JWT attached</em></div>
   </div>
   <div class="trace-lane trace-edge-lane">
@@ -914,7 +914,7 @@ class: opening trace-opening trace-note-edit
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane wide-browser">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser dim"><b>React UI</b><span>editor + local query</span></div>
     <div class="trace-node node-browser-worker active"><b>LiveStore Web Worker</b><span>event materializers</span></div>
     <div class="trace-node node-local-db active"><b>OPFS SQLite</b><span>store.commit(noteUpdated)</span><em>immediate local truth</em></div>
@@ -970,7 +970,7 @@ hide: true
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-browser-worker active"><b>LiveStore worker</b><span>WebSocket /api/sync</span><em>JWT in sync payload</em></div>
   </div>
   <div class="trace-lane trace-edge-lane">
@@ -1019,7 +1019,7 @@ hide: true
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-local-db dim"><b>OPFS SQLite</b><span>browser materialized view</span></div>
   </div>
   <div class="trace-lane trace-edge-lane"><small class="trace-lane-label">CLOUDFLARE REQUEST EDGE</small><div class="trace-node node-worker dim"><b>LiveStore Worker</b><span>sync protocol</span></div></div>
@@ -1061,7 +1061,7 @@ class: opening trace-opening trace-agent
 
 <div class="trace-section">AGENT REQUEST · 05</div>
 <h1>The agent joins the same ownership boundary.</h1>
-<p class="trace-subtitle">Trace one message from Bali through trusted admission, durable conversation state, inference, and note tools.</p>
+<p class="trace-subtitle">Trace one message from Ubud through trusted admission, durable conversation state, inference, and note tools.</p>
 
 <ArchitectureCanvas canvas="agent-request" />
 
@@ -1108,7 +1108,7 @@ class: opening trace-opening trace-projection
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
+    <small class="trace-lane-label">UBUD · BROWSER</small>
     <div class="trace-node node-local-db dim"><b>OPFS SQLite</b><span>local user view</span></div>
   </div>
   <div class="trace-lane trace-edge-lane">
@@ -1142,7 +1142,7 @@ Click 2: hide the producer hop, then activate Projection Queue → Admin Worker.
 
 Click 3: hide the delivery hop, then activate Admin Worker → Admin D1. Show both idempotency rules: the event log ignores duplicate event IDs, while table-shaped snapshots only accept a newer source sequence number.
 
-Click 4: remove the connectors and leave the four active cards numbered 1–4. Read the bottom strip left-to-right as the summary. Keep the Bali browser dim: projection is deliberately off its request path.
+Click 4: remove the connectors and leave the four active cards numbered 1–4. Read the bottom strip left-to-right as the summary. Keep the Ubud browser dim: projection is deliberately off its request path.
 
 Keep the two D1 databases visibly separate: Auth D1 owns identity; Admin D1 owns eventual cross-user projections. The Denpasar label describes the request-edge example used throughout the walkthrough; the queue consumer and Durable Object are placed independently and should not be claimed to run in that colo without instrumentation.
 

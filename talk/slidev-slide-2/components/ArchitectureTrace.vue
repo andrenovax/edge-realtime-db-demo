@@ -136,7 +136,7 @@ const code = computed(() => codeByStep[props.step])
 <template>
   <div class="architecture-trace">
     <div class="trace-lane trace-browser-lane" :class="laneState('browser')">
-      <small class="trace-lane-label">BALI · BROWSER</small>
+      <small class="trace-lane-label">UBUD · BROWSER</small>
       <div class="trace-stack-card" :class="stateFor('react')"><b>React SPA</b><span class="library-tag">Better Auth client</span></div>
       <div class="trace-stack-card" :class="stateFor('liveWeb')"><b>LiveStore Web Worker</b><span class="library-tag">LiveStore</span></div>
       <div class="trace-stack-card" :class="stateFor('opfs')"><b>OPFS SQLite</b><span>local materialized view</span></div>

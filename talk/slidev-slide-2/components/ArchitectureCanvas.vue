@@ -7,7 +7,7 @@ defineProps<{
 <template>
   <div class="architecture-trace architecture-canvas" :class="`architecture-canvas-${canvas}`">
     <div class="trace-lane trace-browser-lane">
-      <small class="trace-lane-label">BALI · BROWSER</small>
+      <small class="trace-lane-label">UBUD · BROWSER</small>
       <span v-if="canvas === 'first-request' || canvas === 'authentication'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
       <span v-if="canvas === 'initial-sync'" v-click="2" class="lane-activation-state"><i class="lane-on"></i></span>
       <span v-if="canvas === 'note-edit'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
