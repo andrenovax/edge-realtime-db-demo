@@ -644,7 +644,7 @@ class: opening trace-opening trace-authentication
 <div class="trace-footer"><a href="https://better-auth.com/docs/plugins/jwt">docs · Better Auth JWT ↗</a></div>
 
 <!--
-Click 1: React and the Better Auth client POST to the public gateway while the client configuration receipt appears. Click 2: replace that receipt with the gateway routing receipt as the gateway forwards the request to Auth Worker over its preconfigured service binding. Click 3: replace it with the Auth Worker database receipt as Auth Worker queries Auth D1, without detouring through Google OAuth. Click 4: clear the path and leave the React SPA holding the JWT token. Click 5: send any non-auth request back through the gateway; the gateway verifies the JWT and attaches trusted identity headers before forwarding.
+Click 1: React and the Better Auth client POST to the public gateway while the client configuration receipt appears. Click 2: replace that receipt with the gateway routing receipt as the gateway forwards the request to Auth Worker over its preconfigured service binding. Click 3: replace it with the Auth Worker database receipt as Auth Worker queries Auth D1, without detouring through Google OAuth. Click 4: clear the path and leave the React SPA holding the JWT token. Click 5: send any non-auth request back through the gateway and reveal forwardAsUser once, in full. It verifies the JWT, deletes caller-supplied identity headers, stamps trusted identity, and forwards to whichever private Worker the route selected. Later sections only show route-specific calls to this shared boundary.
 
 The same hostname serves assets and APIs. The /api/auth path activates the gateway Worker, while Auth remains private behind a service binding. This canvas deliberately skips the provider-specific OAuth redirect so the audience can hold onto the application boundary.
 
@@ -1059,48 +1059,34 @@ These databases do not compete as sources of truth. UserSyncBackendDO owns the c
 class: opening trace-opening trace-agent
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 05</div>
+<div class="trace-section">AGENT REQUEST · 05</div>
 <h1>The agent joins the same ownership boundary.</h1>
-<p class="trace-subtitle">Trusted context chooses the user database before the model or its tools run.</p>
+<p class="trace-subtitle">Trace one message from Bali through trusted admission, durable conversation state, inference, and note tools.</p>
 
-<ArchitectureTrace step="agent" />
-
-<div class="trace-canvas">
-  <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">BALI · BROWSER</small>
-    <div class="trace-node node-browser active"><b>Flue client</b><span>/api/agents/hello/:noteId</span><em>streaming response</em></div>
-  </div>
-  <div class="trace-lane trace-edge-lane">
-    <small class="trace-lane-label">CLOUDFLARE REQUEST EDGE</small>
-    <div class="trace-node node-worker dim"><b>Gateway Worker</b><span>verify + forward</span></div>
-    <div class="trace-node node-worker active"><b>Agent Worker</b><span>inject userId + noteId</span><em>AGENT binding</em></div>
-  </div>
-  <div class="trace-lane trace-user-state-lane">
-    <small class="trace-lane-label">PER-USER / CONVERSATION STATE</small>
-    <div class="trace-node node-agent-do active"><b>Flue conversation DO</b><span>transcript + stream</span><em>SQLite</em></div>
-    <div class="trace-node node-do-secondary active"><b>UserDO</b><span>read_note · write_note</span><em>USER_DO binding</em></div>
-  </div>
-  <div class="trace-lane trace-shared-lane">
-    <small class="trace-lane-label">SHARED SERVICES</small>
-    <div class="trace-node node-ai active"><b>Workers AI</b><span>model inference</span></div>
-  </div>
-  <div class="trace-path"><span>message</span><i>Flue DO</i><span>tool call</span><i>USER_DO binding</i><strong>same user’s note</strong></div>
-</div>
-
-<div class="trace-code trace-code-split">
-  <div><small>AGENT · hello.agent.ts</small><pre><code>const { userId, noteId } = useInitialData()
-useTool(notesTools(userId, noteId))</code></pre></div>
-  <div><small>TOOL · notes.tool.ts</small><pre><code>const user = env.USER_DO.getByName(userId)
-return user.writeNote({ id: noteId, text })</code></pre></div>
-</div>
+<ArchitectureCanvas canvas="agent-request" />
 
 <div class="trace-footer"><a href="https://flueframework.com/blog/flue-2/">docs · Flue 2.0 ↗</a></div>
 
 <!--
-The model never supplies userId or noteId. The Agent Worker overwrites caller-provided creation data with gateway-stamped identity. The conversation DO and UserDO are separate top-level objects; regional proximity is best effort, not guaranteed co-location.
+Click 1: the React app creates an authenticated Flue client, adapts Flue history/status/send/abort into assistant-ui’s external-store runtime, and sends a message to the public agents route.
+
+Click 2: highlight only Gateway Worker → Agent Worker. The route calls the shared forwardAsUser boundary already explained in Authentication; do not repeat its implementation here.
+
+Click 3: Agent Worker opens UserDO to validate that the conversation belongs to this user, or that this POST may create it.
+
+Click 4: highlight only Agent Worker → Flue conversation DO. The middleware passes the validated userId and conversationId as server-owned creation context, then createAgentRouter durably admits the message. After a successful first admission, Agent Worker creates the note and conversation catalog entry in UserDO. The request-rewrite helper is intentionally omitted because it does not change the ownership model.
+
+Click 5: the Flue conversation DO runs Hello with its persisted server context, registered tools, and Workers AI model.
+
+Click 6: a model-selected read_note or write_note tool uses the closed-over userId and noteId to reach only that user’s UserDO.
+
+Clicks 1–6 highlight one hop at a time; completed connectors disappear before the next hop so no routes share or cross a visible segment. Click 7 clears the outbound trace and draws the return chain on separate lanes. Read the numbered responsibilities on the active cards and in the return strip: tool result, model resume, Agent Worker stream, Gateway proxy, React render.
+
+The model never supplies userId or noteId. The conversation DO and UserDO are separate top-level objects; regional proximity is best effort, not guaranteed co-location.
 
 [Sources]
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/features/agent/hooks/use-current-user-agent.ts#L17
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/features/agent/hooks/use-agent-chat-runtime.ts#L16
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agent.worker.ts#L60
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agents/hello.agent.ts#L14
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/tools/notes.tool.ts#L8
@@ -1113,10 +1099,12 @@ class: opening trace-opening trace-projection
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 06</div>
-<h1>Global questions leave the partition.</h1>
-<p class="trace-subtitle">Cross-user views are explicit, asynchronous, and rebuildable.</p>
+<h1>Accepted events become a global read model.</h1>
+<p class="trace-subtitle">The request path is finished. Projection catches up asynchronously and can be rebuilt.</p>
 
-<ArchitectureTrace step="projection" />
+<ArchitectureCanvas canvas="projection" />
+
+<div class="trace-runtime-note">* request-edge example · queue consumers and Durable Objects are placed independently</div>
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
@@ -1148,7 +1136,15 @@ setWhere: excluded.seq_num &gt; current.seq_num</code></pre></div>
 <div class="trace-footer"><a href="https://developers.cloudflare.com/queues/">docs · Queues ↗</a></div>
 
 <!--
-Keep the two D1 databases visibly separate: Auth D1 owns identity; Admin D1 owns eventual cross-user projections. Queue delivery can repeat or arrive out of order, so the consumer deduplicates by event ID and accepts only newer source sequence numbers.
+Click 1: activate only UserSyncBackendDO and Projection Queue. After LiveStore validates the push, onPush packages the batch; queue failure aborts the append, so rejected pushes publish nothing. The browser request path is already complete.
+
+Click 2: hide the producer hop, then activate Projection Queue → Admin Worker. The queue consumer is wired in the deployment graph with a dead-letter queue. Delivery is at least once and may be retried.
+
+Click 3: hide the delivery hop, then activate Admin Worker → Admin D1. Show both idempotency rules: the event log ignores duplicate event IDs, while table-shaped snapshots only accept a newer source sequence number.
+
+Click 4: remove the connectors and leave the four active cards numbered 1–4. Read the bottom strip left-to-right as the summary. Keep the Bali browser dim: projection is deliberately off its request path.
+
+Keep the two D1 databases visibly separate: Auth D1 owns identity; Admin D1 owns eventual cross-user projections. The Denpasar label describes the request-edge example used throughout the walkthrough; the queue consumer and Durable Object are placed independently and should not be claimed to run in that colo without instrumentation.
 
 [Sources]
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user-sync-backend.do.ts#L10
