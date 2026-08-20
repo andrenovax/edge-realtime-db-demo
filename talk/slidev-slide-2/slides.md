@@ -508,14 +508,14 @@ Return to this slide after the live demo. Click through the four observed behavi
 -->
 
 ---
-class: opening trace-opening trace-assets
+class: opening trace-opening trace-first-request
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 01</div>
 <h1>The first request needs no application code.</h1>
-<p class="trace-subtitle">The public deployment contains both the SPA assets and the API Worker.</p>
+<p class="trace-subtitle">One URL becomes static assets, then an executing React app in Bali.</p>
 
-<ArchitectureTrace step="assets" />
+<ArchitectureCanvas canvas="first-request" />
 
 <div class="trace-runtime-note">* actual request colo depends on Anycast routing · verify with cf-ray</div>
 
@@ -546,6 +546,8 @@ class: opening trace-opening trace-assets
 <div class="trace-footer"><a href="https://developers.cloudflare.com/workers/static-assets/routing/worker-script/">docs · asset routing ↗</a></div>
 
 <!--
+Click 1: the Bali browser requests do.hello-o.workers.com; reveal the asset connection and its deployment receipt together. Click 2: dismiss that receipt, dim the browser shell, and follow download + execute into the React SPA while revealing the React bootstrap receipt. Better Auth is intentionally not introduced yet.
+
 The first request does not execute gateway.worker.ts. Cloudflare's asset layer serves the SPA because only /api/* is configured worker-first. Cloudflare currently lists a Denpasar location; the asterisk is important because Anycast routing can still select another colo. Confirm the actual venue path from the response's cf-ray header.
 
 [Sources]
@@ -557,6 +559,7 @@ The first request does not execute gateway.worker.ts. Cloudflare's asset layer s
 
 ---
 class: opening trace-opening trace-browser-app
+hide: true
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 02</div>
@@ -602,14 +605,14 @@ Separate three similarly named things: React runs on the page; LiveStore uses a 
 -->
 
 ---
-class: opening trace-opening trace-signin
+class: opening trace-opening trace-authentication
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 03</div>
-<h1>Signing in turns on the gateway.</h1>
-<p class="trace-subtitle">The browser knows one public origin. It does not know where the auth service lives.</p>
+<div class="trace-section">FOLLOW THE REQUEST · 02</div>
+<h1>Authentication crosses one public boundary.</h1>
+<p class="trace-subtitle">The gateway routes identity privately, then returns a token to the React app.</p>
 
-<ArchitectureTrace step="signin" />
+<ArchitectureCanvas canvas="authentication" />
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane">
@@ -638,19 +641,25 @@ class: opening trace-opening trace-signin
 })</code></pre>
 </div>
 
-<div class="trace-footer"><a href="https://better-auth.com/docs/concepts/oauth">docs · OAuth ↗</a></div>
+<div class="trace-footer"><a href="https://better-auth.com/docs/plugins/jwt">docs · Better Auth JWT ↗</a></div>
 
 <!--
-The same hostname serves assets and APIs. The /api/auth path activates the gateway Worker; Better Auth owns the provider-specific flow after routing.
+Click 1: React and the Better Auth client POST to the public gateway while the client configuration receipt appears. Click 2: replace that receipt with the gateway routing receipt as the gateway forwards the request to Auth Worker over its preconfigured service binding. Click 3: replace it with the Auth Worker database receipt as Auth Worker queries Auth D1, without detouring through Google OAuth. Click 4: clear the path and leave the React SPA holding the JWT token. Click 5: send any non-auth request back through the gateway; the gateway verifies the JWT and attaches trusted identity headers before forwarding.
+
+The same hostname serves assets and APIs. The /api/auth path activates the gateway Worker, while Auth remains private behind a service binding. This canvas deliberately skips the provider-specific OAuth redirect so the audience can hold onto the application boundary.
 
 [Sources]
-- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/features/auth/hooks/use-google-signin.ts#L16
-- https://better-auth.com/docs/concepts/oauth
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/gateway.worker.ts#L55
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/gateway.worker.ts#L28
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/auth/auth.worker.ts#L22
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/alchemy.run.ts#L174
+- https://better-auth.com/docs/plugins/jwt
 - https://www.cloudflare.com/network/
 -->
 
 ---
 class: opening trace-opening trace-auth-binding
+hide: true
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 04</div>
@@ -695,6 +704,7 @@ Service bindings provide private Worker-to-Worker calls. By default both Workers
 
 ---
 class: opening trace-opening trace-auth-db
+hide: true
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 05</div>
@@ -746,6 +756,7 @@ Be precise: D1 is globally accessible, but this deployment does not enable read 
 
 ---
 class: opening trace-opening trace-jwt
+hide: true
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 06</div>
@@ -795,7 +806,7 @@ The first JWKS fetch goes through the Auth service binding. The key set is then 
 class: opening trace-opening trace-store-id
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 07</div>
+<div class="trace-section">FOLLOW THE REQUEST · 03</div>
 <h1>Identity becomes a database address.</h1>
 <p class="trace-subtitle">The stable user ID selects an opaque, deterministic Durable Object identity.</p>
 
@@ -841,7 +852,7 @@ The User Worker derives identity but does not instantiate or query UserDO here. 
 class: opening trace-opening trace-local-edit
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 08</div>
+<div class="trace-section">FOLLOW THE REQUEST · 04</div>
 <h1>The first application database is in Bali.</h1>
 <p class="trace-subtitle">Editing a note changes browser-local SQLite. Synchronization is a separate job.</p>
 
@@ -888,7 +899,7 @@ Do not describe this as an optimistic cache. The application writes and queries 
 class: opening trace-opening trace-sync
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 09</div>
+<div class="trace-section">FOLLOW THE REQUEST · 05</div>
 <h1>Sync sends the event to one canonical log.</h1>
 <p class="trace-subtitle">The server proves that the authenticated user owns the requested store before routing it.</p>
 
@@ -936,7 +947,7 @@ UserSyncBackendDO is created near its first request on a best-effort basis. Do n
 class: opening trace-opening trace-two-dos
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 10</div>
+<div class="trace-section">FOLLOW THE REQUEST · 06</div>
 <h1>One user has two server-side SQLite roles.</h1>
 <p class="trace-subtitle">One database stores canonical history. The other keeps a queryable server-side view.</p>
 
@@ -984,7 +995,7 @@ These databases do not compete as sources of truth. UserSyncBackendDO owns the c
 class: opening trace-opening trace-agent
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 11</div>
+<div class="trace-section">FOLLOW THE REQUEST · 07</div>
 <h1>The agent joins the same ownership boundary.</h1>
 <p class="trace-subtitle">Trusted context chooses the user database before the model or its tools run.</p>
 
@@ -1037,7 +1048,7 @@ The model never supplies userId or noteId. The Agent Worker overwrites caller-pr
 class: opening trace-opening trace-projection
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 12</div>
+<div class="trace-section">FOLLOW THE REQUEST · 08</div>
 <h1>Global questions leave the partition.</h1>
 <p class="trace-subtitle">Cross-user views are explicit, asynchronous, and rebuildable.</p>
 
