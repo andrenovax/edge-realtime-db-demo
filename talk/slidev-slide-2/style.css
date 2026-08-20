@@ -34,13 +34,14 @@
 }
 
 .opening .slidev-vclick-target {
-  transition: opacity 260ms ease, transform 380ms cubic-bezier(.2,.8,.2,1), filter 360ms ease;
+  transform: none !important;
+  filter: none !important;
+  transition: none !important;
 }
 
 .opening .slidev-vclick-hidden {
   opacity: 0;
-  transform: translateY(10px);
-  filter: blur(2px);
+  visibility: hidden;
 }
 
 .ambient-grid {
@@ -1303,6 +1304,16 @@
   padding: 5px 10px;
 }
 
+.architecture-canvas .trace-edge-lane .flow-card-slot-edge {
+  min-height: 31px;
+  margin-bottom: 3px;
+}
+
+.architecture-canvas .trace-edge-lane .flow-card-slot-edge .trace-stack-card {
+  min-height: 31px;
+  padding: 5px 10px;
+}
+
 .jwt-tag {
   flex: none;
   padding: 3px 6px;
@@ -1347,6 +1358,7 @@
 
 .wire-flow path { stroke: var(--green); marker-end: url(#flow-arrow); }
 .wire-flow.wire-directed path { stroke-width: 2.2; marker-end: none; }
+.wire-flow.wire-return path { stroke-dasharray: 5 5; }
 .wire-flow circle { fill: var(--green); }
 #flow-arrow path { fill: var(--green); stroke: none; }
 .wire-arrowheads polygon { fill: var(--green); }
@@ -1378,6 +1390,15 @@
 .label-react-gateway { top: 91px; left: 166px; }
 .label-gateway-auth { top: 118px; left: 650px; }
 .label-auth-d1 { top: 25px; left: 748px; }
+.label-note-commit { top: 119px; left: 219px; }
+.label-note-materialize { top: 164px; left: 219px; }
+.label-note-sync { top: 123px; left: 167px; }
+.label-note-forward { top: 146px; left: 650px; }
+.label-note-append { top: 52px; left: 735px; }
+.label-note-pull { top: 77px; left: 935px; }
+.label-initial-user-rpc { top: 145px; left: 650px; }
+.label-initial-store-id { top: 169px; left: 177px; }
+.label-initial-events-back { top: 265px; left: 406px; }
 .label-browser-edge { top: 82px; left: 169px; }
 .label-edge-vertical { top: 110px; left: 657px; }
 .label-auth-db { top: 6px; left: 746px; }
@@ -1508,7 +1529,166 @@
   width: 384px;
 }
 
+.code-popover.canvas-code-note-react {
+  top: 180px;
+  left: 61px;
+  width: 520px;
+}
+
+.code-popover.canvas-code-note-opfs {
+  top: 225px;
+  left: 61px;
+  width: 330px;
+}
+
+.code-popover.canvas-code-note-web {
+  top: 180px;
+  left: 61px;
+  width: 330px;
+}
+
+.code-popover.canvas-code-note-edge {
+  top: 270px;
+  left: 296px;
+  width: 384px;
+}
+
+.code-popover.canvas-code-note-sync-do {
+  top: 90px;
+  left: 723px;
+  width: 390px;
+}
+
+.code-popover.canvas-code-note-user-do {
+  top: 135px;
+  left: 723px;
+  width: 390px;
+}
+
+.canvas-code-grid {
+  position: absolute;
+  z-index: 40;
+  left: 61px;
+  display: grid;
+  width: 1062px;
+  gap: 8px;
+}
+
+.canvas-code-contract {
+  top: 370px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.canvas-code-source {
+  top: 370px;
+  left: 240px;
+  width: 704px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.canvas-code-local-view {
+  top: 370px;
+  left: 240px;
+  width: 704px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.canvas-code-runtime {
+  top: 370px;
+  left: 356px;
+  width: 472px;
+  grid-template-columns: 1fr;
+}
+
+.canvas-code-address {
+  top: 370px;
+  left: 240px;
+  width: 704px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.canvas-code-address-request,
+.canvas-code-address-forward {
+  top: 370px;
+  left: 356px;
+  width: 472px;
+  grid-template-columns: 1fr;
+}
+
+.canvas-code-address-response {
+  top: 370px;
+  left: 240px;
+  width: 704px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.canvas-code-sync-init {
+  top: 370px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.canvas-code-sync-response {
+  top: 370px;
+  left: 240px;
+  width: 704px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.canvas-code-sync-step {
+  top: 370px;
+  left: 356px;
+  width: 472px;
+  grid-template-columns: 1fr;
+}
+
+.canvas-code-sync-connect {
+  top: 370px;
+  left: 61px;
+  width: 1062px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.canvas-code-panel {
+  min-height: 112px;
+  padding: 10px 12px;
+  border: 1px solid rgb(54 82 115 / 92%);
+  border-radius: 7px;
+  background: #071426;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 38%);
+}
+
+.canvas-code-runtime .canvas-code-panel { min-height: 132px; }
+
+.canvas-code-panel pre {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #cbdcf1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8.5px;
+  line-height: 1.18;
+  white-space: pre-wrap;
+}
+
+.canvas-code-panel code { font: inherit; color: inherit; }
+
+.code-popover.canvas-code-note-react::before,
+.code-popover.canvas-code-note-opfs::before,
+.code-popover.canvas-code-note-web::before,
+.code-popover.canvas-code-note-edge::before,
+.code-popover.canvas-code-note-sync-do::before,
+.code-popover.canvas-code-note-user-do::before {
+  top: -9px;
+  left: 24px;
+  border-width: 0 8px 9px;
+  border-color: transparent transparent rgb(54 82 115 / 92%);
+}
+
 .architecture-canvas .flow-state.slidev-vclick-target:has(> .code-popover),
+.architecture-canvas .flow-state.slidev-vclick-target:has(> .canvas-code-grid),
+.architecture-canvas .canvas-code-grid.slidev-vclick-target,
 .architecture-canvas .code-popover.slidev-vclick-target {
   transform: none !important;
   transition: none !important;

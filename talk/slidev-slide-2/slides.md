@@ -804,6 +804,7 @@ The first JWKS fetch goes through the Auth service binding. The key set is then 
 
 ---
 class: opening trace-opening trace-store-id
+hide: true
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 03</div>
@@ -849,14 +850,67 @@ The User Worker derives identity but does not instantiate or query UserDO here. 
 -->
 
 ---
-class: opening trace-opening trace-local-edit
+class: opening trace-opening trace-initial-sync
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 04</div>
-<h1>The first application database is in Bali.</h1>
-<p class="trace-subtitle">Editing a note changes browser-local SQLite. Synchronization is a separate job.</p>
+<div class="trace-section">INITIAL SYNC · 03</div>
+<h1>Canonical events hydrate a personal database.</h1>
+<p class="trace-subtitle">Resolve the user’s store address, then replay its events into browser-local SQLite.</p>
 
-<ArchitectureTrace step="local-edit" />
+<ArchitectureCanvas canvas="initial-sync" />
+
+<!--
+Click 1: activate only UserSyncBackendDO. Reveal the synced event contract beside the protocol-owned Durable Object implementation. The canonical source of truth is an event log; the notes table does not live here.
+
+Click 2: disable UserSyncBackendDO. Activate only the LiveStore Web Worker and OPFS SQLite. Replace the event-log receipt with the browser replica contract: the notes table and SQLite materializers.
+
+Click 3: activate React while keeping the LiveStore Web Worker and OPFS SQLite active. Replace the schema panels with StoreRegistry, the persisted OPFS adapter, and StoreRegistryProvider. No schema code remains on this step.
+
+Click 4: keep UserDO and User Worker inactive. Reveal only React SPA → Gateway Worker for /api/data viewer(), together with the provider’s useSuspenseQuery receipt.
+
+Click 5: keep the React → Gateway connection visible, hide the provider receipt, then extend the request Gateway Worker → User Worker. Reveal only the gateway’s USER forwarding branch.
+
+Click 6: hide both request connections. Start the response with only User Worker → Gateway Worker. Reveal the deterministic storeId construction beside UserApi.viewer().
+
+Click 7: keep the first response connection, hide the User Worker code, then add Gateway Worker → React SPA. Show no code; this step only makes the public response path explicit. Workers never address React directly.
+
+Click 8: disable the User Worker. Start sync with only LiveStore Web Worker → Gateway Worker. Show useCurrentUserLiveStore consuming viewer.data.storeId, useNotesModel querying that personal store, and the store’s makeWsSync connection.
+
+Click 9: keep the first connection, hide its code, then add Gateway Worker → LiveStore Worker. Reveal only the gateway’s trusted sync route.
+
+Click 10: keep both earlier request connections, hide the gateway code, then add LiveStore Worker → UserSyncBackendDO. Activate per-user state and reveal the complete handleSyncRequest receipt: canonical backend selection plus the ownership check.
+
+Click 11: hide all sync-request connections. Start the return path with only UserSyncBackendDO → LiveStore Worker. Show no code; the server setup was already explained on the preceding request step.
+
+Click 12: keep the first return connection, then add LiveStore Worker → Gateway Worker. Show no code; continue tracing the response.
+
+Click 13: keep the earlier return connections, then add Gateway Worker → LiveStore Web Worker. Show no code; this step only traces the WebSocket response through the public boundary.
+
+Click 14: keep the return chain, hide the gateway code, then add LiveStore Web Worker → OPFS SQLite. Show no code; the final hop completes hydration. UserDO remains inactive because initial browser sync does not pass through it.
+
+[Sources]
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L8
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L54
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L77
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user-sync-backend.do.ts#L10
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/providers/livestore-provider.tsx#L14
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/user/user.worker.ts#L16
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/user/user.rpc.ts#L13
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/lib/livestore.worker.ts#L8
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/gateway.worker.ts#L59
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/livestore.worker.ts#L25
+- https://livestore.dev/
+-->
+
+---
+class: opening trace-opening trace-note-edit
+---
+
+<div class="trace-section">EDIT A NOTE · 04</div>
+<h1>A personal store turns one edit into a durable event.</h1>
+<p class="trace-subtitle">Follow one local commit from the browser replica into durable history and the server replica.</p>
+
+<ArchitectureCanvas canvas="note-edit" />
 
 <div class="trace-canvas">
   <div class="trace-lane trace-browser-lane wide-browser">
@@ -886,20 +940,29 @@ class: opening trace-opening trace-local-edit
 <div class="trace-footer"><a href="https://livestore.dev/">docs · LiveStore ↗</a></div>
 
 <!--
-Do not describe this as an optimistic cache. The application writes and queries its real local database. The strongest visible number on this slide is “0 API calls,” not an invented millisecond measurement.
+Click 1: React commits NoteUpdated or NoteCreated to the LiveStore Web Worker and reveal the complete saveNote branch. Click 2: replace the receipt with the materializer that updates OPFS SQLite; the edit is already locally durable and queryable. Click 3: replace it with the WebSocket sync configuration as the LiveStore worker sends /api/sync to the gateway. Click 4: replace it with the gateway route that verifies the JWT, stamps trusted identity, and forwards to the private LiveStore Worker. Click 5: replace it with the ownership check as LiveStore routes the event to UserSyncBackendDO’s canonical log. Click 6: replace it with UserDO’s live-pull configuration as an already-active server materialized view catches up. Click 7: clear the outbound trace and show one complete broadcast to another connected browser replica: UserSyncBackendDO → LiveStore Worker → Gateway Worker → LiveStore Web Worker → OPFS SQLite. Do not repeat the preceding request steps.
+
+Do not describe the local edit as an optimistic cache. UserSyncBackendDO owns canonical event history. UserDO only participates here if server-side application or agent work has already initialized its materialized replica; it is not required for browser sync.
 
 [Sources]
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/providers/livestore-provider.tsx#L16
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/user/user.worker.ts#L16
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/features/notes/hooks/use-notes-model.ts#L72
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L82
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/lib/livestore.worker.ts#L8
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/gateway.worker.ts#L59
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/livestore.worker.ts#L25
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L46
 - https://livestore.dev/
 - https://www.cloudflare.com/network/
 -->
 
 ---
 class: opening trace-opening trace-sync
+hide: true
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 05</div>
+<div class="trace-section">FOLLOW THE REQUEST · 04</div>
 <h1>Sync sends the event to one canonical log.</h1>
 <p class="trace-subtitle">The server proves that the authenticated user owns the requested store before routing it.</p>
 
@@ -945,9 +1008,10 @@ UserSyncBackendDO is created near its first request on a best-effort basis. Do n
 
 ---
 class: opening trace-opening trace-two-dos
+hide: true
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 06</div>
+<div class="trace-section">FOLLOW THE REQUEST · 05</div>
 <h1>One user has two server-side SQLite roles.</h1>
 <p class="trace-subtitle">One database stores canonical history. The other keeps a queryable server-side view.</p>
 
@@ -995,7 +1059,7 @@ These databases do not compete as sources of truth. UserSyncBackendDO owns the c
 class: opening trace-opening trace-agent
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 07</div>
+<div class="trace-section">FOLLOW THE REQUEST · 05</div>
 <h1>The agent joins the same ownership boundary.</h1>
 <p class="trace-subtitle">Trusted context chooses the user database before the model or its tools run.</p>
 
@@ -1048,7 +1112,7 @@ The model never supplies userId or noteId. The Agent Worker overwrites caller-pr
 class: opening trace-opening trace-projection
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 08</div>
+<div class="trace-section">FOLLOW THE REQUEST · 06</div>
 <h1>Global questions leave the partition.</h1>
 <p class="trace-subtitle">Cross-user views are explicit, asynchronous, and rebuildable.</p>
 
