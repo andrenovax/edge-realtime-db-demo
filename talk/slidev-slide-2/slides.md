@@ -361,11 +361,50 @@ class: opening durable-agent-opening
 </div>
 
 <!--
-A durable agent combines an agent identity with state and execution on Cloudflare. The next slide should explain which Flue primitives make that model possible.
+A durable agent combines an agent identity with state and execution on Cloudflare. The next slide explains which Flue primitives make that model possible.
 
 [Sources]
 - Agent Smith avatar already supplied for this presentation.
 - Cloudflare mark from Simple Icons (https://simpleicons.org/?q=cloudflare); official brand reference: Cloudflare press kit (https://www.cloudflare.com/press/press-kit/).
+-->
+
+---
+class: opening flue-opening
+---
+
+<h1><span>Flue</span><em>Durable Pi Agent</em></h1>
+
+<div class="flue-feature-row">
+  <div v-click="1" class="flue-feature-card">
+    <span class="flue-feature-icon i-carbon-code" aria-hidden="true"></span>
+    <strong>Powered by Pi</strong>
+    <small>agent loop · tools · model providers</small>
+  </div>
+  <div v-click="2" class="flue-feature-card">
+    <span class="flue-feature-icon i-carbon-data-base" aria-hidden="true"></span>
+    <strong>Durable conversation</strong>
+    <small>admission · queue · transcript · recovery</small>
+  </div>
+  <div v-click="3" class="flue-feature-card">
+    <span class="flue-feature-icon i-carbon-chat" aria-hidden="true"></span>
+    <strong>Live client</strong>
+    <small>stream · reconnect · abort</small>
+  </div>
+  <div v-click="4" class="flue-feature-card">
+    <span class="flue-feature-icon i-carbon-workspace" aria-hidden="true"></span>
+    <strong>Composable hooks</strong>
+    <small>model · tools · state</small>
+  </div>
+</div>
+
+<!--
+Reveal the four layers in order. Pi supplies the inner agent harness and model-provider protocol. Flue adds a durable per-conversation runtime: it records submissions before model work, orders them in a queue, persists the canonical transcript, and recovers interrupted work. The client observes that durable stream, resumes after reconnects, and records aborts as durable intent. Hooks compose the model, tools, and persistent state in TypeScript.
+
+[Sources]
+- https://flueframework.com/docs/guide/why-flue/
+- https://flueframework.com/docs/guide/durability/
+- https://flueframework.com/docs/sdk/flue-client/
+- https://flueframework.com/docs/guide/agent-hooks/
 -->
 
 ---
