@@ -81,14 +81,14 @@ defineProps<{
       <span v-if="canvas === 'projection'" v-click="2" class="lane-activation-state"><i v-click.hide="4" class="lane-on"></i></span>
       <span v-if="canvas === 'projection'" v-click="4" class="lane-activation-state"><i class="lane-on"></i></span>
 
-      <div class="flow-card-slot">
+      <div class="flow-card-slot flow-card-slot-static">
         <div class="trace-stack-card is-future"><b>Static assets</b><span>HTML · JS · CSS</span></div>
         <div v-if="canvas === 'first-request'" v-click="1" class="flow-card-state">
           <div class="trace-stack-card is-active"><b>Static assets</b><span>HTML · JS · CSS</span></div>
         </div>
       </div>
 
-      <div class="flow-card-slot">
+      <div class="flow-card-slot flow-card-slot-gateway">
         <div class="trace-stack-card is-future"><b>Gateway Worker</b><span>only public Worker</span></div>
         <div v-if="canvas === 'authentication'" v-click="1" class="flow-card-state">
           <div v-click.hide="4" class="trace-stack-card is-active"><b>Gateway Worker</b><span>only public Worker</span></div>
@@ -276,8 +276,8 @@ defineProps<{
       </g>
       <g v-if="canvas === 'authentication'" v-click="2" class="flow-state">
         <g v-click.hide="4" class="wire-flow wire-directed">
-          <path d="M633 109 H643 V154 H633" />
-          <polygon points="633,154 645,147 645,161" />
+          <path d="M333 109 H339 V154 H345" />
+          <polygon points="345,154 333,147 333,161" />
         </g>
       </g>
       <g v-if="canvas === 'authentication'" v-click="3" class="flow-state">
@@ -311,14 +311,14 @@ defineProps<{
       </g>
       <g v-if="canvas === 'initial-sync'" v-click="5" class="flow-state">
         <g v-click.hide="6" class="wire-flow wire-directed">
-          <path d="M633 109 H645 V199 H633" />
-          <polygon points="633,199 645,192 645,206" />
+          <path d="M333 109 H339 V199 H345" />
+          <polygon points="345,199 333,192 333,206" />
         </g>
       </g>
       <g v-if="canvas === 'initial-sync'" v-click="6" class="flow-state">
         <g v-click.hide="8" class="wire-flow wire-return wire-directed">
-          <path d="M633 199 H657 V109 H633" />
-          <polygon points="633,109 645,102 645,116" />
+          <path d="M345 199 H339 V109 H333" />
+          <polygon points="333,109 345,102 345,116" />
         </g>
       </g>
       <g v-if="canvas === 'initial-sync'" v-click="7" class="flow-state">
@@ -335,8 +335,8 @@ defineProps<{
       </g>
       <g v-if="canvas === 'initial-sync'" v-click="9" class="flow-state">
         <g v-click.hide="11" class="wire-flow wire-directed">
-          <path d="M633 109 H645 V244 H633" />
-          <polygon points="633,244 645,237 645,251" />
+          <path d="M333 109 H339 V244 H345" />
+          <polygon points="345,244 333,237 333,251" />
         </g>
       </g>
       <g v-if="canvas === 'initial-sync'" v-click="10" class="flow-state">
@@ -350,8 +350,8 @@ defineProps<{
         <polygon points="633,244 645,237 645,251" />
       </g>
       <g v-if="canvas === 'initial-sync'" v-click="12" class="wire-flow wire-return wire-directed">
-        <path d="M633 244 H657 V109 H633" />
-        <polygon points="633,109 645,102 645,116" />
+        <path d="M345 244 H339 V109 H333" />
+        <polygon points="333,109 345,102 345,116" />
       </g>
       <g v-if="canvas === 'initial-sync'" v-click="13" class="wire-flow wire-return wire-directed">
         <path d="M249 109 H237 Q227 109 227 121 V142 Q227 154 207 154" />
@@ -382,8 +382,8 @@ defineProps<{
       </g>
       <g v-if="canvas === 'note-edit'" v-click="4" class="flow-state">
         <g v-click.hide="7" class="wire-flow wire-directed">
-          <path d="M633 109 H645 V244 H633" />
-          <polygon points="633,244 645,237 645,251" />
+          <path d="M333 109 H339 V244 H345" />
+          <polygon points="345,244 333,237 333,251" />
         </g>
       </g>
       <g v-if="canvas === 'note-edit'" v-click="5" class="flow-state">
@@ -401,8 +401,8 @@ defineProps<{
       <g v-if="canvas === 'note-edit'" v-click="7" class="wire-flow wire-return wire-directed">
         <path d="M673 82 H663 V244 H633" />
         <polygon points="633,244 645,237 645,251" />
-        <path d="M633 244 H657 V109 H633" />
-        <polygon points="633,109 645,102 645,116" />
+        <path d="M345 244 H339 V109 H333" />
+        <polygon points="333,109 345,102 345,116" />
         <path d="M249 109 H237 Q227 109 227 121 V142 Q227 154 207 154" />
         <polygon points="207,154 219,147 219,161" />
         <path d="M207 154 H217 V199 H207" />
@@ -417,8 +417,8 @@ defineProps<{
       </g>
       <g v-if="canvas === 'agent-request'" v-click="2" class="flow-state">
         <g v-click.hide="3" class="wire-flow wire-directed">
-          <path d="M249 117 H237 V270 H249" />
-          <polygon points="249,270 237,263 237,277" />
+          <path d="M333 109 H339 V270 H345" />
+          <polygon points="345,270 333,263 333,277" />
         </g>
       </g>
       <g v-if="canvas === 'agent-request'" v-click="3" class="flow-state">
@@ -450,8 +450,8 @@ defineProps<{
         <polygon points="919,146 931,139 931,153" />
         <path d="M673 162 H664 V270 H633" />
         <polygon points="633,270 645,263 645,277" />
-        <path d="M249 270 H237 V117 H249" />
-        <polygon points="249,117 237,110 237,124" />
+        <path d="M345 270 H339 V109 H333" />
+        <polygon points="333,109 345,102 345,116" />
         <path d="M249 109 H207" />
         <polygon points="207,109 219,102 219,116" />
       </g>
@@ -845,7 +845,7 @@ root.<span class="tok-fn">render</span>(&lt;<span class="tok-type">AppProviders<
       </div>
 
       <div v-click="5" class="flow-state">
-        <div v-click.hide="6" class="code-popover canvas-code-note-sync-do">
+          <div v-click.hide="6" class="code-popover canvas-code-note-livestore-worker">
           <a class="code-path tone-edge" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/livestore.worker.ts#L25" target="_blank" rel="noreferrer">
             <span>src/workers/livestore/livestore.worker.ts</span><em>open code ↗</em>
           </a>

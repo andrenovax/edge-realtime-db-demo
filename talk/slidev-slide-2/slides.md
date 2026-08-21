@@ -7,290 +7,139 @@ info: |
 colorSchema: dark
 aspectRatio: 16/9
 canvasWidth: 1280
+class: opening title-slide
 transition: none
 drawings:
   persist: false
 ---
 
 <div class="opening title-opening">
-  <div class="ambient-grid"></div>
-  <div class="title-mark">
-    <span class="db-rim"></span>
-    <span class="db-body"></span>
+  <h1>Your Database, <span>Everywhere</span></h1>
+  <div class="title-map" role="img" aria-label="Low-detail world map without Antarctica">
+    <div class="earth-map"></div>
   </div>
-  <div class="eyebrow">TECHNICAL DEEP DIVE</div>
-  <h1>Your Database,<br><span>Everywhere.</span></h1>
-  <p class="hero-question">What if every user had a database<br>running beside their compute?</p>
-  <div class="speaker-line"><strong>Andrii Novak</strong><i></i><span>Durable Notes</span></div>
 </div>
 
 <!--
-Open on the question, not the stack. Let “Everywhere” land before advancing.
+Let the title and map settle before advancing.
+
+[Sources]
+- worldLow.svg supplied by the user; Antarctica hidden for the presentation.
 -->
 
 ---
-class: opening experiment-opening
+class: opening world-opening
 ---
 
-<div class="experiment-copy">
-  <div class="eyebrow">THE SIDE PROJECT</div>
-  <h1>I built the smallest version<br>I could actually break.</h1>
-  <p>One forkable app. One TypeScript infrastructure graph.<br>No architecture hidden behind the demo.</p>
-</div>
+<div class="world-stage">
+  <h1 class="world-slide-title">Single Database <span>Tax</span></h1>
+  <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
+  <img class="world-coastlines world-germany-highlight" src="/germany-highlight.svg?v=1" alt="" aria-hidden="true" />
 
-<div class="one-file">
-  <div class="one">1</div>
-  <div class="file-label">TypeScript<br>deployment graph</div>
-</div>
-
-<div class="capability-stream">
-  <span v-click="1">authentication</span>
-  <i v-click="1"></i>
-  <span v-click="2">typed RPC</span>
-  <i v-click="2"></i>
-  <span v-click="3">streaming agent</span>
-  <i v-click="3"></i>
-  <span v-click="4">local-first sync</span>
-  <i v-click="4"></i>
-  <span v-click="5">global deploy</span>
-</div>
-
-<div v-click="5" class="repo-note">DURABLE NOTES <b>·</b> SIDE PROJECT, NOT A PRODUCT PITCH</div>
-
-<!--
-The project is evidence, not the point. Click through the capabilities quickly.
--->
-
----
-class: opening global-opening
----
-
-<div class="eyebrow">THE SETUP</div>
-<h1>The application is already everywhere.</h1>
-<p class="deck-subtitle">Three users. Three nearby edge runtimes.</p>
-
-<div class="world-line"></div>
-
-<div class="edge-person edge-sf">
-  <div class="edge-halo"><div class="person-avatar">SD</div></div>
-  <strong>San Diego</strong><span>edge compute</span>
-</div>
-<div class="edge-person edge-be">
-  <div class="edge-halo"><div class="person-avatar">KY</div></div>
-  <strong>Kyiv</strong><span>edge compute</span>
-</div>
-<div class="edge-person edge-sg">
-  <div class="edge-halo"><div class="person-avatar">BA</div></div>
-  <strong>Bali</strong><span>edge compute</span>
-</div>
-
-<div v-click="1" class="single-home">
-  <div class="home-label">BUT STATE HAS ONE HOME</div>
-  <div class="db-icon db-orange"><span></span><b>POSTGRES</b><small>Virginia</small></div>
-</div>
-
-<div v-click="1" class="setup-punchline">The application is global. <strong>The data path is regional.</strong></div>
-
-<!--
-Click once: reveal the single database. Pause on the mismatch.
--->
-
----
-class: opening tax-opening
----
-
-<div class="tax-stage">
-  <div class="eyebrow">THE CENTRALIZED DATABASE TAX</div>
-  <h1>Every database touch makes the same trip.</h1>
-  <p class="tax-subtitle">The app moved. The source of truth did not.</p>
-
-  <div class="tax-grid"></div>
-  <div v-click="1" class="tax-lines tax-lines-there" aria-label="Outbound requests">
-    <i class="tax-line line-sf"></i><i class="tax-line line-be"></i><i class="tax-line line-sg"></i>
-  </div>
-  <div v-click="2" class="tax-lines tax-lines-back" aria-label="Return responses">
-    <i class="tax-line line-sf"></i><i class="tax-line line-be"></i><i class="tax-line line-sg"></i>
-  </div>
-
-  <div class="tax-user tax-sf"><div>SD</div><span><b>San Diego</b><small>user + edge</small></span></div>
-  <div class="tax-user tax-be"><div>KY</div><span><b>Kyiv</b><small>user + edge</small></span></div>
-  <div class="tax-user tax-sg"><div>BA</div><span><b>Bali</b><small>user + edge</small></span></div>
-
-  <div class="tax-db">
-    <small>ONE AUTHORITATIVE HOME</small>
-    <div class="db-icon db-orange"><span></span><b>POSTGRES</b><em>Virginia</em></div>
-  </div>
-
-  <div v-click="1" class="route-key key-there"><i></i>there</div>
-  <div v-click="2" class="route-key key-back"><i></i>back</div>
-
-  <div v-click="3" class="agent-loop">
-    <span>agent</span><b>read</b><i>→</i><b>tool</b><i>→</i><b>read</b><i>→</i><b>tool</b><i>→</i><b>write</b>
-    <strong>× 5 round trips</strong>
-  </div>
-
-  <div class="fixes-panel">
-    <div class="fixes-title">“FIXED” IN PRODUCTION</div>
-    <div v-click="4" class="fix-row"><span>PR #184</span><b>connection pooler</b><i>POOL</i></div>
-    <div v-click="5" class="fix-row"><span>PR #219</span><b>regional cache</b><i>CACHE</i></div>
-    <div v-click="6" class="fix-row"><span>PR #241</span><b>session store</b><i>SESSION</i></div>
-    <div v-click="7" class="fix-row"><span>PR #287</span><b>read replica</b><i>REPLICA</i></div>
-    <div v-click="8" class="fix-row"><span>PR #301</span><b>invalidation queue</b><i>QUEUE</i></div>
-    <div class="fix-spine"></div>
-  </div>
-
-  <div v-click="9" class="tax-total"><span>5 fixes</span><i>+</i><span>6 systems</span><i>+</i><strong>same distant truth</strong></div>
-</div>
-
-<!--
-1 there. 2 back. 3 agent loops compound the cost.
-4–8: read each PR as a reasonable local decision. Let the architecture grow.
-9: the network tax survived every fix.
--->
-
----
-class: opening meme-opening
----
-
-<div class="meme-kicker">ARCHITECTURE REVIEW · WEEK 6</div>
-<h1>We made the database “faster.”</h1>
-
-<div class="meme-frame">
-  <div class="meme-row meme-no">
-    <div class="meme-face">🙅</div>
-    <div><small>NO</small><strong>Move the data closer</strong></div>
-  </div>
-  <div class="meme-divider"></div>
-  <div class="meme-row meme-yes">
-    <div class="meme-face">🧠</div>
-    <div><small>YES</small><strong>Add six systems<br>to survive the distance</strong></div>
-  </div>
-</div>
-
-<div v-click="1" class="meme-caption">We optimized the trip. <strong>We never questioned the destination.</strong></div>
-
-<!--
-This is the laugh/reset beat. Do not explain the meme before the click.
--->
-
----
-class: opening reset-opening
----
-
-<div class="reset-canvas">
-  <div class="eyebrow">SO I TRIED ONE DIFFERENT MOVE</div>
-  <h1 v-click.hide="1">Delete the coping mechanisms.</h1>
-  <h1 v-click="1" class="reset-answer">Move the database boundary.</h1>
-
-  <svg v-click.hide="1" class="reset-routes" viewBox="0 0 1280 720">
-    <defs>
-      <marker id="reset-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ff9d2e" /></marker>
-    </defs>
-    <path d="M244 264 C430 217 585 258 754 354" marker-end="url(#reset-arrow)" />
-    <path d="M250 384 C446 378 600 376 754 376" marker-end="url(#reset-arrow)" />
-    <path d="M244 504 C431 551 596 488 754 398" marker-end="url(#reset-arrow)" />
+  <svg class="world-routes" viewBox="0 0 1280 720" preserveAspectRatio="none" aria-hidden="true">
+    <path class="route-base" d="M365 369 Q506 219 659 319" />
+    <path class="route-flow route-flow-san-diego" d="M365 369 Q506 219 659 319" />
+    <path class="route-base" d="M704 320 Q684 283 659 319" />
+    <path class="route-flow route-flow-kyiv" d="M704 320 Q684 283 659 319" />
+    <path class="route-base" d="M919 492 Q833 229 659 319" />
+    <path class="route-flow route-flow-ubud" d="M919 492 Q833 229 659 319" />
   </svg>
 
-  <div class="reset-user reset-sf"><div class="person-avatar">SD</div><b>San Diego</b><span>user + compute</span></div>
-  <div class="reset-user reset-be"><div class="person-avatar">KY</div><b>Kyiv</b><span>user + compute</span></div>
-  <div class="reset-user reset-sg"><div class="person-avatar">BA</div><b>Bali</b><span>user + compute</span></div>
-
-  <div v-click.hide="1" class="reset-central-db db-icon db-orange"><span></span><b>POSTGRES</b><small>one global home</small></div>
-
-  <div v-click.hide="1" class="reset-fixes">
-    <span>POOLER</span><span>CACHE</span><span>SESSION</span><span>REPLICA</span><span>QUEUE</span>
+  <div class="world-city world-san-diego">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Chris</span>
+  </div>
+  <div class="world-city world-kyiv">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Vicky</span>
+  </div>
+  <div class="world-city world-ubud">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Andrii</span>
   </div>
 
-  <div v-click="1" class="personal-db personal-sf"><div class="db-icon db-blue"><span></span><b>SQLite</b></div><small>user database</small></div>
-  <div v-click="1" class="personal-db personal-be"><div class="db-icon db-blue"><span></span><b>SQLite</b></div><small>user database</small></div>
-  <div v-click="1" class="personal-db personal-sg"><div class="db-icon db-blue"><span></span><b>SQLite</b></div><small>user database</small></div>
-
-  <div v-click="1" class="local-arrows local-sf">⇄</div>
-  <div v-click="1" class="local-arrows local-be">⇄</div>
-  <div v-click="1" class="local-arrows local-sg">⇄</div>
-
-  <div v-click="2" class="reset-punchline"><span>Reads become local.</span><span>Writes get one owner.</span><strong>State can live near the user.</strong></div>
-</div>
-
-<!--
-Start with the mess. Click 1 erases the central architecture and paints a small database beside each user.
-Click 2 states the three consequences.
--->
-
----
-class: opening fleet-opening
----
-
-<div class="eyebrow">THE PRECISE CLAIM</div>
-<h1>A global database fleet.<br><span>Not one database copied everywhere.</span></h1>
-
-<div class="fleet-stage">
-  <div class="fleet-unit"><div class="mini-user">SD</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
-  <div class="fleet-unit"><div class="mini-user">KY</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
-  <div class="fleet-unit"><div class="mini-user">BA</div><i>⇄</i><div class="db-icon db-blue"><span></span><b>SQLite</b></div></div>
-</div>
-
-<div class="fleet-rule">
-  <small>THE BOUNDARY</small>
-  <strong>Data that coordinates together,<br>lives together.</strong>
-  <p>In this demo: <b>one user = one Durable Object with SQLite</b></p>
-</div>
-
-<div v-click="1" class="boundary-options"><span>tenant</span><span>workspace</span><span>document</span><span>conversation</span></div>
-
-<!--
-Be exact: independent partitions, not synchronous global replication.
-Click: user is one possible boundary, not the only one.
--->
-
----
-class: opening promise-opening
----
-
-<div class="promise-copy">
-  <div class="eyebrow">FOR THE NEXT 39 MINUTES</div>
-  <h1>We’ll build it.<br>Measure it.<br><span>Then break it.</span></h1>
-</div>
-
-<div class="promise-acts">
-  <div v-click="1"><b>01</b><strong>BUILD</strong><p>auth · RPC · local-first sync · streaming agent</p></div>
-  <div v-click="2"><b>02</b><strong>MEASURE</strong><p>one request · agent loop · median · tail</p></div>
-  <div v-click="3"><b>03</b><strong>BREAK</strong><p>joins · migrations · hot users · relocation</p></div>
-</div>
-
-<div v-click="3" class="final-opening-line">Code. Real numbers. A repo you can fork.</div>
-
-<!--
-This closes the opening contract and hands off to the Durable Object mental model.
--->
-
----
-class: opening primitive-opening
----
-
-<div class="eyebrow">THE PRIMITIVE</div>
-<h1>A database with a<br><span>mailing address.</span></h1>
-
-<div class="primitive-route">
-  <div v-click="1" class="address-ticket">
-    <small>GLOBALLY ADDRESSABLE ID</small>
-    <strong>user:andrii</strong>
-  </div>
-  <div v-click="2" class="address-arrow"><i></i><span>route from anywhere</span></div>
-  <div v-click="2" class="object-shell">
-    <small>DURABLE OBJECT</small>
-    <div class="object-code"><b>TypeScript</b><span>stateful compute</span></div>
-    <div class="object-plus">+</div>
-    <div class="object-storage"><div class="db-icon db-blue"><span></span><b>SQLite</b></div><span>private storage</span></div>
+  <div class="world-db world-berlin">
+    <img class="database-icon" src="/office-database-white.svg" alt="Database" />
+    <small>Berlin</small>
   </div>
 </div>
 
-<div v-click="3" class="primitive-properties">
-  <span>one identity</span><i></i><span>one coordination point</span><i></i><strong>compute beside storage</strong>
+<!--
+The users are distributed; the database still has one physical home.
+
+[Sources]
+- worldLow.svg supplied by the user; Antarctica hidden and the United States, Ukraine, and Indonesia highlighted for the presentation.
+- amCharts SVG Map Generator Natural Earth projection (https://dojo.amcharts.com/svg-map-generator/) used to align the city coordinates.
+- Office Database icon by Jeremiah, from Icon-Icons (https://icon-icons.com/icon/office-database/103574), recolored white; CC BY 4.0.
+-->
+
+---
+class: opening world-opening fleet-world-opening
+---
+
+<div class="world-stage database-fleet-stage">
+  <h1 class="world-slide-title">Edge Database <span>Fleet</span></h1>
+  <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
+
+  <div class="world-city world-san-diego">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Chris</span>
+  </div>
+  <div class="world-city world-kyiv">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Vicky</span>
+  </div>
+  <div class="world-city world-ubud">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Andrii</span>
+  </div>
+
+  <div class="durable-object durable-san-diego">
+    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+  </div>
+  <div class="durable-object durable-kyiv">
+    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+  </div>
+  <div class="durable-object durable-ubud">
+    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+  </div>
 </div>
 
 <!--
-Think of the object as a database with an inbox and an event loop. The address is global; the object owns both the code and its private SQLite storage.
+Each user now has a nearby stateful compute and storage boundary instead of sharing one distant database.
+
+[Sources]
+- worldLow.svg supplied by the user; Antarctica hidden and the United States, Ukraine, and Indonesia highlighted for the presentation.
+- Cloudflare mark from Simple Icons (https://simpleicons.org/?q=cloudflare); official brand reference: Cloudflare press kit (https://www.cloudflare.com/press/press-kit/).
+-->
+
+---
+class: opening do-definition-opening
+---
+
+<h1><span>Durable Object</span><em>Stateful Worker</em></h1>
+
+<div class="do-feature-row">
+  <div v-click="1" class="do-feature-card">
+    <span class="do-feature-icon i-carbon-data-base" aria-hidden="true"></span>
+    <strong>SQLite</strong>
+  </div>
+  <div v-click="2" class="do-feature-card">
+    <span class="do-feature-icon i-carbon-code" aria-hidden="true"></span>
+    <strong>single-threaded</strong>
+  </div>
+  <div v-click="3" class="do-feature-card">
+    <span class="do-feature-icon i-carbon-location" aria-hidden="true"></span>
+    <strong>created near first request</strong>
+  </div>
+  <div v-click="4" class="do-feature-card do-feature-address">
+    <span class="do-feature-icon i-carbon-tag" aria-hidden="true"></span>
+    <strong>addressable by id</strong>
+  </div>
+</div>
+
+<!--
+Reveal one property at a time: SQLite storage, single-threaded execution, first-request placement, and stable addressability by ID.
 
 [Sources]
 - https://developers.cloudflare.com/durable-objects/concepts/what-are-durable-objects/
@@ -298,213 +147,242 @@ Think of the object as a database with an inbox and an event loop. The address i
 -->
 
 ---
-class: opening identity-opening
+class: opening partition-boundary-opening
 ---
 
-<div class="eyebrow">DETERMINISTIC ROUTING</div>
-<h1>The ID selects the database.</h1>
-<p class="identity-subtitle">No registry lookup. No tenant filter. The identity is the route.</p>
+<h1>The <span>Boundary</span></h1>
 
-<div class="identity-flow">
-  <div class="identity-node identity-user"><small>VERIFIED IDENTITY</small><strong>usr_7f3a</strong></div>
-  <div v-click="1" class="identity-op"><code>idFromName(userId)</code><i>→</i></div>
-  <div v-click="2" class="identity-node identity-object"><small>OBJECT ID</small><strong>0x8c…41</strong></div>
-  <div v-click="3" class="identity-op identity-resolve"><code>get(id)</code><i>→</i></div>
-  <div v-click="3" class="identity-database"><div class="db-icon db-blue"><span></span><b>SQLite</b></div><small>USER DATABASE</small></div>
-</div>
-
-<div v-click="4" class="identity-callers">
-  <span><b>SD</b> request</span><span><b>KY</b> request</span><span><b>BA</b> request</span>
-  <strong>same user → same object</strong>
-</div>
-
-<!--
-The gateway supplies the trusted user ID. A deterministic object ID resolves to the same UserDO from every caller location.
-
-[Sources]
-- https://developers.cloudflare.com/durable-objects/best-practices/rules-of-durable-objects/
--->
-
----
-class: opening boundary-opening
----
-
-<div class="eyebrow">THE DESIGN DECISION</div>
-<h1>The partition key is the architecture.</h1>
-
-<div class="boundary-choices">
-  <small>WHAT GETS ONE DATABASE?</small>
-  <span class="boundary-muted">tenant</span>
-  <span class="boundary-muted">workspace</span>
-  <strong>user</strong>
-  <span class="boundary-muted">document</span>
-  <span class="boundary-muted">conversation</span>
-</div>
-
-<div v-click="1" class="chosen-boundary">
-  <small>ONE USER BOUNDARY</small>
-  <div class="boundary-subject"><span>AN</span><b>Andrii</b></div>
-  <div class="boundary-owned">
-    <span>notes</span>
-    <span>events</span>
-    <span>conversation catalog</span>
+<div class="boundary-card-row">
+  <div v-click="1" class="boundary-option-card boundary-user-card">
+    <span class="boundary-option-icon i-carbon-user" aria-hidden="true"></span>
+    <strong>User</strong>
+    <i v-click="6" class="boundary-selected-highlight" aria-hidden="true"></i>
+  </div>
+  <div v-click="2" class="boundary-option-card">
+    <span class="boundary-option-icon i-carbon-chat" aria-hidden="true"></span>
+    <strong>Conversation</strong>
+    <i v-click="6" class="boundary-selected-highlight" aria-hidden="true"></i>
+  </div>
+  <div v-click="3" class="boundary-option-card">
+    <span class="boundary-option-icon i-carbon-document" aria-hidden="true"></span>
+    <strong>Document</strong>
+  </div>
+  <div v-click="4" class="boundary-option-card">
+    <span class="boundary-option-icon i-carbon-workspace" aria-hidden="true"></span>
+    <strong>Workspace</strong>
+  </div>
+  <div v-click="5" class="boundary-option-card">
+    <span class="boundary-option-icon i-carbon-building" aria-hidden="true"></span>
+    <strong>Tenant</strong>
   </div>
 </div>
 
-<div v-click="2" class="boundary-rule">Things that must coordinate synchronously<br><strong>should live together.</strong></div>
-<div v-click="2" class="roommate-joke">Choose your database roommates carefully.</div>
+<div v-click="6" class="boundary-demo-choice">This demo</div>
 
 <!--
-User is this demo's boundary, not a Durable Object requirement. The governing rule is coordination: data and operations that must agree synchronously belong in the same partition.
+Reveal the possible ownership boundaries one at a time, then highlight User and Conversation as the Durable Object boundaries used in this demo. These are alternatives, not a nesting hierarchy.
 
 [Sources]
 - https://developers.cloudflare.com/durable-objects/best-practices/rules-of-durable-objects/
 -->
 
 ---
-class: opening planes-opening
+class: opening world-opening admin-view-opening
 ---
 
-<div class="eyebrow">TWO DATA PLANES</div>
-<h1>Strong inside. <span>Explicit outside.</span></h1>
+<div class="world-stage admin-view-stage">
+  <h1 class="world-slide-title">The <span>Admin</span> View</h1>
+  <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
+  <img class="world-coastlines admin-italy-highlight" src="/italy-highlight.svg?v=1" alt="" aria-hidden="true" />
 
-<div class="planes-local">
-  <small>PARTITION-LOCAL TRUTH</small>
-  <div class="plane-user plane-a"><b>A</b><span>private SQLite</span><em>transactions</em></div>
-  <div class="plane-user plane-b"><b>B</b><span>private SQLite</span><em>transactions</em></div>
-  <div class="plane-user plane-c"><b>C</b><span>private SQLite</span><em>transactions</em></div>
+  <svg class="world-routes admin-view-routes" viewBox="0 0 1280 720" preserveAspectRatio="none" aria-hidden="true">
+    <path class="route-base" d="M365 369 Q510 270 663 341" />
+    <path class="route-flow admin-route-chris" d="M365 369 Q510 270 663 341" />
+    <path class="route-base" d="M704 320 Q682 304 663 341" />
+    <path class="route-flow route-flow-kyiv admin-route-vicky" d="M704 320 Q682 304 663 341" />
+    <path class="route-base" d="M919 492 Q821 294 663 341" />
+    <path class="route-flow route-flow-ubud admin-route-andrii" d="M919 492 Q821 294 663 341" />
+  </svg>
+
+  <div class="world-city world-san-diego">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Chris</span>
+  </div>
+  <div class="world-city world-kyiv">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Vicky</span>
+  </div>
+  <div class="world-city world-ubud">
+    <i class="city-dot" aria-hidden="true"></i>
+    <span>Andrii</span>
+  </div>
+
+  <div class="durable-object durable-san-diego">
+    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+  </div>
+  <div class="durable-object durable-kyiv">
+    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+  </div>
+  <div class="durable-object durable-ubud">
+    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+  </div>
+
+  <div class="admin-vatican-db">
+    <img src="/office-database-white.svg" alt="Database in Vatican City" />
+    <strong>Leo</strong>
+  </div>
 </div>
-
-<div v-click="1" class="projection-path">
-  <div class="event-stream"><span></span><span></span><span></span></div>
-  <div class="queue-block"><small>EVENTS</small><strong>QUEUE</strong></div>
-  <i></i>
-</div>
-
-<div v-click="2" class="planes-global">
-  <small>CROSS-USER VIEW</small>
-  <div class="db-icon db-orange"><span></span><b>D1</b><em>projection</em></div>
-  <strong>admin · reporting · search</strong>
-</div>
-
-<div v-click="3" class="planes-verdict"><span>Within one object: <b>strong coordination</b></span><span>Across objects: <b>eventual projection</b></span></div>
 
 <!--
-An object owns strong coordination only within its own boundary. Cross-user queries are a separate read model, fed explicitly and asynchronously through events.
+Leo needs a cross-user administrative view, so data from the three user boundaries converges on a database in Vatican City.
 
 [Sources]
-- https://developers.cloudflare.com/durable-objects/reference/glossary/
+- worldLow.svg supplied by the user; Antarctica hidden and the United States, Ukraine, and Indonesia highlighted for the presentation.
+- amCharts SVG Map Generator Natural Earth projection (https://dojo.amcharts.com/svg-map-generator/) used to align the city and Vatican coordinates.
+- Office Database icon by Jeremiah, from Icon-Icons (https://icon-icons.com/icon/office-database/103574), recolored white; CC BY 4.0.
+- Cloudflare mark from Simple Icons (https://simpleicons.org/?q=cloudflare); official brand reference: Cloudflare press kit (https://www.cloudflare.com/press/press-kit/).
+-->
+
+---
+class: opening browser-state-opening
+---
+
+<h1>Durable State in <span>Browser</span></h1>
+
+<svg class="browser-state-connection" viewBox="0 0 1280 720" preserveAspectRatio="none" aria-hidden="true">
+  <path class="browser-sync-base" d="M426 379 H854" />
+  <path class="browser-sync-flow browser-sync-flow-out" d="M426 379 H854" />
+  <path class="browser-sync-flow browser-sync-flow-in" d="M854 379 H426" />
+</svg>
+
+<div class="browser-state-flow">
+  <div class="browser-state-endpoint browser-state-cloudflare">
+    <img class="browser-state-logo" src="/cloudflare-mark.svg" alt="Cloudflare" />
+  </div>
+
+  <div class="browser-state-endpoint browser-state-browser">
+    <img class="browser-state-logo browser-state-chrome" src="/chromium-logo.svg?v=green" alt="Chromium" />
+  </div>
+</div>
+
+<!--
+The browser and the Durable Object each have SQLite. The missing piece is bidirectional synchronization; the next slide introduces LiveStore as that layer.
+
+[Sources]
+- Chromium_Logo.svg supplied by the user.
+- Cloudflare mark from Simple Icons (https://simpleicons.org/?q=cloudflare); official brand reference: Cloudflare press kit (https://www.cloudflare.com/press/press-kit/).
 -->
 
 ---
 class: opening livestore-opening
 ---
 
-<div class="eyebrow">THE SECOND LAYER</div>
-<h1>The browser gets SQLite, too.</h1>
+<h1>Welcome <span>LiveStore</span></h1>
 
-<div class="livestore-flow">
-  <div class="live-node browser-node">
-    <small>BROWSER</small>
-    <strong>OPFS SQLite</strong>
-    <span>instant local reads + writes</span>
+<div class="livestore-feature-row">
+  <div v-click="1" class="livestore-feature-card">
+    <span class="livestore-feature-icon i-carbon-data-base" aria-hidden="true"></span>
+    <strong>SQLite in the browser</strong>
+    <small>instant local reads + writes</small>
   </div>
-
-  <div v-click="1" class="live-link sync-link"><i>⇄</i><span>event sync</span></div>
-
-  <div v-click="1" class="live-node log-node">
-    <small>UserSyncBackendDO</small>
-    <strong>Canonical event log</strong>
-    <span>per-user SQLite</span>
+  <div v-click="2" class="livestore-feature-card">
+    <span class="livestore-feature-icon i-carbon-document" aria-hidden="true"></span>
+    <strong>Event log</strong>
+    <small>every change, replayable</small>
   </div>
-
-  <div v-click="2" class="live-link pull-link"><i>⇄</i><span>live pull</span></div>
-
-  <div v-click="2" class="live-node view-node">
-    <small>UserDO</small>
-    <strong>Server-side view</strong>
-    <span>application + agent RPC</span>
+  <div v-click="3" class="livestore-feature-card">
+    <span class="livestore-feature-icon i-carbon-code" aria-hidden="true"></span>
+    <strong>Web Worker runtime</strong>
+    <small>off the UI thread</small>
   </div>
-</div>
-
-<div v-click="3" class="livestore-consequence">
-  <strong>Offline and realtime are additions.</strong>
-  <span>LiveStore does not create the per-user boundary.</span>
+  <div v-click="4" class="livestore-feature-card">
+    <span class="livestore-feature-icon i-carbon-cloud" aria-hidden="true"></span>
+    <strong>Durable Object sync</strong>
+    <small>realtime over WebSocket</small>
+  </div>
 </div>
 
 <!--
-The browser commits events and queries local SQLite. UserSyncBackendDO owns the canonical LiveStore event log; UserDO maintains the server-side view used by application and agent operations.
+LiveStore gives the browser a local OPFS SQLite database, records changes as events, runs its browser-side runtime off the UI thread, and synchronizes with the per-user Durable Object backend over WebSocket.
 
 [Sources]
 - /Users/andrenovax_1/docs/flue-alchemy-demo/README.md
 - /Users/andrenovax_1/docs/flue-alchemy-demo/docs/architecture.md
+-->
+
+---
+class: opening livestore-decisions-opening
+---
+
+<h1>Sync <span>Authority</span></h1>
+
+<div class="sync-authority-options">
+  <div class="sync-authority-option is-selected">
+    <span class="sync-authority-icon i-carbon-cloud" aria-hidden="true"></span>
+    <strong>Durable Object</strong>
+  </div>
+  <div class="sync-authority-option">
+    <span class="sync-authority-icon i-carbon-data-base" aria-hidden="true"></span>
+    <strong>Electric</strong>
+  </div>
+  <div class="sync-authority-option">
+    <span class="sync-authority-icon i-carbon-code" aria-hidden="true"></span>
+    <strong>Custom backend</strong>
+  </div>
+</div>
+
+<!--
+LiveStore needs an authoritative sync backend to order and distribute events. This demo has already selected a Durable Object; Electric and a custom backend remain possible alternatives.
+
+[Sources]
+- /Users/andrenovax_1/docs/flue-alchemy-demo/docs/architecture.md
+- https://docs.livestore.dev/reference/syncing/
+-->
+
+---
+class: opening durable-agent-opening
+---
+
+<h1>Durable <span>Agent</span></h1>
+
+<svg class="durable-agent-connection" viewBox="0 0 1280 720" preserveAspectRatio="none" aria-hidden="true">
+  <path class="durable-agent-base" d="M430 379 H850" />
+  <path class="durable-agent-flow durable-agent-flow-out" d="M430 379 H850" />
+  <path class="durable-agent-flow durable-agent-flow-in" d="M850 379 H430" />
+</svg>
+
+<div class="durable-agent-flow-layout">
+  <div class="durable-agent-endpoint durable-agent-cloudflare">
+    <span class="durable-agent-cloudflare-mark" role="img" aria-label="Cloudflare"></span>
+  </div>
+  <div class="durable-agent-endpoint durable-agent-smith">
+    <img src="/agent-smith-avatar.png" alt="Agent Smith" />
+  </div>
+</div>
+
+<!--
+A durable agent combines an agent identity with state and execution on Cloudflare. The next slide should explain which Flue primitives make that model possible.
+
+[Sources]
+- Agent Smith avatar already supplied for this presentation.
+- Cloudflare mark from Simple Icons (https://simpleicons.org/?q=cloudflare); official brand reference: Cloudflare press kit (https://www.cloudflare.com/press/press-kit/).
 -->
 
 ---
 class: opening demo-opening
 ---
 
-<div class="demo-grid"></div>
-<div class="demo-copy">
-  <div class="eyebrow">ENOUGH BOXES</div>
-  <h1 v-click.hide="1">You have the model.</h1>
-  <h1 v-click="1" class="demo-answer">Now use the app.</h1>
-  <p v-click="1">Sign in · edit offline · reconnect · stream an agent</p>
+<div class="demo-access">
+  <a class="demo-open-link" href="https://do.hell-o.workers.dev/" target="_blank" rel="noopener noreferrer"><strong>DEMO</strong><span class="demo-link-icon i-carbon-arrow-up-right" aria-hidden="true"></span></a>
+  <img class="demo-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&amp;margin=10&amp;format=svg&amp;data=https%3A%2F%2Fdo.hell-o.workers.dev%2F" alt="QR code for the Durable Objects demo" />
 </div>
 
-<div v-click="1" class="demo-launch"><span>LIVE DEMO</span><i>→</i></div>
-
 <!--
-Switch to the running application immediately. Keep this transition short.
--->
-
----
-class: opening demo-recap-opening
----
-
-<div class="eyebrow">WHAT JUST HAPPENED</div>
-<h1>The edit was local.<br><span>Everything else caught up.</span></h1>
-
-<div class="demo-recap-flow">
-  <div v-click="1" class="demo-recap-step recap-local">
-    <small>01 · EDIT</small>
-    <strong>Browser SQLite</strong>
-    <span>instant local commit</span>
-  </div>
-
-  <div v-click="2" class="demo-recap-arrow"><i></i><span>reconnect</span></div>
-
-  <div v-click="2" class="demo-recap-step recap-sync">
-    <small>02 · SYNC</small>
-    <strong>Per-user event log</strong>
-    <span>converge with the server</span>
-  </div>
-
-  <div v-click="3" class="demo-recap-arrow"><i></i><span>tool calls</span></div>
-
-  <div v-click="3" class="demo-recap-step recap-agent">
-    <small>03 · ACT</small>
-    <strong>Streaming agent</strong>
-    <span>read and rewrite the same note</span>
-  </div>
-
-  <div v-click="4" class="demo-recap-arrow"><i></i><span>events</span></div>
-
-  <div v-click="4" class="demo-recap-step recap-global">
-    <small>04 · PROJECT</small>
-    <strong>Global read model</strong>
-    <span>cross-user queries catch up</span>
-  </div>
-</div>
-
-<div v-click="5" class="demo-recap-close"><span>One experience.</span><strong>Four deliberately different jobs.</strong><i>→</i></div>
-
-<!--
-Return to this slide after the live demo. Click through the four observed behaviors, then use the final arrow to begin the architecture walkthrough: “Now let's follow one edit through the system.”
+Click once to reveal the link, then open the application in a new browser tab so Google OAuth runs in a top-level browsing context.
 
 [Sources]
-- /Users/andrenovax_1/docs/flue-alchemy-demo/README.md
-- /Users/andrenovax_1/docs/flue-alchemy-demo/docs/architecture.md
+- https://do.hell-o.workers.dev/
+- QR code generated by QR Server (https://goqr.me/api/).
 -->
 
 ---
@@ -512,8 +390,7 @@ class: opening trace-opening trace-first-request
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 01</div>
-<h1>The first request needs no application code.</h1>
-<p class="trace-subtitle">One URL becomes static assets, then an executing React app in Ubud.</p>
+<h1>Load the App</h1>
 
 <ArchitectureCanvas canvas="first-request" />
 
@@ -609,8 +486,7 @@ class: opening trace-opening trace-authentication
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 02</div>
-<h1>Authentication crosses one public boundary.</h1>
-<p class="trace-subtitle">The gateway routes identity privately, then returns a token to the React app.</p>
+<h1>Sign In</h1>
 
 <ArchitectureCanvas canvas="authentication" />
 
@@ -854,8 +730,7 @@ class: opening trace-opening trace-initial-sync
 ---
 
 <div class="trace-section">INITIAL SYNC · 03</div>
-<h1>Canonical events hydrate a personal database.</h1>
-<p class="trace-subtitle">Resolve the user’s store address, then replay its events into browser-local SQLite.</p>
+<h1>Sync User Data</h1>
 
 <ArchitectureCanvas canvas="initial-sync" />
 
@@ -907,8 +782,7 @@ class: opening trace-opening trace-note-edit
 ---
 
 <div class="trace-section">EDIT A NOTE · 04</div>
-<h1>A personal store turns one edit into a durable event.</h1>
-<p class="trace-subtitle">Follow one local commit from the browser replica into durable history and the server replica.</p>
+<h1>Edit a Note</h1>
 
 <ArchitectureCanvas canvas="note-edit" />
 
@@ -1060,8 +934,7 @@ class: opening trace-opening trace-agent
 ---
 
 <div class="trace-section">AGENT REQUEST · 05</div>
-<h1>The agent joins the same ownership boundary.</h1>
-<p class="trace-subtitle">Trace one message from Ubud through trusted admission, durable conversation state, inference, and note tools.</p>
+<h1>Ask the Agent</h1>
 
 <ArchitectureCanvas canvas="agent-request" />
 
@@ -1099,8 +972,7 @@ class: opening trace-opening trace-projection
 ---
 
 <div class="trace-section">FOLLOW THE REQUEST · 06</div>
-<h1>Accepted events become a global read model.</h1>
-<p class="trace-subtitle">The request path is finished. Projection catches up asynchronously and can be rebuilt.</p>
+<h1>Update Admin View</h1>
 
 <ArchitectureCanvas canvas="projection" />
 
