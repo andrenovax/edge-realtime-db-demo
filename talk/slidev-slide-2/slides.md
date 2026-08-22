@@ -28,11 +28,15 @@ Let the title and map settle before advancing.
 -->
 
 ---
-class: opening world-opening
+class: opening world-opening single-db-opening
 ---
 
 <div class="world-stage">
-  <h1 class="world-slide-title">Single Database <span>Tax</span></h1>
+  <div class="single-db-heading">
+    <div class="single-db-problem">THE PROBLEM</div>
+    <h1 class="world-slide-title">Single database feels <span>slow</span></h1>
+    <p class="single-db-subtitle">and has availability, scaling and blast radius issues</p>
+  </div>
   <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
   <img class="world-coastlines world-germany-highlight" src="/germany-highlight.svg?v=1" alt="" aria-hidden="true" />
 
@@ -65,7 +69,7 @@ class: opening world-opening
 </div>
 
 <!--
-The users are distributed; the database still has one physical home.
+The users are distributed; the database still has one physical home in Germany.
 
 [Sources]
 - worldLow.svg supplied by the user; Antarctica hidden and the United States, Ukraine, and Indonesia highlighted for the presentation.
@@ -425,55 +429,6 @@ Click once to reveal the link, then open the application in a new browser tab so
 -->
 
 ---
-class: opening trace-opening trace-first-request
----
-
-<div class="trace-section">FOLLOW THE REQUEST · 01</div>
-<h1>Load the App</h1>
-
-<ArchitectureCanvas canvas="first-request" />
-
-<div class="trace-runtime-note">* actual request colo depends on Anycast routing · verify with cf-ray</div>
-
-<div class="trace-canvas">
-  <div class="trace-lane trace-browser-lane">
-    <small class="trace-lane-label">UBUD · BROWSER</small>
-    <div class="trace-node node-browser active"><b>Browser</b><span>opens do.hello-o.workers.com</span><em>Ubud</em></div>
-  </div>
-  <div class="trace-lane trace-edge-lane">
-    <small class="trace-lane-label">CLOUDFLARE REQUEST EDGE</small>
-    <div class="trace-node node-assets active"><b>Static assets</b><span>index.html · JS · CSS</span><em>observed ingress: SIN</em></div>
-    <div class="trace-node node-worker dim"><b>Gateway Worker</b><span>/api/* only</span></div>
-  </div>
-  <div class="trace-lane trace-user-state-lane"><small class="trace-lane-label">PER-USER STATE</small></div>
-  <div class="trace-lane trace-shared-lane"><small class="trace-lane-label">SHARED STATE</small></div>
-  <div class="trace-path"><span>Browser</span><i>HTTPS</i><span>edge asset layer</span><strong>SPA downloaded</strong></div>
-</div>
-
-<div class="trace-code">
-  <small>DEPLOYMENT RECEIPT · infra/alchemy.run.ts</small>
-  <pre><code>Cloudflare.Website.Vite("gateway", {
-  rootDir: "../src/web/user",
-  main: "gateway.worker.ts",
-  assets: { runWorkerFirst: ["/api/*"], notFoundHandling: "single-page-application" },
-})</code></pre>
-</div>
-
-<div class="trace-footer"><a href="https://developers.cloudflare.com/workers/static-assets/routing/worker-script/">docs · asset routing ↗</a></div>
-
-<!--
-Click 1: the Ubud browser requests do.hello-o.workers.com; reveal the asset connection and its deployment receipt together. Click 2: dismiss that receipt, dim the browser shell, and follow download + execute into the React SPA while revealing the React bootstrap receipt. Better Auth is intentionally not introduced yet.
-
-The first request does not execute gateway.worker.ts. Cloudflare's asset layer serves the SPA because only /api/* is configured worker-first. Cloudflare currently lists a Denpasar location; the asterisk is important because Anycast routing can still select another colo. Confirm the actual venue path from the response's cf-ray header.
-
-[Sources]
-- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/alchemy.run.ts#L152
-- https://developers.cloudflare.com/workers/static-assets/routing/worker-script/
-- https://developers.cloudflare.com/workers/static-assets/binding/
-- https://www.cloudflare.com/network/
--->
-
----
 class: opening trace-opening trace-browser-app
 hide: true
 ---
@@ -524,7 +479,7 @@ Separate three similarly named things: React runs on the page; LiveStore uses a 
 class: opening trace-opening trace-authentication
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 02</div>
+<div class="trace-section">THE CODE · 01</div>
 <h1>Sign In</h1>
 
 <ArchitectureCanvas canvas="authentication" />
@@ -559,13 +514,12 @@ class: opening trace-opening trace-authentication
 <div class="trace-footer"><a href="https://better-auth.com/docs/plugins/jwt">docs · Better Auth JWT ↗</a></div>
 
 <!--
-Click 1: React and the Better Auth client POST to the public gateway while the client configuration receipt appears. Click 2: replace that receipt with the gateway routing receipt as the gateway forwards the request to Auth Worker over its preconfigured service binding. Click 3: replace it with the Auth Worker database receipt as Auth Worker queries Auth D1, without detouring through Google OAuth. Click 4: clear the path and leave the React SPA holding the JWT token. Click 5: send any non-auth request back through the gateway and reveal forwardAsUser once, in full. It verifies the JWT, deletes caller-supplied identity headers, stamps trusted identity, and forwards to whichever private Worker the route selected. Later sections only show route-specific calls to this shared boundary.
+On arrival, show only the empty, dim topology. Click 1: activate the Better Auth client, Gateway Worker, Auth Worker, and Auth D1, then draw the complete authentication request path. The gateway exits near its top-right, runs horizontally, and drops into the top of Auth Worker. Click 2: replace the solid request path with the dashed return route from Auth D1 through Auth Worker and Gateway Worker to the React SPA, reusing the same upper elbow in reverse; React now holds the JWT token.
 
 The same hostname serves assets and APIs. The /api/auth path activates the gateway Worker, while Auth remains private behind a service binding. This canvas deliberately skips the provider-specific OAuth redirect so the audience can hold onto the application boundary.
 
 [Sources]
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/gateway.worker.ts#L55
-- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/gateway.worker.ts#L28
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/auth/auth.worker.ts#L22
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/alchemy.run.ts#L174
 - https://better-auth.com/docs/plugins/jwt
@@ -768,39 +722,21 @@ The User Worker derives identity but does not instantiate or query UserDO here. 
 class: opening trace-opening trace-initial-sync
 ---
 
-<div class="trace-section">INITIAL SYNC · 03</div>
+<div class="trace-section">THE CODE · 02</div>
 <h1>Sync User Data</h1>
 
 <ArchitectureCanvas canvas="initial-sync" />
 
 <!--
-Click 1: activate only UserSyncBackendDO. Reveal the synced event contract beside the protocol-owned Durable Object implementation. The canonical source of truth is an event log; the notes table does not live here.
+Click 1: activate and distinctly highlight OPFS SQLite in green while keeping the LiveStore Web Worker inactive and disconnected. Reveal the browser replica contract: the notes table and SQLite materializers.
 
-Click 2: disable UserSyncBackendDO. Activate only the LiveStore Web Worker and OPFS SQLite. Replace the event-log receipt with the browser replica contract: the notes table and SQLite materializers.
+Click 2: reactivate and distinctly highlight the LiveStore Web Worker and its OPFS SQLite connection, label that connection “realtime sync,” replace the schema panels with the enlarged Realtime sync panel positioned below the Denpasar heading, and leave the rest of the topology inactive.
 
-Click 3: activate React while keeping the LiveStore Web Worker and OPFS SQLite active. Replace the schema panels with StoreRegistry, the persisted OPFS adapter, and StoreRegistryProvider. No schema code remains on this step.
+Click 3: activate and distinctly highlight React SPA in green while keeping the LiveStore Web Worker and OPFS SQLite active. Replace the worker configuration with three enlarged panels positioned below Denpasar: StoreRegistryProvider, useStore, and useQuery. No schema code remains on this step.
 
-Click 4: keep UserDO and User Worker inactive. Reveal only React SPA → Gateway Worker for /api/data viewer(), together with the provider’s useSuspenseQuery receipt.
+Click 4: reveal the complete outbound sync path at once: LiveStore Web Worker → Gateway Worker → LiveStore Worker → UserSyncBackendDO. Route the Gateway request across the top and down into LiveStore Worker. Highlight LiveStore Worker and its code panel in blue, highlight UserSyncBackendDO and its code panel in orange, and position the enlarged implementation panels just below the architecture columns.
 
-Click 5: keep the React → Gateway connection visible, hide the provider receipt, then extend the request Gateway Worker → User Worker. Reveal only the gateway’s USER forwarding branch.
-
-Click 6: hide both request connections. Start the response with only User Worker → Gateway Worker. Reveal the deterministic storeId construction beside UserApi.viewer().
-
-Click 7: keep the first response connection, hide the User Worker code, then add Gateway Worker → React SPA. Show no code; this step only makes the public response path explicit. Workers never address React directly.
-
-Click 8: disable the User Worker. Start sync with only LiveStore Web Worker → Gateway Worker. Show useCurrentUserLiveStore consuming viewer.data.storeId, useNotesModel querying that personal store, and the store’s makeWsSync connection.
-
-Click 9: keep the first connection, hide its code, then add Gateway Worker → LiveStore Worker. Reveal only the gateway’s trusted sync route.
-
-Click 10: keep both earlier request connections, hide the gateway code, then add LiveStore Worker → UserSyncBackendDO. Activate per-user state and reveal the complete handleSyncRequest receipt: canonical backend selection plus the ownership check.
-
-Click 11: hide all sync-request connections. Start the return path with only UserSyncBackendDO → LiveStore Worker. Show no code; the server setup was already explained on the preceding request step.
-
-Click 12: keep the first return connection, then add LiveStore Worker → Gateway Worker. Show no code; continue tracing the response.
-
-Click 13: keep the earlier return connections, then add Gateway Worker → LiveStore Web Worker. Show no code; this step only traces the WebSocket response through the public boundary.
-
-Click 14: keep the return chain, hide the gateway code, then add LiveStore Web Worker → OPFS SQLite. Show no code; the final hop completes hydration. UserDO remains inactive because initial browser sync does not pass through it.
+Click 5: hide all sync-request connections and reveal the complete return chain at once: UserSyncBackendDO → LiveStore Worker → Gateway Worker → LiveStore Web Worker → OPFS SQLite. Show no code; the final hop completes hydration. UserDO remains inactive because initial browser sync does not pass through it.
 
 [Sources]
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L8
@@ -820,7 +756,7 @@ Click 14: keep the return chain, hide the gateway code, then add LiveStore Web W
 class: opening trace-opening trace-note-edit
 ---
 
-<div class="trace-section">EDIT A NOTE · 04</div>
+<div class="trace-section">THE CODE · 03</div>
 <h1>Edit a Note</h1>
 
 <ArchitectureCanvas canvas="note-edit" />
@@ -853,9 +789,13 @@ class: opening trace-opening trace-note-edit
 <div class="trace-footer"><a href="https://livestore.dev/">docs · LiveStore ↗</a></div>
 
 <!--
-Click 1: React commits NoteUpdated or NoteCreated to the LiveStore Web Worker and reveal the complete saveNote branch. Click 2: replace the receipt with the materializer that updates OPFS SQLite; the edit is already locally durable and queryable. Click 3: replace it with the WebSocket sync configuration as the LiveStore worker sends /api/sync to the gateway. Click 4: replace it with the gateway route that verifies the JWT, stamps trusted identity, and forwards to the private LiveStore Worker. Click 5: replace it with the ownership check as LiveStore routes the event to UserSyncBackendDO’s canonical log. Click 6: replace it with UserDO’s live-pull configuration as an already-active server materialized view catches up. Click 7: clear the outbound trace and show one complete broadcast to another connected browser replica: UserSyncBackendDO → LiveStore Worker → Gateway Worker → LiveStore Web Worker → OPFS SQLite. Do not repeat the preceding request steps.
+Click 1: distinctly highlight React SPA in green as it commits NoteUpdated or NoteCreated to the LiveStore Web Worker, materializes it into OPFS SQLite, and reveals the complete saveNote branch. Draw both browser-local arrows down the left side of the cards with their labels.
 
-Do not describe the local edit as an optimistic cache. UserSyncBackendDO owns canonical event history. UserDO only participates here if server-side application or agent work has already initialized its materialized replica; it is not required for browser sync.
+Click 2: reveal the complete outbound sync: LiveStore Web Worker → Gateway Worker → LiveStore Worker → UserSyncBackendDO. Keep UserDO inactive, draw no UserSyncBackendDO → UserDO connection, and show no UserDO code panel.
+
+Click 3: clear the outbound trace and show one complete broadcast to another connected browser replica: UserSyncBackendDO → LiveStore Worker → Gateway Worker → LiveStore Web Worker → OPFS SQLite. Route the final browser-local arrow down the left side. Do not repeat the preceding request steps.
+
+Do not describe the local edit as an optimistic cache. UserSyncBackendDO owns canonical event history. UserDO remains outside this browser-sync path.
 
 [Sources]
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/providers/livestore-provider.tsx#L16
@@ -865,7 +805,6 @@ Do not describe the local edit as an optimistic cache. UserSyncBackendDO owns ca
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/lib/livestore.worker.ts#L8
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/gateway.worker.ts#L59
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/livestore.worker.ts#L25
-- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L46
 - https://livestore.dev/
 - https://www.cloudflare.com/network/
 -->
@@ -972,7 +911,7 @@ These databases do not compete as sources of truth. UserSyncBackendDO owns the c
 class: opening trace-opening trace-agent
 ---
 
-<div class="trace-section">AGENT REQUEST · 05</div>
+<div class="trace-section">THE CODE · 04</div>
 <h1>Ask the Agent</h1>
 
 <ArchitectureCanvas canvas="agent-request" />
@@ -980,19 +919,19 @@ class: opening trace-opening trace-agent
 <div class="trace-footer"><a href="https://flueframework.com/blog/flue-2/">docs · Flue 2.0 ↗</a></div>
 
 <!--
-Click 1: the React app creates an authenticated Flue client, adapts Flue history/status/send/abort into assistant-ui’s external-store runtime, and sends a message to the public agents route.
+Click 1: activate and distinctly highlight only the React SPA in green. Show the enlarged useFlueAgent and sync with assistant-ui panels below Denpasar. Keep Gateway Worker inactive, draw no React → Gateway connection, and do not show the POST route label yet.
 
-Click 2: highlight only Gateway Worker → Agent Worker. The route calls the shared forwardAsUser boundary already explained in Authentication; do not repeat its implementation here.
+Click 2: extend the request from React through Gateway Worker to Agent Worker and distinctly highlight Agent Worker in blue. Route Gateway → Agent across the upper edge lane and then down into the top of Agent Worker. Add the POST /api/agents/hello/:conversationId label above the React → Gateway arrow. Show the enlarged agent router panel below the Per-User State heading. Keep UserDO inactive and show no Agent Worker → UserDO connection.
 
-Click 3: Agent Worker opens UserDO to validate that the conversation belongs to this user, or that this POST may create it.
+Click 3: extend the request through the Flue conversation DO and distinctly highlight it in orange. Merge the exported agent and system-prompt snippets into one enlarged useAgent panel, right-aligned below Shared State. Keep Workers AI inactive and draw no Flue conversation DO → Workers AI connection yet.
 
-Click 4: highlight only Agent Worker → Flue conversation DO. The middleware passes the validated userId and conversationId as server-owned creation context, then createAgentRouter durably admits the message. After a successful first admission, Agent Worker creates the note and conversation catalog entry in UserDO. The request-rewrite helper is intentionally omitted because it does not change the ownership model.
+Click 4: copy the preceding topology without its code panels, preserving the corrected top-down Gateway → Agent route. Activate and distinctly highlight Workers AI in purple, route Flue → Workers AI across the top and down into the card, and show the model response returning to the Flue conversation DO.
 
-Click 5: the Flue conversation DO runs Hello with its persisted server context, registered tools, and Workers AI model.
+Click 5: distinctly highlight the Flue conversation DO in orange. A model-selected read_note or write_note tool uses the closed-over userId and noteId to activate and reach only that user’s UserDO. Merge both implementations into one enlarged Tools panel below Denpasar. Deactivate Workers AI, Agent Worker, Gateway Worker, and React SPA so the tool boundary is isolated.
 
-Click 6: a model-selected read_note or write_note tool uses the closed-over userId and noteId to reach only that user’s UserDO.
+Click 6 copies the isolated tool boundary, distinctly highlights UserDO in orange, removes the outbound Flue conversation DO → UserDO arrow, and draws only the UserDO → Flue conversation DO return arrow. Move the enlarged UserDO implementation panels below Denpasar and title them Materialize UserSyncBackendDO and RPC.
 
-Clicks 1–6 highlight one hop at a time; completed connectors disappear before the next hop so no routes share or cross a visible segment. Click 7 clears the outbound trace and draws the return chain on separate lanes. Read the numbered responsibilities on the active cards and in the return strip: tool result, model resume, Agent Worker stream, Gateway proxy, React render.
+Click 7 clears the UserDO implementation panels and draws the complete application return chain on separate lanes. Reverse the corrected Agent → Gateway geometry: leave Agent Worker from the top, travel upward, then point left into Gateway Worker. Read the numbered responsibilities on the active cards: tool result, model resume, Agent Worker stream, Gateway proxy, React render.
 
 The model never supplies userId or noteId. The conversation DO and UserDO are separate top-level objects; regional proximity is best effort, not guaranteed co-location.
 
@@ -1002,6 +941,7 @@ The model never supplies userId or noteId. The conversation DO and UserDO are se
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agent.worker.ts#L60
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agents/hello.agent.ts#L14
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/tools/notes.tool.ts#L8
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L30
 - https://flueframework.com/blog/flue-2/
 - https://www.cloudflare.com/network/
 -->
@@ -1010,7 +950,7 @@ The model never supplies userId or noteId. The conversation DO and UserDO are se
 class: opening trace-opening trace-projection
 ---
 
-<div class="trace-section">FOLLOW THE REQUEST · 06</div>
+<div class="trace-section">THE CODE · 05</div>
 <h1>Update Admin View</h1>
 
 <ArchitectureCanvas canvas="projection" />
@@ -1047,13 +987,7 @@ setWhere: excluded.seq_num &gt; current.seq_num</code></pre></div>
 <div class="trace-footer"><a href="https://developers.cloudflare.com/queues/">docs · Queues ↗</a></div>
 
 <!--
-Click 1: activate only UserSyncBackendDO and Projection Queue. After LiveStore validates the push, onPush packages the batch; queue failure aborts the append, so rejected pushes publish nothing. The browser request path is already complete.
-
-Click 2: hide the producer hop, then activate Projection Queue → Admin Worker. The queue consumer is wired in the deployment graph with a dead-letter queue. Delivery is at least once and may be retried.
-
-Click 3: hide the delivery hop, then activate Admin Worker → Admin D1. Show both idempotency rules: the event log ignores duplicate event IDs, while table-shaped snapshots only accept a newer source sequence number.
-
-Click 4: remove the connectors and leave the four active cards numbered 1–4. Read the bottom strip left-to-right as the summary. Keep the Ubud browser dim: projection is deliberately off its request path.
+Click 1: activate UserSyncBackendDO, Projection Queue, Admin Worker, and Admin D1 together, and distinctly highlight UserSyncBackendDO in orange. Show the complete projection path at once: accepted events enqueue into the projection queue, the queue delivers to the Admin Worker with retries, and the consumer folds idempotently into Admin D1. Keep all three arrows spatially separate. Move the enlarged producer panel slightly upward below the columns and title it Publish livestore events to queue. Keep the Ubud browser dim: projection is deliberately off its request path.
 
 Keep the two D1 databases visibly separate: Auth D1 owns identity; Admin D1 owns eventual cross-user projections. The Denpasar label describes the request-edge example used throughout the walkthrough; the queue consumer and Durable Object are placed independently and should not be claimed to run in that colo without instrumentation.
 
