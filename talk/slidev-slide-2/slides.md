@@ -28,14 +28,23 @@ Let the title and map settle before advancing.
 -->
 
 ---
+class: opening disclaimer-opening
+---
+
+<div class="disclaimer-copy">
+  <h1>DISCLAIMER</h1>
+  <p>The problems described here might look subjective, the ideas overthought, and the solutions experimental.<br />The implementation is AI-generated; the architecture — and this text — are not. Feel free to ask, critique, and suggest anything.</p>
+</div>
+
+---
 class: opening world-opening single-db-opening
 ---
 
 <div class="world-stage">
-  <div class="single-db-heading">
-    <div class="single-db-problem">THE PROBLEM</div>
+  <div class="opening-heading">
+    <div class="opening-tag">THE PROBLEM</div>
     <h1 class="world-slide-title">Single database feels <span>slow</span></h1>
-    <p class="single-db-subtitle">and has availability, scaling and blast radius issues</p>
+    <p class="opening-subtitle">and has availability, scaling and blast radius issues</p>
   </div>
   <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
   <img class="world-coastlines world-germany-highlight" src="/germany-highlight.svg?v=1" alt="" aria-hidden="true" />
@@ -63,8 +72,8 @@ class: opening world-opening single-db-opening
   </div>
 
   <div class="world-db world-berlin">
-    <img class="database-icon" src="/office-database-white.svg" alt="Database" />
     <small>Berlin</small>
+    <img class="database-icon" src="/office-database-white.svg" alt="Database" />
   </div>
 </div>
 
@@ -82,30 +91,23 @@ class: opening world-opening fleet-world-opening
 ---
 
 <div class="world-stage database-fleet-stage">
-  <h1 class="world-slide-title">Edge Database <span>Fleet</span></h1>
+  <div class="opening-heading">
+    <div class="opening-tag">THE IDEA</div>
+    <h1 class="world-slide-title">Split the database</h1>
+  </div>
   <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
 
   <div class="world-city world-san-diego">
     <i class="city-dot" aria-hidden="true"></i>
-    <span>Chris</span>
+    <span><b>Chris</b><img class="map-user-database" src="/office-database-white.svg" alt="Database" /></span>
   </div>
   <div class="world-city world-kyiv">
     <i class="city-dot" aria-hidden="true"></i>
-    <span>Vicky</span>
+    <span><b>Vicky</b><img class="map-user-database" src="/office-database-white.svg" alt="Database" /></span>
   </div>
   <div class="world-city world-ubud">
     <i class="city-dot" aria-hidden="true"></i>
-    <span>Andrii</span>
-  </div>
-
-  <div class="durable-object durable-san-diego">
-    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
-  </div>
-  <div class="durable-object durable-kyiv">
-    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
-  </div>
-  <div class="durable-object durable-ubud">
-    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+    <span><b>Andrii</b><img class="map-user-database" src="/office-database-white.svg" alt="Database" /></span>
   </div>
 </div>
 
@@ -114,77 +116,47 @@ Each user now has a nearby stateful compute and storage boundary instead of shar
 
 [Sources]
 - worldLow.svg supplied by the user; Antarctica hidden and the United States, Ukraine, and Indonesia highlighted for the presentation.
-- Cloudflare mark from Simple Icons (https://simpleicons.org/?q=cloudflare); official brand reference: Cloudflare press kit (https://www.cloudflare.com/press/press-kit/).
--->
-
----
-class: opening do-definition-opening
----
-
-<h1><span>Durable Object</span><em>Stateful Worker</em></h1>
-
-<div class="do-feature-row">
-  <div v-click="1" class="do-feature-card">
-    <span class="do-feature-icon i-carbon-data-base" aria-hidden="true"></span>
-    <strong>SQLite</strong>
-  </div>
-  <div v-click="2" class="do-feature-card">
-    <span class="do-feature-icon i-carbon-code" aria-hidden="true"></span>
-    <strong>single-threaded</strong>
-  </div>
-  <div v-click="3" class="do-feature-card">
-    <span class="do-feature-icon i-carbon-location" aria-hidden="true"></span>
-    <strong>created near first request</strong>
-  </div>
-  <div v-click="4" class="do-feature-card do-feature-address">
-    <span class="do-feature-icon i-carbon-tag" aria-hidden="true"></span>
-    <strong>addressable by id</strong>
-  </div>
-</div>
-
-<!--
-Reveal one property at a time: SQLite storage, single-threaded execution, first-request placement, and stable addressability by ID.
-
-[Sources]
-- https://developers.cloudflare.com/durable-objects/concepts/what-are-durable-objects/
-- https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/
+- Office Database icon by Jeremiah, from Icon-Icons (https://icon-icons.com/icon/office-database/103574), recolored white; CC BY 4.0.
 -->
 
 ---
 class: opening partition-boundary-opening
 ---
 
-<h1>The <span>Boundary</span></h1>
+<div class="opening-heading">
+  <div class="opening-tag">THE CHALLENGE</div>
+  <h1 class="world-slide-title">How to split?</h1>
+</div>
 
 <div class="boundary-card-row">
-  <div v-click="1" class="boundary-option-card boundary-user-card">
+  <div class="boundary-option-card boundary-user-card">
     <span class="boundary-option-icon i-carbon-user" aria-hidden="true"></span>
     <strong>User</strong>
-    <i v-click="6" class="boundary-selected-highlight" aria-hidden="true"></i>
+    <i v-click="1" class="boundary-selected-highlight" aria-hidden="true"></i>
   </div>
-  <div v-click="2" class="boundary-option-card">
+  <div class="boundary-option-card">
     <span class="boundary-option-icon i-carbon-chat" aria-hidden="true"></span>
     <strong>Conversation</strong>
-    <i v-click="6" class="boundary-selected-highlight" aria-hidden="true"></i>
+    <i v-click="1" class="boundary-selected-highlight" aria-hidden="true"></i>
   </div>
-  <div v-click="3" class="boundary-option-card">
+  <div class="boundary-option-card">
     <span class="boundary-option-icon i-carbon-document" aria-hidden="true"></span>
     <strong>Document</strong>
   </div>
-  <div v-click="4" class="boundary-option-card">
+  <div class="boundary-option-card">
     <span class="boundary-option-icon i-carbon-workspace" aria-hidden="true"></span>
     <strong>Workspace</strong>
   </div>
-  <div v-click="5" class="boundary-option-card">
+  <div class="boundary-option-card">
     <span class="boundary-option-icon i-carbon-building" aria-hidden="true"></span>
     <strong>Tenant</strong>
   </div>
 </div>
 
-<div v-click="6" class="boundary-demo-choice">This demo</div>
+<div v-click="1" class="boundary-demo-choice">This demo</div>
 
 <!--
-Reveal the possible ownership boundaries one at a time, then highlight User and Conversation as the Durable Object boundaries used in this demo. These are alternatives, not a nesting hierarchy.
+Show all possible ownership boundaries immediately, then highlight User and Conversation on the first click as the Durable Object boundaries used in this demo. These are alternatives, not a nesting hierarchy.
 
 [Sources]
 - https://developers.cloudflare.com/durable-objects/best-practices/rules-of-durable-objects/
@@ -195,10 +167,12 @@ class: opening world-opening admin-view-opening
 ---
 
 <div class="world-stage admin-view-stage">
-  <h1 class="world-slide-title">The <span>Admin</span> View</h1>
+  <div class="opening-heading">
+    <div class="opening-tag">THE CHALLENGE</div>
+    <h1 class="world-slide-title">How to do crossuser analytics?</h1>
+    <p class="opening-subtitle">Project the data into a single database at the admin's location</p>
+  </div>
   <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
-  <img class="world-coastlines admin-italy-highlight" src="/italy-highlight.svg?v=1" alt="" aria-hidden="true" />
-
   <svg class="world-routes admin-view-routes" viewBox="0 0 1280 720" preserveAspectRatio="none" aria-hidden="true">
     <path class="route-base" d="M365 369 Q510 270 663 341" />
     <path class="route-flow admin-route-chris" d="M365 369 Q510 270 663 341" />
@@ -210,30 +184,20 @@ class: opening world-opening admin-view-opening
 
   <div class="world-city world-san-diego">
     <i class="city-dot" aria-hidden="true"></i>
-    <span>Chris</span>
+    <span><b>Chris</b><img class="map-user-database" src="/office-database-white.svg" alt="Database" /></span>
   </div>
   <div class="world-city world-kyiv">
     <i class="city-dot" aria-hidden="true"></i>
-    <span>Vicky</span>
+    <span><b>Vicky</b><img class="map-user-database" src="/office-database-white.svg" alt="Database" /></span>
   </div>
   <div class="world-city world-ubud">
     <i class="city-dot" aria-hidden="true"></i>
-    <span>Andrii</span>
-  </div>
-
-  <div class="durable-object durable-san-diego">
-    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
-  </div>
-  <div class="durable-object durable-kyiv">
-    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
-  </div>
-  <div class="durable-object durable-ubud">
-    <img src="/cloudflare-mark.svg" alt="Cloudflare" />
+    <span><b>Andrii</b><img class="map-user-database" src="/office-database-white.svg" alt="Database" /></span>
   </div>
 
   <div class="admin-vatican-db">
-    <img src="/office-database-white.svg" alt="Database in Vatican City" />
     <strong>Leo</strong>
+    <i class="admin-vatican-db-icon" role="img" aria-label="Database in Vatican City"></i>
   </div>
 </div>
 
@@ -244,14 +208,91 @@ Leo needs a cross-user administrative view, so data from the three user boundari
 - worldLow.svg supplied by the user; Antarctica hidden and the United States, Ukraine, and Indonesia highlighted for the presentation.
 - amCharts SVG Map Generator Natural Earth projection (https://dojo.amcharts.com/svg-map-generator/) used to align the city and Vatican coordinates.
 - Office Database icon by Jeremiah, from Icon-Icons (https://icon-icons.com/icon/office-database/103574), recolored white; CC BY 4.0.
-- Cloudflare mark from Simple Icons (https://simpleicons.org/?q=cloudflare); official brand reference: Cloudflare press kit (https://www.cloudflare.com/press/press-kit/).
+-->
+
+---
+class: opening do-definition-opening
+---
+
+<div class="solution-product-tag">THE SOLUTION</div>
+<h1 class="solution-product-heading"><span>Durable Object</span><em>stateful worker</em></h1>
+
+<div class="do-feature-row">
+  <div v-click="1" class="do-feature-card">
+    <span class="do-feature-icon i-carbon-data-base" aria-hidden="true"></span>
+    <strong>SQLite</strong>
+    <div v-click="2" class="do-feature-tags">
+      <span class="do-feature-tag">kv</span>
+      <span class="do-feature-tag">sql</span>
+    </div>
+  </div>
+  <div v-click="3" class="do-feature-card">
+    <span class="do-feature-icon i-carbon-code" aria-hidden="true"></span>
+    <strong>single-threaded</strong>
+  </div>
+  <div v-click="4" class="do-feature-card">
+    <span class="do-feature-icon i-carbon-location" aria-hidden="true"></span>
+    <strong>created near first request</strong>
+  </div>
+  <div v-click="5" class="do-feature-card do-feature-address">
+    <span class="do-feature-icon i-carbon-tag" aria-hidden="true"></span>
+    <strong>addressable by id</strong>
+  </div>
+  <div v-click="6" class="do-feature-card">
+    <span class="do-feature-icon i-carbon-data-connected" aria-hidden="true"></span>
+    <strong>websockets</strong>
+  </div>
+</div>
+
+<!--
+Reveal SQLite storage first, then show its KV and SQL interfaces; KV data is backed by the hidden SQLite table `__cf_kv`. Continue with single-threaded execution, first-request placement, stable addressability by ID, and WebSocket connection coordination. The Hibernation WebSocket API keeps clients connected while the object sleeps.
+
+[Sources]
+- https://developers.cloudflare.com/durable-objects/concepts/what-are-durable-objects/
+- https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/
+- https://developers.cloudflare.com/durable-objects/best-practices/websockets/
+-->
+
+---
+class: opening server-state-problem-opening
+---
+
+<div class="opening-heading">
+  <div class="opening-tag">THE PROBLEM</div>
+  <h1 class="world-slide-title">Managing server state in React is <span>hard</span></h1>
+</div>
+
+<div class="server-state-panel-row">
+  <div v-click="1" class="server-state-panel">
+    <strong>Cache management</strong>
+    <p>Invalidation, optimistic updates, query state</p>
+  </div>
+  <div v-click="2" class="server-state-panel">
+    <strong>Real-time sync</strong>
+    <p>Connections, reconnections, SSE, polling</p>
+  </div>
+  <div v-click="3" class="server-state-panel">
+    <strong>Async UI</strong>
+    <p>Loading states, spinners, Suspense</p>
+  </div>
+  <div v-click="4" class="server-state-panel">
+    <strong>Failure recovery</strong>
+    <p>Errors, retries, backoff, offline states</p>
+  </div>
+</div>
+
+<!--
+Reveal the four categories one at a time to show why synchronizing server state with a React UI becomes a substantial application concern.
 -->
 
 ---
 class: opening browser-state-opening
 ---
 
-<h1>Durable State in <span>Browser</span></h1>
+<div class="opening-heading">
+  <div class="opening-tag">THE IDEA</div>
+  <h1 class="world-slide-title">Sync database with a browser</h1>
+</div>
 
 <svg class="browser-state-connection" viewBox="0 0 1280 720" preserveAspectRatio="none" aria-hidden="true">
   <path class="browser-sync-base" d="M426 379 H854" />
@@ -265,7 +306,7 @@ class: opening browser-state-opening
   </div>
 
   <div class="browser-state-endpoint browser-state-browser">
-    <img class="browser-state-logo browser-state-chrome" src="/chromium-logo.svg?v=green" alt="Chromium" />
+    <img class="browser-state-logo browser-state-chrome" src="/chromium-logo.svg?v=blue" alt="Chromium" />
   </div>
 </div>
 
@@ -281,7 +322,8 @@ The browser and the Durable Object each have SQLite. The missing piece is bidire
 class: opening livestore-opening
 ---
 
-<h1>Welcome <span>LiveStore</span></h1>
+<div class="solution-product-tag">THE SOLUTION</div>
+<h1 class="solution-product-heading"><span>LiveStore</span><em>SQLite in the browser with real-time sync</em></h1>
 
 <div class="livestore-feature-row">
   <div v-click="1" class="livestore-feature-card">
@@ -315,53 +357,39 @@ LiveStore gives the browser a local OPFS SQLite database, records changes as eve
 -->
 
 ---
-class: opening livestore-decisions-opening
+class: opening agent-serverless-problem-opening
 ---
 
-<h1>Sync <span>Authority</span></h1>
+<div class="opening-heading">
+  <div class="opening-tag">THE PROBLEM</div>
+  <h1 class="world-slide-title">A serverless agent is <span>fragile</span></h1>
+  <p class="opening-subtitle">Connections drop. State disappears. Files vanish.</p>
+</div>
 
-<div class="sync-authority-options">
-  <div class="sync-authority-option is-selected">
-    <span class="sync-authority-icon i-carbon-cloud" aria-hidden="true"></span>
-    <strong>Durable Object</strong>
-  </div>
-  <div class="sync-authority-option">
-    <span class="sync-authority-icon i-carbon-data-base" aria-hidden="true"></span>
-    <strong>Electric</strong>
-  </div>
-  <div class="sync-authority-option">
-    <span class="sync-authority-icon i-carbon-code" aria-hidden="true"></span>
-    <strong>Custom backend</strong>
-  </div>
+<div class="cloudflare-agent-shell cloudflare-agent-shell-fragile" role="img" aria-label="A Cloudflare agent runtime with an unstable, flickering screen">
+  <span class="cloudflare-agent-shell-mark" aria-hidden="true"></span>
+  <span class="cloudflare-agent-screen cloudflare-agent-static" aria-hidden="true"></span>
 </div>
 
 <!--
-LiveStore needs an authoritative sync backend to order and distribute events. This demo has already selected a Durable Object; Electric and a custom backend remain possible alternatives.
-
-[Sources]
-- /Users/andrenovax_1/docs/flue-alchemy-demo/docs/architecture.md
-- https://docs.livestore.dev/reference/syncing/
+Without a durable runtime, a serverless agent is fragile: connections drop, conversation state disappears, and files vanish.
 -->
 
 ---
 class: opening durable-agent-opening
 ---
 
-<h1>Durable <span>Agent</span></h1>
+<div class="opening-heading">
+  <div class="opening-tag">THE IDEA</div>
+  <h1 class="world-slide-title">Durable Agent</h1>
+  <p class="opening-subtitle">Put agent into the durable object</p>
+</div>
 
-<svg class="durable-agent-connection" viewBox="0 0 1280 720" preserveAspectRatio="none" aria-hidden="true">
-  <path class="durable-agent-base" d="M430 379 H850" />
-  <path class="durable-agent-flow durable-agent-flow-out" d="M430 379 H850" />
-  <path class="durable-agent-flow durable-agent-flow-in" d="M850 379 H430" />
-</svg>
-
-<div class="durable-agent-flow-layout">
-  <div class="durable-agent-endpoint durable-agent-cloudflare">
-    <span class="durable-agent-cloudflare-mark" role="img" aria-label="Cloudflare"></span>
-  </div>
-  <div class="durable-agent-endpoint durable-agent-smith">
+<div class="cloudflare-agent-shell cloudflare-agent-shell-stable" role="img" aria-label="Agent Smith running inside a durable Cloudflare agent runtime">
+  <span class="cloudflare-agent-shell-mark" aria-hidden="true"></span>
+  <span class="cloudflare-agent-screen">
     <img src="/agent-smith-avatar.png" alt="Agent Smith" />
-  </div>
+  </span>
 </div>
 
 <!--
@@ -376,39 +404,45 @@ A durable agent combines an agent identity with state and execution on Cloudflar
 class: opening flue-opening
 ---
 
-<h1><span>Flue</span><em>Durable Pi Agent</em></h1>
+<div class="solution-product-tag">THE SOLUTION</div>
+<h1><span>Flue</span><em>A durable runtime for dynamic agents</em></h1>
 
 <div class="flue-feature-row">
   <div v-click="1" class="flue-feature-card">
-    <span class="flue-feature-icon i-carbon-code" aria-hidden="true"></span>
-    <strong>Powered by Pi</strong>
-    <small>agent loop · tools · model providers</small>
-  </div>
-  <div v-click="2" class="flue-feature-card">
     <span class="flue-feature-icon i-carbon-data-base" aria-hidden="true"></span>
     <strong>Durable conversation</strong>
-    <small>admission · queue · transcript · recovery</small>
+    <small>One Durable Object per conversation</small>
+  </div>
+  <div v-click="2" class="flue-feature-card">
+    <span class="flue-feature-icon i-carbon-settings-adjust" aria-hidden="true"></span>
+    <strong>Dynamic runtime</strong>
+    <small>tools · models · prompts based on state and request</small>
   </div>
   <div v-click="3" class="flue-feature-card">
-    <span class="flue-feature-icon i-carbon-chat" aria-hidden="true"></span>
-    <strong>Live client</strong>
-    <small>stream · reconnect · abort</small>
+    <span class="flue-feature-icon i-carbon-terminal" aria-hidden="true"></span>
+    <strong>Built-in sandbox</strong>
+    <small>files · shell · code execution</small>
   </div>
   <div v-click="4" class="flue-feature-card">
-    <span class="flue-feature-icon i-carbon-workspace" aria-hidden="true"></span>
-    <strong>Composable hooks</strong>
-    <small>model · tools · state</small>
+    <span class="flue-feature-icon i-carbon-code" aria-hidden="true"></span>
+    <strong>React-style Hooks API</strong>
+    <small>compose models · tools · state · sandbox</small>
+  </div>
+  <div v-click="5" class="flue-feature-card">
+    <span class="flue-feature-icon i-carbon-chat" aria-hidden="true"></span>
+    <strong>Live React client</strong>
+    <small>stream · reconnect · abort</small>
   </div>
 </div>
 
 <!--
-Reveal the four layers in order. Pi supplies the inner agent harness and model-provider protocol. Flue adds a durable per-conversation runtime: it records submissions before model work, orders them in a queue, persists the canonical transcript, and recovers interrupted work. The client observes that durable stream, resumes after reconnects, and records aborts as durable intent. Hooks compose the model, tools, and persistent state in TypeScript.
+Reveal the five capabilities in order. Flue gives every conversation its own Durable Object, where state and execution share a durable boundary. Its runtime can select tools, models, and prompts from the current state and request. A built-in sandbox provides files, shell access, and code execution. React-style Hooks compose those capabilities in TypeScript, while the live React client streams conversation state, reconnects, and aborts work.
 
 [Sources]
-- https://flueframework.com/docs/guide/why-flue/
 - https://flueframework.com/docs/guide/durability/
-- https://flueframework.com/docs/sdk/flue-client/
 - https://flueframework.com/docs/guide/agent-hooks/
+- https://flueframework.com/docs/guide/sandbox/
+- https://flueframework.com/docs/guide/react/
 -->
 
 ---
