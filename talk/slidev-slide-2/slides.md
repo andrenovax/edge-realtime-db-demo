@@ -762,7 +762,7 @@ class: opening trace-opening trace-initial-sync
 <ArchitectureCanvas canvas="initial-sync" />
 
 <!--
-Click 1: activate and distinctly highlight OPFS SQLite in green while keeping the LiveStore Web Worker inactive and disconnected. Reveal the browser replica contract: the notes table and SQLite materializers.
+Click 1: activate and distinctly highlight OPFS SQLite in green while keeping the LiveStore Web Worker inactive and disconnected. Reveal the browser replica contract in execution order: the notes table, synced events, and SQLite materializers.
 
 Click 2: reactivate and distinctly highlight the LiveStore Web Worker and its OPFS SQLite connection, label that connection “realtime sync,” replace the schema panels with the enlarged Realtime sync panel positioned below the Denpasar heading, and leave the rest of the topology inactive.
 
@@ -953,19 +953,21 @@ class: opening trace-opening trace-agent
 <div class="trace-footer"><a href="https://flueframework.com/blog/flue-2/">docs · Flue 2.0 ↗</a></div>
 
 <!--
-Click 1: activate and distinctly highlight only the React SPA in green. Show the enlarged useFlueAgent and sync with assistant-ui panels below Denpasar. Keep Gateway Worker inactive, draw no React → Gateway connection, and do not show the POST route label yet.
+Click 1: activate and distinctly highlight only the React SPA in green. Show the enlarged useFlueAgent panel and the merged assistant-ui runtime panel below Denpasar. Keep Gateway Worker inactive, draw no React → Gateway connection, and do not show the POST route label yet.
 
 Click 2: extend the request from React through Gateway Worker to Agent Worker and distinctly highlight Agent Worker in blue. Route Gateway → Agent across the upper edge lane and then down into the top of Agent Worker. Add the POST /api/agents/hello/:conversationId label above the React → Gateway arrow. Show the enlarged agent router panel below the Per-User State heading. Keep UserDO inactive and show no Agent Worker → UserDO connection.
 
-Click 3: extend the request through the Flue conversation DO and distinctly highlight it in orange. Merge the exported agent and system-prompt snippets into one enlarged useAgent panel, right-aligned below Shared State. Keep Workers AI inactive and draw no Flue conversation DO → Workers AI connection yet.
+Click 3: extend the request through the Flue conversation DO and distinctly highlight it in orange. Show only the real Hello agent beneath the active request path without covering active cards or connections. Keep its title orange. Keep Workers AI inactive and draw no Flue conversation DO → Workers AI connection yet.
 
-Click 4: copy the preceding topology without its code panels, preserving the corrected top-down Gateway → Agent route. Activate and distinctly highlight Workers AI in purple, route Flue → Workers AI across the top and down into the card, and show the model response returning to the Flue conversation DO.
+Click 4: copy click 3's topology exactly. Remove the Hello agent panel and replace it beneath the active request path with one merged, non-linked Composable agent panel that does not cover active cards or connections. Keep its title orange. Keep the model, sandbox, `review_file`, and `canWrite` code unchanged so the audience can see how the primitives compose. Workers AI remains inactive.
 
-Click 5: distinctly highlight the Flue conversation DO in orange. A model-selected read_note or write_note tool uses the closed-over userId and noteId to activate and reach only that user’s UserDO. Merge both implementations into one enlarged Tools panel below Denpasar. Deactivate Workers AI, Agent Worker, Gateway Worker, and React SPA so the tool boundary is isolated.
+Click 5: copy the preceding topology without its code panel, preserving the corrected top-down Gateway → Agent route. Activate and distinctly highlight Workers AI in purple, route Flue → Workers AI across the top and down into the card, and show the model response returning to the Flue conversation DO.
 
-Click 6 copies the isolated tool boundary, distinctly highlights UserDO in orange, removes the outbound Flue conversation DO → UserDO arrow, and draws only the UserDO → Flue conversation DO return arrow. Move the enlarged UserDO implementation panels below Denpasar and title them Materialize UserSyncBackendDO and RPC.
+Click 6: distinctly highlight the Flue conversation DO in orange. A model-selected read_note or write_note tool uses the closed-over userId and noteId to activate and reach only that user’s UserDO. Merge both implementations into one enlarged Tools panel below Denpasar. Deactivate Workers AI, Agent Worker, Gateway Worker, and React SPA so the tool boundary is isolated.
 
-Click 7 clears the UserDO implementation panels and draws the complete application return chain on separate lanes. Reverse the corrected Agent → Gateway geometry: leave Agent Worker from the top, travel upward, then point left into Gateway Worker. Read the numbered responsibilities on the active cards: tool result, model resume, Agent Worker stream, Gateway proxy, React render.
+Click 7 copies the isolated tool boundary, distinctly highlights UserDO in orange, removes the outbound Flue conversation DO → UserDO arrow, and draws only the UserDO → Flue conversation DO return arrow. Move the enlarged UserDO implementation panels below Denpasar and title them Materialize UserSyncBackendDO and RPC.
+
+Click 8 clears the UserDO implementation panels and draws the complete application return chain on separate lanes. Reverse the corrected Agent → Gateway geometry: leave Agent Worker from the top, travel upward, then point left into Gateway Worker. Read the numbered responsibilities on the active cards: tool result, model resume, Agent Worker stream, Gateway proxy, React render.
 
 The model never supplies userId or noteId. The conversation DO and UserDO are separate top-level objects; regional proximity is best effort, not guaranteed co-location.
 
@@ -977,6 +979,7 @@ The model never supplies userId or noteId. The conversation DO and UserDO are se
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/tools/notes.tool.ts#L8
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L30
 - https://flueframework.com/blog/flue-2/
+- https://flueframework.com/docs/guide/tools/
 - https://www.cloudflare.com/network/
 -->
 
@@ -1034,85 +1037,181 @@ Keep the two D1 databases visibly separate: Auth D1 owns identity; Admin D1 owns
 -->
 
 ---
-class: opening trace-opening trace-complete
+class: opening final-architecture-opening
 ---
 
-<div class="trace-section">THE COMPLETE DEPLOYMENT</div>
-<h1>One file assembles the whole topology.</h1>
-<p class="trace-subtitle">Six Workers. Two shared D1 databases. Three Durable Object roles. One public entry.</p>
-
-<div class="complete-graph">
-  <div class="complete-browser"><small>BROWSER</small><b>React + LiveStore</b><span>OPFS SQLite</span></div>
-  <div class="complete-gateway"><small>ONLY PUBLIC WORKER</small><b>Gateway</b><span>assets + trusted routing</span></div>
-  <div class="complete-workers">
-    <div><b>Auth</b><span>Better Auth</span></div>
-    <div><b>User</b><span>Cap’n Web</span></div>
-    <div><b>LiveStore</b><span>sync protocol</span></div>
-    <div><b>Agent</b><span>Flue runtime</span></div>
-    <div><b>Admin</b><span>global reads</span></div>
-  </div>
-  <div class="complete-state">
-    <div class="state-purple"><b>Auth D1</b><span>identity</span></div>
-    <div class="state-orange"><b>UserSyncBackendDO</b><span>event log</span></div>
-    <div class="state-orange"><b>UserDO</b><span>server view</span></div>
-    <div class="state-green"><b>Flue DO</b><span>conversation</span></div>
-    <div class="state-dashed"><b>Queue → Admin D1</b><span>projection</span></div>
-  </div>
-</div>
-
-<div class="complete-code"><a href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/alchemy.run.ts#L191"><span>infra/alchemy.run.ts ↗</span><code>authDb → AuthWorker · events → LiveStoreWorker · UserWorker · AgentWorker · AdminWorker → GatewayWorker</code></a></div>
-
-<div class="trace-footer"><a href="https://alchemy.run/providers/cloudflare/workers/durableobject/">docs · Alchemy Durable Objects ↗</a></div>
+<FinalArchitecture />
 
 <!--
-Resolve the walkthrough with ownership: assets and routing at the gateway; identity in Auth D1; local-first truth in per-user LiveStore DOs; conversations in Flue DOs; global queries in Admin D1. Then transition into benefits and benchmarks.
+Read the topology left to right: the browser reaches one public Gateway Worker, which routes privately to purpose-built Workers. Durable Objects hold per-user and per-conversation SQLite state. D1, Queues, and Workers AI remain shared platform services outside that identity-addressed boundary.
 
 [Sources]
-- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/alchemy.run.ts#L191
+- User-supplied architecture screenshot, Screenshot 2026-08-23 at 14.16.38.png
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/docs/architecture.md
-- https://alchemy.run/providers/cloudflare/workers/durableobject/
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/alchemy.run.ts
+- https://developers.cloudflare.com/workers-ai/
+-->
+
+---
+class: opening deployment-question-opening
+---
+
+<h1>How the hell do I run and deploy<br />all of this together?</h1>
+
+<!--
+Let the complete topology from the previous slide settle, then ask the operational question plainly. The next slide answers it with the single Alchemy stack used by both local development and deployment.
+-->
+
+---
+class: opening alchemy-opening
+---
+
+<AlchemyDeployment />
+
+<!--
+Click 1: define the LiveStore Worker and its Durable Object bindings.
+
+Click 2: show how the Flue-generated Worker entry and Durable Object manifest become Alchemy resources.
+
+Click 3: put the private Workers behind the public Vite Gateway through service bindings.
+
+Click 4: provision D1 databases and the projection queues alongside the Workers.
+
+Click 5: show that resource outputs form a dependency graph: LiveStore exists before the Workers that consume its Durable Object namespaces, and Gateway is assembled after its private targets.
+
+Click 6: finish with the lifecycle scripts. `alchemy dev` evaluates the graph for the local stack; `alchemy deploy` deploys the stage; `alchemy destroy` removes resources according to their removal policies.
+
+[Sources]
+- /Users/andrenovax_1/docs/flue-alchemy-demo/infra/alchemy.run.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/infra/flue-alchemy.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/infra/package.json
+- https://alchemy.run/getting-started/
+-->
+
+---
+class: opening trace-opening alternative-opening
+---
+
+<div class="trace-section">THE ALTERNATIVE</div>
+<h1>Beyond Cloudflare</h1>
+
+<div class="alternative-panels">
+  <section class="alternative-panel alternative-celld">
+    <a class="alternative-product" href="https://celld.dev/docs/">celld ↗</a>
+    <h2>Self-host Durable Objects</h2>
+    <p>Runs Workers and SQLite-backed Durable Objects on your infrastructure, with state replicated to object storage.</p>
+  </section>
+
+  <section class="alternative-panel alternative-livestore">
+    <a class="alternative-product" href="https://docs.livestore.dev/getting-started/node/">LiveStore on Node.js ↗</a>
+    <h2>Local SQLite anywhere Node runs</h2>
+    <p>The official Node adapter provides a local LiveStore database for server-side queries and event processing.</p>
+  </section>
+
+  <section class="alternative-panel alternative-flue">
+    <a class="alternative-product" href="https://flueframework.com/docs/guide/node-target/">Flue on Node.js ↗</a>
+    <h2>Database-backed durable agents</h2>
+    <p>The official Node target persists conversations and accepted work in SQLite, Postgres or another database adapter.</p>
+  </section>
+</div>
+
+<!--
+Cloudflare is the integrated path shown in the talk, but the underlying ideas are portable. celld preserves the Workers and Durable Objects model on self-hosted infrastructure. LiveStore and Flue also provide Node.js paths, with separate persistence and coordination responsibilities.
+
+[Sources]
+- https://celld.dev/docs/
+- https://github.com/denoland/celld/blob/main/docs/cloudflare-compat.md
+- https://github.com/denoland/celld/security
+- https://docs.livestore.dev/getting-started/node/
+- https://docs.livestore.dev/reference/syncing/sync-provider/custom/
+- https://flueframework.com/docs/guide/node-target/
+- https://flueframework.com/docs/guide/database/
+- https://flueframework.com/docs/guide/durability/
+-->
+
+---
+class: opening takeaways-opening
+---
+
+<h1>Takeaways</h1>
+
+<div class="takeaways-list">
+  <div class="takeaway-item"><small>01</small><p><strong>Use Durable Objects</strong> to isolate state and keep compute close to data.</p></div>
+  <div class="takeaway-item"><small>02</small><p><strong>Use LiveStore</strong> to deliver real-time, local-first experiences.</p></div>
+  <div class="takeaway-item"><small>03</small><p><strong>Use Flue</strong> to keep agents durable across requests and disconnects.</p></div>
+  <div class="takeaway-item"><small>04</small><p><strong>Experiment</strong> with new technology to find better solutions.</p></div>
+</div>
+
+<!--
+Close on actions rather than definitions: isolate state, make the client local-first, keep agents durable, and stay willing to test new approaches.
+
+[Sources]
+- https://developers.cloudflare.com/durable-objects/
+- https://docs.livestore.dev/
+- https://flueframework.com/docs/
 -->
 
 ---
 class: opening references-opening docs-references-opening
 ---
 
-<div class="eyebrow">PRIMARY SOURCES</div>
-<h1>Docs behind the architecture</h1>
-<p class="references-subtitle">Platform behavior changes. These are the current sources of truth.</p>
+<h1>The sources</h1>
 
-<div class="docs-reference-grid">
-  <a href="https://developers.cloudflare.com/workers/static-assets/routing/worker-script/"><b>Workers Static Assets</b><span>asset-first and worker-first routing ↗</span></a>
-  <a href="https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/"><b>Service bindings</b><span>private Worker-to-Worker calls ↗</span></a>
-  <a href="https://developers.cloudflare.com/d1/configuration/data-location/"><b>D1 data location</b><span>primary placement and jurisdictions ↗</span></a>
-  <a href="https://developers.cloudflare.com/d1/best-practices/read-replication/"><b>D1 read replication</b><span>replicas, primary writes, sessions ↗</span></a>
-  <a href="https://developers.cloudflare.com/durable-objects/concepts/what-are-durable-objects/"><b>Durable Objects</b><span>identity, compute, storage ↗</span></a>
-  <a href="https://developers.cloudflare.com/durable-objects/reference/data-location/"><b>DO data location</b><span>first placement and hints ↗</span></a>
-  <a href="https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/"><b>DO SQLite storage</b><span>private strongly consistent storage ↗</span></a>
-  <a href="https://better-auth.com/docs/concepts/oauth"><b>Better Auth</b><span>social OAuth flow ↗</span></a>
-  <a href="https://livestore.dev/"><b>LiveStore</b><span>local-first event sync ↗</span></a>
-  <a href="https://flueframework.com/blog/flue-2/"><b>Flue 2.0</b><span>durable TypeScript agents ↗</span></a>
-  <a href="https://alchemy.run/providers/cloudflare/workers/durableobject/"><b>Alchemy</b><span>Cloudflare resource graph ↗</span></a>
-  <a href="https://github.com/cloudflare/capnweb"><b>Cap’n Web</b><span>typed RPC ↗</span></a>
+<div class="docs-priority-list">
+  <a class="docs-priority-item docs-priority-top" href="https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/"><small>01</small><span><b>Durable Objects</b><em>stateful compute + private SQLite ↗</em></span></a>
+  <a class="docs-priority-item docs-priority-top" href="https://docs.livestore.dev/"><small>02</small><span><b>LiveStore</b><em>local SQLite and event sync ↗</em></span></a>
+  <a class="docs-priority-item docs-priority-top" href="https://flueframework.com/docs/guide/cloudflare-target/"><small>03</small><span><b>Flue 2.0</b><em>durable TypeScript agents ↗</em></span></a>
+  <a class="docs-priority-item" href="https://developers.cloudflare.com/workers-ai/"><small>04</small><span><b>Workers AI</b><em>serverless inference at the edge ↗</em></span></a>
+  <a class="docs-priority-item" href="https://developers.cloudflare.com/workers/runtime-apis/bindings/"><small>05</small><span><b>Workers + bindings</b><em>runtime and private service graph ↗</em></span></a>
+  <a class="docs-priority-item" href="https://better-auth.com/docs/plugins/jwt"><small>06</small><span><b>Better Auth</b><em>accounts, sessions, JWTs ↗</em></span></a>
+  <a class="docs-priority-item" href="https://developers.cloudflare.com/d1/"><small>07</small><span><b>Cloudflare D1</b><em>shared relational read models ↗</em></span></a>
+  <a class="docs-priority-item" href="https://developers.cloudflare.com/queues/"><small>08</small><span><b>Cloudflare Queues</b><em>async projection pipeline ↗</em></span></a>
+  <a class="docs-priority-item" href="https://developers.cloudflare.com/sandbox/"><small>09</small><span><b>Cloudflare Sandbox</b><em>isolated files, shell, code ↗</em></span></a>
+  <a class="docs-priority-item" href="https://alchemy.run/getting-started/"><small>10</small><span><b>Alchemy</b><em>typed infrastructure graph ↗</em></span></a>
 </div>
 
-<div class="references-repo"><span>ALL LINKS</span><div><a href="https://www.cloudflare.com/network/">Cloudflare network locations ↗</a><a href="https://github.com/andrenovax/edge-realtime-db-demo">repository README ↗</a></div></div>
+<div class="sources-links">
+  <a href="https://github.com/andrenovax/edge-realtime-db-demo">Repository ↗</a>
+  <a href="https://do.hell-o.workers.dev/">Demo ↗</a>
+</div>
 
 <!--
 These links are also repeated in the speaker notes and the footers of the slides they support.
 
 [Sources]
-- https://developers.cloudflare.com/workers/static-assets/routing/worker-script/
-- https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/
-- https://developers.cloudflare.com/d1/configuration/data-location/
-- https://developers.cloudflare.com/d1/best-practices/read-replication/
-- https://developers.cloudflare.com/durable-objects/concepts/what-are-durable-objects/
-- https://developers.cloudflare.com/durable-objects/reference/data-location/
 - https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/
-- https://better-auth.com/docs/concepts/oauth
-- https://livestore.dev/
-- https://flueframework.com/blog/flue-2/
-- https://alchemy.run/providers/cloudflare/workers/durableobject/
-- https://github.com/cloudflare/capnweb
-- https://www.cloudflare.com/network/
+- https://docs.livestore.dev/
+- https://flueframework.com/docs/guide/cloudflare-target/
+- https://developers.cloudflare.com/workers-ai/
+- https://developers.cloudflare.com/workers/runtime-apis/bindings/
+- https://better-auth.com/docs/plugins/jwt
+- https://developers.cloudflare.com/d1/
+- https://developers.cloudflare.com/queues/
+- https://developers.cloudflare.com/sandbox/
+- https://alchemy.run/getting-started/
+- https://github.com/andrenovax/edge-realtime-db-demo
+- https://do.hell-o.workers.dev/
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/docs/architecture.md
+-->
+
+---
+class: opening thanks-opening
+---
+
+<div class="thanks-copy">
+  <h1>Terima kasih</h1>
+  <p>Andrii</p>
+</div>
+
+<a class="thanks-qr-link" href="https://github.com/andrenovax/edge-realtime-db-demo" aria-label="Open the demo repository">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;margin=10&amp;format=svg&amp;data=https%3A%2F%2Fgithub.com%2Fandrenovax%2Fedge-realtime-db-demo" alt="QR code for the demo repository" />
+  <span>Demo repository</span>
+</a>
+
+<!--
+Thank the audience, then leave the repository QR code on screen for questions and follow-up.
+
+[Sources]
+- https://github.com/andrenovax/edge-realtime-db-demo
+- QR code generated by QR Server (https://goqr.me/api/).
 -->

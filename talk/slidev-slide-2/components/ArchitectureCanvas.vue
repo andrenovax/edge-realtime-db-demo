@@ -12,8 +12,8 @@ defineProps<{
       <span v-if="canvas === 'authentication'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
       <span v-if="canvas === 'initial-sync'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
       <span v-if="canvas === 'note-edit'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
-      <span v-if="canvas === 'agent-request'" v-click="1" class="lane-activation-state"><i v-click.hide="5" class="lane-on"></i></span>
-      <span v-if="canvas === 'agent-request'" v-click="7" class="lane-activation-state"><i class="lane-on"></i></span>
+      <span v-if="canvas === 'agent-request'" v-click="1" class="lane-activation-state"><i v-click.hide="6" class="lane-on"></i></span>
+      <span v-if="canvas === 'agent-request'" v-click="8" class="lane-activation-state"><i class="lane-on"></i></span>
 
       <div class="flow-card-slot">
         <div class="trace-stack-card is-future"><b>Browser</b><span>user agent</span></div>
@@ -53,9 +53,9 @@ defineProps<{
           <div v-click.hide="2" class="trace-stack-card is-active is-focus-highlight"><b>React SPA</b><span class="library-tag">Flue client</span></div>
         </div>
         <div v-if="canvas === 'agent-request'" v-click="2" class="flow-card-state">
-          <div v-click.hide="5" class="trace-stack-card is-active"><b>React SPA</b><span class="library-tag">Flue client</span></div>
+          <div v-click.hide="6" class="trace-stack-card is-active"><b>React SPA</b><span class="library-tag">Flue client</span></div>
         </div>
-        <div v-if="canvas === 'agent-request'" v-click="7" class="flow-card-state">
+        <div v-if="canvas === 'agent-request'" v-click="8" class="flow-card-state">
           <div class="trace-stack-card is-active"><b>React SPA</b><span class="return-step-tag">5 · render tokens</span></div>
         </div>
       </div>
@@ -93,8 +93,8 @@ defineProps<{
       <span v-if="canvas === 'authentication'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
       <span v-if="canvas === 'initial-sync'" v-click="4" class="lane-activation-state"><i class="lane-on"></i></span>
       <span v-if="canvas === 'note-edit'" v-click="2" class="lane-activation-state"><i class="lane-on"></i></span>
-      <span v-if="canvas === 'agent-request'" v-click="2" class="lane-activation-state"><i v-click.hide="5" class="lane-on"></i></span>
-      <span v-if="canvas === 'agent-request'" v-click="7" class="lane-activation-state"><i class="lane-on"></i></span>
+      <span v-if="canvas === 'agent-request'" v-click="2" class="lane-activation-state"><i v-click.hide="6" class="lane-on"></i></span>
+      <span v-if="canvas === 'agent-request'" v-click="8" class="lane-activation-state"><i class="lane-on"></i></span>
       <span v-if="canvas === 'projection'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
 
       <div class="flow-card-slot flow-card-slot-static">
@@ -116,9 +116,9 @@ defineProps<{
           <div class="trace-stack-card is-active"><b>Gateway Worker</b><span>only public Worker</span></div>
         </div>
         <div v-if="canvas === 'agent-request'" v-click="2" class="flow-card-state">
-          <div v-click.hide="5" class="trace-stack-card is-active"><b>Gateway Worker</b><span class="jwt-tag">verified identity</span></div>
+          <div v-click.hide="6" class="trace-stack-card is-active"><b>Gateway Worker</b><span class="jwt-tag">verified identity</span></div>
         </div>
-        <div v-if="canvas === 'agent-request'" v-click="7" class="flow-card-state">
+        <div v-if="canvas === 'agent-request'" v-click="8" class="flow-card-state">
           <div class="trace-stack-card is-active"><b>Gateway Worker</b><span class="return-step-tag">4 · proxy stream</span></div>
         </div>
       </div>
@@ -151,9 +151,9 @@ defineProps<{
           <div v-click.hide="3" class="trace-stack-card is-active is-edge-highlight"><b>Agent Worker</b><span class="library-tag">Flue router</span></div>
         </div>
         <div v-if="canvas === 'agent-request'" v-click="3" class="flow-card-state">
-          <div v-click.hide="5" class="trace-stack-card is-active"><b>Agent Worker</b><span class="library-tag">Flue router</span></div>
+          <div v-click.hide="6" class="trace-stack-card is-active"><b>Agent Worker</b><span class="library-tag">Flue router</span></div>
         </div>
-        <div v-if="canvas === 'agent-request'" v-click="7" class="flow-card-state">
+        <div v-if="canvas === 'agent-request'" v-click="8" class="flow-card-state">
           <div class="trace-stack-card is-active"><b>Agent Worker</b><span class="return-step-tag">3 · stream response</span></div>
         </div>
       </div>
@@ -190,28 +190,28 @@ defineProps<{
 
       <div class="flow-card-slot">
         <div class="trace-stack-card is-future"><b>UserDO</b><span>lazy server materialized view</span></div>
-        <div v-if="canvas === 'agent-request'" v-click="5" class="flow-card-state">
-          <div v-click.hide="7" class="trace-stack-card is-active"><b>UserDO</b><span>notes + conversation catalog</span></div>
-        </div>
         <div v-if="canvas === 'agent-request'" v-click="6" class="flow-card-state">
-          <div v-click.hide="7" class="trace-stack-card is-active is-user-highlight"><b>UserDO</b><span>notes + conversation catalog</span></div>
+          <div v-click.hide="8" class="trace-stack-card is-active"><b>UserDO</b><span>notes + conversation catalog</span></div>
         </div>
         <div v-if="canvas === 'agent-request'" v-click="7" class="flow-card-state">
+          <div v-click.hide="8" class="trace-stack-card is-active is-user-highlight"><b>UserDO</b><span>notes + conversation catalog</span></div>
+        </div>
+        <div v-if="canvas === 'agent-request'" v-click="8" class="flow-card-state">
           <div class="trace-stack-card is-active"><b>UserDO</b><span class="return-step-tag">1 · tool result</span></div>
         </div>
       </div>
       <div class="flow-card-slot">
         <div class="trace-stack-card is-future"><b>Flue conversation DO</b><span>transcript · SQLite</span></div>
         <div v-if="canvas === 'agent-request'" v-click="3" class="flow-card-state">
-          <div v-click.hide="4" class="trace-stack-card is-active is-user-highlight"><b>Flue conversation DO</b><span>agent runtime + stream</span></div>
-        </div>
-        <div v-if="canvas === 'agent-request'" v-click="4" class="flow-card-state">
-          <div v-click.hide="7" class="trace-stack-card is-active"><b>Flue conversation DO</b><span>agent runtime + stream</span></div>
+          <div v-click.hide="5" class="trace-stack-card is-active is-user-highlight"><b>Flue conversation DO</b><span>agent runtime + stream</span></div>
         </div>
         <div v-if="canvas === 'agent-request'" v-click="5" class="flow-card-state">
-          <div v-click.hide="6" class="trace-stack-card is-active is-user-highlight"><b>Flue conversation DO</b><span>agent runtime + stream</span></div>
+          <div v-click.hide="8" class="trace-stack-card is-active"><b>Flue conversation DO</b><span>agent runtime + stream</span></div>
         </div>
-        <div v-if="canvas === 'agent-request'" v-click="7" class="flow-card-state">
+        <div v-if="canvas === 'agent-request'" v-click="6" class="flow-card-state">
+          <div v-click.hide="7" class="trace-stack-card is-active is-user-highlight"><b>Flue conversation DO</b><span>agent runtime + stream</span></div>
+        </div>
+        <div v-if="canvas === 'agent-request'" v-click="8" class="flow-card-state">
           <div class="trace-stack-card is-active"><b>Flue conversation DO</b><span class="return-step-tag">2 · resume model</span></div>
         </div>
       </div>
@@ -220,7 +220,7 @@ defineProps<{
     <div class="trace-lane trace-shared-lane">
       <small class="trace-lane-label">SHARED STATE</small>
       <span v-if="canvas === 'authentication'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
-      <span v-if="canvas === 'agent-request'" v-click="4" class="lane-activation-state"><i v-click.hide="5" class="lane-on"></i></span>
+      <span v-if="canvas === 'agent-request'" v-click="5" class="lane-activation-state"><i v-click.hide="6" class="lane-on"></i></span>
       <span v-if="canvas === 'projection'" v-click="1" class="lane-activation-state"><i class="lane-on"></i></span>
 
       <div class="flow-card-slot">
@@ -245,8 +245,8 @@ defineProps<{
       </div>
       <div class="flow-card-slot">
         <div class="trace-stack-card is-future"><b>Workers AI</b><span>model inference</span></div>
-        <div v-if="canvas === 'agent-request'" v-click="4" class="flow-card-state">
-          <div v-click.hide="5" class="trace-stack-card is-active is-shared-highlight"><b>Workers AI</b><span>GLM 4.7 Flash</span></div>
+        <div v-if="canvas === 'agent-request'" v-click="5" class="flow-card-state">
+          <div v-click.hide="6" class="trace-stack-card is-active is-shared-highlight"><b>Workers AI</b><span>GLM 4.7 Flash</span></div>
         </div>
       </div>
     </div>
@@ -367,7 +367,7 @@ defineProps<{
         </g>
       </g>
       <g v-if="canvas === 'agent-request'" v-click="3" class="flow-state">
-        <g v-click.hide="4" class="wire-flow wire-directed">
+        <g v-click.hide="5" class="wire-flow wire-directed">
           <path d="M207 109 H249" />
           <polygon points="249,109 237,102 237,116" />
           <path d="M333 109 H430 V255" />
@@ -376,8 +376,8 @@ defineProps<{
           <polygon points="673,162 661,155 661,169" />
         </g>
       </g>
-      <g v-if="canvas === 'agent-request'" v-click="4" class="flow-state">
-        <g v-click.hide="5" class="wire-flow wire-directed">
+      <g v-if="canvas === 'agent-request'" v-click="5" class="flow-state">
+        <g v-click.hide="6" class="wire-flow wire-directed">
           <path d="M207 109 H249" />
           <polygon points="249,109 237,102 237,116" />
           <path d="M333 109 H430 V255" />
@@ -387,24 +387,24 @@ defineProps<{
           <path d="M919 162 H1010 V244" />
           <polygon points="1010,244 1003,232 1017,232" />
         </g>
-        <g v-click.hide="5" class="wire-flow wire-return wire-directed">
+        <g v-click.hide="6" class="wire-flow wire-return wire-directed">
           <path d="M959 260 H943 V178 H919" />
           <polygon points="919,178 931,171 931,185" />
         </g>
       </g>
-      <g v-if="canvas === 'agent-request'" v-click="5" class="flow-state">
-        <g v-click.hide="6" class="wire-flow wire-directed">
+      <g v-if="canvas === 'agent-request'" v-click="6" class="flow-state">
+        <g v-click.hide="7" class="wire-flow wire-directed">
           <path d="M919 146 H937 V117 H919" />
           <polygon points="919,117 931,110 931,124" />
         </g>
       </g>
-      <g v-if="canvas === 'agent-request'" v-click="6" class="flow-state">
-        <g v-click.hide="7" class="wire-flow wire-return wire-directed">
+      <g v-if="canvas === 'agent-request'" v-click="7" class="flow-state">
+        <g v-click.hide="8" class="wire-flow wire-return wire-directed">
           <path d="M919 117 H937 V146 H919" />
           <polygon points="919,146 931,139 931,153" />
         </g>
       </g>
-      <g v-if="canvas === 'agent-request'" v-click="7" class="wire-flow wire-return wire-directed">
+      <g v-if="canvas === 'agent-request'" v-click="8" class="wire-flow wire-return wire-directed">
         <path d="M919 117 H937 V146 H919" />
         <polygon points="919,146 931,139 931,153" />
         <path d="M673 162 H664 V270 H633" />
@@ -463,17 +463,47 @@ defineProps<{
             <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L8" target="_blank" rel="noreferrer">
               <span>SQLite table</span><em>schema.ts ↗</em>
             </a>
-            <pre><code><span class="tok-prop">notes</span>: State.SQLite.<span class="tok-fn">table</span>({
-  <span class="tok-prop">columns</span>: { id, title, text, updatedAt },
-})</code></pre>
+            <pre><code><span class="tok-keyword">const</span> tables = {
+  <span class="tok-prop">notes</span>: State.SQLite.<span class="tok-fn">table</span>({
+    <span class="tok-prop">name</span>: <span class="tok-string">"notes"</span>,
+    <span class="tok-prop">columns</span>: {
+      <span class="tok-prop">id</span>: State.SQLite.<span class="tok-fn">text</span>({ <span class="tok-prop">primaryKey</span>: <span class="tok-keyword">true</span> }),
+      <span class="tok-prop">title</span>: State.SQLite.<span class="tok-fn">text</span>({ <span class="tok-prop">default</span>: <span class="tok-string">""</span> }),
+      <span class="tok-prop">text</span>: State.SQLite.<span class="tok-fn">text</span>({ <span class="tok-prop">default</span>: <span class="tok-string">""</span> }),
+      <span class="tok-prop">status</span>: State.SQLite.<span class="tok-fn">text</span>({
+        <span class="tok-prop">schema</span>: Schema.<span class="tok-fn">Literal</span>(...noteStatuses),
+        <span class="tok-prop">default</span>: <span class="tok-string">"active"</span>,
+      }),
+      <span class="tok-prop">updatedAt</span>: State.SQLite.<span class="tok-fn">integer</span>({ <span class="tok-prop">default</span>: 0 }),
+    },
+  }),
+};</code></pre>
+          </div>
+          <div class="canvas-code-panel">
+            <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L54" target="_blank" rel="noreferrer">
+              <span>Events</span><em>schema.ts ↗</em>
+            </a>
+            <pre><code><span class="tok-keyword">export const</span> events = {
+  <span class="tok-prop">noteCreated</span>: Events.<span class="tok-fn">synced</span>({
+    <span class="tok-prop">name</span>: <span class="tok-string">"v1.NoteCreated"</span>,
+    <span class="tok-prop">schema</span>: tables.notes.rowSchema,
+  }),
+  <span class="tok-prop">noteUpdated</span>: Events.<span class="tok-fn">synced</span>({
+    <span class="tok-prop">name</span>: <span class="tok-string">"v1.NoteUpdated"</span>,
+    <span class="tok-prop">schema</span>: tables.notes.rowSchema,
+  }),
+};</code></pre>
           </div>
           <div class="canvas-code-panel">
             <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/db/livestore/schema.ts#L77" target="_blank" rel="noreferrer">
               <span>SQLite materializers</span><em>schema.ts ↗</em>
             </a>
-            <pre><code>[noteCreated]: note =&gt; notes.<span class="tok-fn">insert</span>(note)
-[noteUpdated]: ({ id, ...note }) =&gt;
-  notes.<span class="tok-fn">update</span>(note).<span class="tok-fn">where</span>({ id })</code></pre>
+            <pre><code><span class="tok-keyword">const</span> materializers = State.SQLite.<span class="tok-fn">materializers</span>(events, {
+  [eventNames.noteCreated]: (note) =&gt;
+    tables.notes.<span class="tok-fn">insert</span>(note).<span class="tok-fn">onConflict</span>(<span class="tok-string">"id"</span>, <span class="tok-string">"ignore"</span>),
+  [eventNames.noteUpdated]: ({ id, ...note }) =&gt;
+    tables.notes.<span class="tok-fn">update</span>(note).<span class="tok-fn">where</span>({ id }),
+});</code></pre>
           </div>
         </div>
       </div>
@@ -509,25 +539,34 @@ defineProps<{
         <div v-click.hide="4" class="canvas-code-grid canvas-code-sync-connect">
           <div class="canvas-code-panel">
             <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/providers/livestore-provider.tsx#L14" target="_blank" rel="noreferrer">
-              <span>StoreRegistryProvider</span><em>provider.tsx ↗</em>
+              <span>Provider</span><em>provider.tsx ↗</em>
             </a>
             <pre><code><span class="tok-keyword">const</span> storeRegistry = <span class="tok-keyword">new</span> <span class="tok-type">StoreRegistry</span>({
   <span class="tok-prop">defaultOptions</span>: { batchUpdates },
 })
+
 <span class="tok-keyword">const</span> adapter = <span class="tok-fn">makePersistedAdapter</span>({
-  <span class="tok-prop">storage</span>: { <span class="tok-prop">type</span>: <span class="tok-string">"opfs"</span> }, <span class="tok-prop">worker</span>: LiveStoreWorker,
+  <span class="tok-prop">storage</span>: { <span class="tok-prop">type</span>: <span class="tok-string">"opfs"</span> },
+  <span class="tok-prop">worker</span>: LiveStoreWorker,
 })
-&lt;<span class="tok-type">StoreRegistryProvider</span> storeRegistry={storeRegistry}&gt;</code></pre>
+
+&lt;<span class="tok-type">StoreRegistryProvider</span> storeRegistry={storeRegistry}&gt;
+  {children}
+&lt;/<span class="tok-type">StoreRegistryProvider</span>&gt;</code></pre>
           </div>
           <div class="canvas-code-panel">
             <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/providers/livestore-provider.tsx#L25" target="_blank" rel="noreferrer">
               <span>useStore</span><em>provider.tsx ↗</em>
             </a>
             <pre><code><span class="tok-keyword">import</span> { storeOptions, useStore } <span class="tok-keyword">from</span> <span class="tok-string">"@livestore/react"</span>
+<span class="tok-keyword">import</span> { useCurrentUserStoreId } <span class="tok-keyword">from</span> <span class="tok-string">"..."</span>
 
 <span class="tok-keyword">export function</span> <span class="tok-fn">useCurrentUserLiveStore</span>() {
+  <span class="tok-keyword">const</span> storeId = <span class="tok-fn">useCurrentUserStoreId</span>();
   <span class="tok-keyword">return</span> <span class="tok-fn">useStore</span>(<span class="tok-fn">storeOptions</span>({
-    schema, <span class="tok-prop">storeId</span>: viewer.data.storeId, adapter,
+    schema,
+    <span class="tok-prop">storeId</span>: storeId,
+    adapter,
     <span class="tok-prop">syncPayload</span>: { authToken: token },
   }))
 }</code></pre>
@@ -538,10 +577,18 @@ defineProps<{
             </a>
             <pre><code><span class="tok-keyword">export function</span> <span class="tok-fn">useNotesModel</span>() {
   <span class="tok-keyword">const</span> store = <span class="tok-fn">useCurrentUserLiveStore</span>()
+
   <span class="tok-keyword">const</span> notes = store.<span class="tok-fn">useQuery</span>(
-    tables.notes.<span class="tok-fn">orderBy</span>(<span class="tok-string">"updatedAt"</span>, <span class="tok-string">"desc"</span>))
+    tables
+      .notes
+      .<span class="tok-fn">orderBy</span>(<span class="tok-string">"updatedAt"</span>, <span class="tok-string">"desc"</span>)
+  )
+
   <span class="tok-keyword">const</span> conversations = store.<span class="tok-fn">useQuery</span>(
-    tables.agentConversations.<span class="tok-fn">orderBy</span>(<span class="tok-string">"updatedAt"</span>, <span class="tok-string">"desc"</span>))
+    tables
+      .agentConversations
+      .<span class="tok-fn">orderBy</span>(<span class="tok-string">"updatedAt"</span>, <span class="tok-string">"desc"</span>)
+  )
 }</code></pre>
           </div>
         </div>
@@ -556,21 +603,40 @@ defineProps<{
             <a class="code-path tone-edge" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/livestore.worker.ts#L25" target="_blank" rel="noreferrer">
               <span>LiveStore worker</span><em>livestore.worker.ts ↗</em>
             </a>
-            <pre><code><span class="tok-keyword">return await</span> <span class="tok-fn">handleSyncRequest</span>({
-  request, searchParams, env, ctx,
-  <span class="tok-prop">syncBackendBinding</span>: <span class="tok-string">"USER_SYNC_BACKEND_DO"</span>,
-  <span class="tok-prop">validatePayload</span>: ({ storeId }) =&gt; {
-    <span class="tok-keyword">const</span> expected = env.USER_DO.<span class="tok-fn">idFromName</span>(userId).<span class="tok-fn">toString</span>()
-    <span class="tok-keyword">if</span> (expected !== storeId) <span class="tok-keyword">throw new</span> <span class="tok-type">Error</span>(<span class="tok-string">"forbidden"</span>)
+            <pre><code><span class="tok-keyword">import type</span> { <span class="tok-type">LiveStoreEnv</span> } <span class="tok-keyword">from</span> <span class="tok-string">"@infra/env"</span>;
+<span class="tok-keyword">import</span> { handleSyncRequest, matchSyncRequest, <span class="tok-keyword">type</span> <span class="tok-type">CfTypes</span> } <span class="tok-keyword">from</span> <span class="tok-string">"@livestore/sync-cf/cf-worker"</span>;
+
+<span class="tok-keyword">const</span> SYNC_BACKEND_BINDING = <span class="tok-string">"USER_SYNC_BACKEND_DO"</span> <span class="tok-keyword">satisfies keyof</span> <span class="tok-type">LiveStoreEnv</span>;
+
+<span class="tok-keyword">export default</span> {
+  <span class="tok-fn">fetch</span>(request: <span class="tok-type">CfTypes.Request</span>, env: <span class="tok-type">LiveStoreEnv</span>, ctx: <span class="tok-type">CfTypes.ExecutionContext</span>) {
+    <span class="tok-keyword">const</span> searchParams = <span class="tok-fn">matchSyncRequest</span>(request);
+    <span class="tok-keyword">if</span> (searchParams === <span class="tok-keyword">undefined</span>) <span class="tok-keyword">return new</span> <span class="tok-type">Response</span>(<span class="tok-string">"not found"</span>, { <span class="tok-prop">status</span>: 404 });
+
+    <span class="tok-keyword">return</span> <span class="tok-fn">handleSyncRequest</span>&lt;<span class="tok-type">Record</span>&lt;<span class="tok-keyword">keyof</span> <span class="tok-type">LiveStoreEnv</span>, <span class="tok-keyword">unknown</span>&gt;&gt;({
+      request,
+      searchParams,
+      env,
+      ctx,
+      <span class="tok-prop">syncBackendBinding</span>: SYNC_BACKEND_BINDING,
+      <span class="tok-prop">validatePayload</span>: (_payload, { storeId, headers }) =&gt; {
+        <span class="tok-comment">// Verify user id</span>
+        <span class="tok-keyword">const</span> userId = headers.<span class="tok-fn">get</span>(<span class="tok-string">"x-user-id"</span>);
+        <span class="tok-keyword">if</span> (!userId || env.USER_DO.<span class="tok-fn">idFromName</span>(userId).<span class="tok-fn">toString</span>() !== storeId) {
+          <span class="tok-keyword">throw new</span> <span class="tok-type">Error</span>(<span class="tok-string">"forbidden: not your store"</span>);
+        }
+      },
+    });
   },
-})</code></pre>
+};</code></pre>
           </div>
           <div class="canvas-code-panel is-user-code-highlight">
             <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user-sync-backend.do.ts#L10" target="_blank" rel="noreferrer">
               <span>User Sync Durable Object</span><em>sync backend ↗</em>
             </a>
-            <pre><code><span class="tok-keyword">export class</span> <span class="tok-type">UserSyncBackendDO</span>
-  <span class="tok-keyword">extends</span> <span class="tok-fn">makeDurableObject</span>({ <span class="tok-prop">onPush</span>: … })</code></pre>
+            <pre><code><span class="tok-keyword">import</span> { makeDurableObject } <span class="tok-keyword">from</span> <span class="tok-string">"@livestore/sync-cf/cf-worker"</span>;
+
+<span class="tok-keyword">export class</span> <span class="tok-type">UserSyncBackendDO</span> <span class="tok-keyword">extends</span> <span class="tok-fn">makeDurableObject</span>({}) {}</code></pre>
           </div>
         </div>
       </div>
@@ -596,20 +662,27 @@ defineProps<{
           <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/features/notes/hooks/use-notes-model.ts#L72" target="_blank" rel="noreferrer">
             <span>src/web/user/…/use-notes-model.ts</span><em>open code ↗</em>
           </a>
-          <pre><code><span class="tok-keyword">const</span> saveNote = <span class="tok-fn">useCallback</span>(
-  (id: string, text: string) =&gt; {
-    <span class="tok-keyword">const</span> updatedAt = Date.<span class="tok-fn">now</span>()
-    <span class="tok-keyword">const</span> note = notes.<span class="tok-fn">find</span>((item) =&gt; item.id === id)
-    <span class="tok-keyword">if</span> (note) {
-      store.<span class="tok-fn">commit</span>(events.<span class="tok-fn">noteUpdated</span>({ ...note, text, updatedAt }))
-    } <span class="tok-keyword">else if</span> (text.<span class="tok-fn">trim</span>()) {
-      store.<span class="tok-fn">commit</span>(events.<span class="tok-fn">noteCreated</span>({
-        id, title: <span class="tok-string">""</span>, text, status: <span class="tok-string">"active"</span>, updatedAt,
-      }))
-    }
-  },
-  [notes, store],
-)</code></pre>
+          <pre><code><span class="tok-keyword">export const</span> <span class="tok-fn">useNotesModel</span> = () =&gt; {
+  <span class="tok-keyword">const</span> store = <span class="tok-fn">useCurrentUserLiveStore</span>();
+  <span class="tok-keyword">const</span> notes = store.<span class="tok-fn">useQuery</span>(tables.notes.<span class="tok-fn">orderBy</span>(<span class="tok-string">"updatedAt"</span>, <span class="tok-string">"desc"</span>));
+
+  <span class="tok-comment">// ...</span>
+
+  <span class="tok-keyword">const</span> saveNote = <span class="tok-fn">useCallback</span>(
+    (id: string, text: string) =&gt; {
+      <span class="tok-keyword">const</span> updatedAt = Date.<span class="tok-fn">now</span>()
+      <span class="tok-keyword">const</span> note = notes.<span class="tok-fn">find</span>((item) =&gt; item.id === id)
+      <span class="tok-keyword">if</span> (note) {
+        store.<span class="tok-fn">commit</span>(events.<span class="tok-fn">noteUpdated</span>({ ...note, text, updatedAt }))
+      } <span class="tok-keyword">else if</span> (text.<span class="tok-fn">trim</span>()) {
+        store.<span class="tok-fn">commit</span>(events.<span class="tok-fn">noteCreated</span>({
+          id, title: <span class="tok-string">""</span>, text, status: <span class="tok-string">"active"</span>, updatedAt,
+        }))
+      }
+    },
+    [notes, store],
+  )
+}</code></pre>
         </div>
       </div>
 
@@ -628,39 +701,73 @@ defineProps<{
             <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/features/agent/hooks/use-current-user-agent.ts#L17" target="_blank" rel="noreferrer">
               <span>useFlueAgent</span><em>use-current-user-agent.ts ↗</em>
             </a>
-            <pre><code><span class="tok-keyword">export const</span> <span class="tok-fn">useCurrentUserAgent</span> = ({ agent: agentName, conversationId }) =&gt; {
-  <span class="tok-keyword">const</span> token = <span class="tok-fn">useAuthToken</span>()
+            <pre><code><span class="tok-keyword">import</span> {
+  useFlueAgent,
+} <span class="tok-keyword">from</span> <span class="tok-string">"@flue/react"</span>;
+<span class="tok-keyword">import</span> {
+  createFlueClient,
+} <span class="tok-keyword">from</span> <span class="tok-string">"@flue/sdk"</span>;
+<span class="tok-comment">// ...</span>
+
+<span class="tok-keyword">export const</span> <span class="tok-fn">useCurrentUserAgent</span> = ({
+  agent: agentName,
+  conversationId,
+}: {
+  agent: <span class="tok-type">AgentName</span>;
+  conversationId: string;
+}) =&gt; {
+  <span class="tok-keyword">const</span> token = <span class="tok-fn">useAuthToken</span>();
+
   <span class="tok-keyword">const</span> client = <span class="tok-fn">useMemo</span>(
-    () =&gt; <span class="tok-fn">createFlueClient</span>({
-      <span class="tok-prop">url</span>: API_PATHS.<span class="tok-fn">agent</span>(agentName, conversationId),
-      token,
-    }),
+    () =&gt;
+      <span class="tok-fn">createFlueClient</span>({
+        <span class="tok-prop">url</span>:
+          <span class="tok-string">`/api/agents/${agent}/${conversationId}`</span>,
+        token,
+      }),
     [agentName, conversationId, token],
-  )
-  <span class="tok-keyword">const</span> agent = <span class="tok-fn">useFlueAgent</span>({ client })
-  <span class="tok-keyword">return</span> { agent, client }
-}</code></pre>
+  );
+
+  <span class="tok-keyword">const</span> agent = <span class="tok-fn">useFlueAgent</span>({ client });
+
+  <span class="tok-keyword">return</span> { agent, client };
+};</code></pre>
           </div>
           <div class="canvas-code-panel">
             <a class="code-path tone-browser" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/web/user/features/agent/hooks/use-agent-chat-runtime.ts#L16" target="_blank" rel="noreferrer">
-              <span>sync with assistant-ui</span><em>use-agent-chat-runtime.ts ↗</em>
+              <span>assistant-ui runtime</span><em>use-agent-chat-runtime.ts ↗</em>
             </a>
-            <pre><code><span class="tok-keyword">const</span> { agent, client } = <span class="tok-fn">useCurrentUserAgent</span>({
-  <span class="tok-prop">agent</span>: AgentName.Hello, <span class="tok-prop">conversationId</span>: noteId,
-})
-<span class="tok-keyword">const</span> isWorking = isOnline &amp;&amp;
-  (agent.status === <span class="tok-string">"submitted"</span> || agent.status === <span class="tok-string">"streaming"</span>)
-<span class="tok-keyword">const</span> messages = agent.messages.<span class="tok-fn">filter</span>(isVisibleRenderableMessage)
+            <pre><code><span class="tok-keyword">import</span> { useExternalStoreRuntime, <span class="tok-keyword">type</span> <span class="tok-type">AppendMessage</span> } <span class="tok-keyword">from</span> <span class="tok-string">"@assistant-ui/react"</span>;
+<span class="tok-keyword">import</span> { getAppendMessageText, toThreadMessage } <span class="tok-keyword">from</span> <span class="tok-string">"../agent-message-adapter.ts"</span>;
+<span class="tok-comment">// ...</span>
 
-<span class="tok-keyword">const</span> onNew = <span class="tok-keyword">async</span> message =&gt; {
-  <span class="tok-keyword">const</span> body = <span class="tok-fn">getAppendMessageText</span>(message)
-  <span class="tok-keyword">if</span> (isOnline &amp;&amp; body) <span class="tok-keyword">await</span> agent.<span class="tok-fn">sendMessage</span>(body)
-}
-<span class="tok-keyword">const</span> runtime = <span class="tok-fn">useExternalStoreRuntime</span>({
-  messages, <span class="tok-prop">convertMessage</span>: toThreadMessage,
-  <span class="tok-prop">isLoading</span>: !agent.historyReady, <span class="tok-prop">isRunning</span>: isWorking,
-  onNew, <span class="tok-prop">onCancel</span>: () =&gt; client.<span class="tok-fn">abort</span>(),
-})</code></pre>
+<span class="tok-keyword">export function</span> <span class="tok-fn">useAgentChatRuntime</span>({ noteId }: { noteId: string }) {
+  <span class="tok-keyword">const</span> { agent, client } =
+    <span class="tok-fn">useCurrentUserAgent</span>({ <span class="tok-prop">agent</span>: AgentName.Hello, <span class="tok-prop">conversationId</span>: noteId });
+
+  <span class="tok-keyword">const</span> onNew = <span class="tok-keyword">async</span> (message: <span class="tok-type">AppendMessage</span>) =&gt; {
+    <span class="tok-comment">// normalize new message</span>
+    <span class="tok-keyword">const</span> body = <span class="tok-fn">getAppendMessageText</span>(message);
+    <span class="tok-keyword">if</span> (!body) <span class="tok-keyword">return</span>;
+    <span class="tok-keyword">await</span> agent.<span class="tok-fn">sendMessage</span>(body);
+  };
+
+  <span class="tok-keyword">const</span> onCancel = <span class="tok-keyword">async</span> () =&gt; {
+    <span class="tok-keyword">await</span> client.<span class="tok-fn">abort</span>();
+  };
+
+  <span class="tok-keyword">const</span> runtime = <span class="tok-fn">useExternalStoreRuntime</span>({
+    <span class="tok-prop">messages</span>: agent.messages,
+    <span class="tok-comment">// map flue message to assistant-ui message</span>
+    <span class="tok-prop">convertMessage</span>: toThreadMessage,
+    <span class="tok-prop">isLoading</span>: !agent.historyReady,
+    <span class="tok-prop">isRunning</span>: agent.status === <span class="tok-string">"submitted"</span> || agent.status === <span class="tok-string">"streaming"</span>,
+    onNew,
+    onCancel,
+  });
+
+  <span class="tok-comment">// ...</span>
+}</code></pre>
           </div>
         </div>
       </div>
@@ -672,35 +779,51 @@ defineProps<{
             <a class="code-path tone-edge" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agent.worker.ts#L145" target="_blank" rel="noreferrer">
               <span>agent router</span><em>agent.worker.ts ↗</em>
             </a>
-            <pre><code><span class="tok-keyword">function</span> <span class="tok-fn">userAgentRouter</span>(name, agent) {
+            <pre><code><span class="tok-keyword">import</span> { createAgentRouter } <span class="tok-keyword">from</span> <span class="tok-string">"@flue/runtime/routing"</span>;
+<span class="tok-comment">// ...</span>
+
+<span class="tok-keyword">function</span> <span class="tok-fn">userAgentRouter</span>(name, agent) {
   <span class="tok-keyword">const</span> router = <span class="tok-keyword">new</span> <span class="tok-type">Hono</span>()
   router.<span class="tok-fn">route</span>(<span class="tok-string">"/"</span>, <span class="tok-fn">createAgentRouter</span>(agent))
   <span class="tok-keyword">return</span> router
 }
 
-<span class="tok-keyword">for</span> (<span class="tok-keyword">const</span> [name, agent] <span class="tok-keyword">of</span> agents)
+<span class="tok-keyword">const</span> agentRoutes = <span class="tok-keyword">new</span> <span class="tok-type">Hono</span>&lt;<span class="tok-type">AppEnv</span>&gt;();
+<span class="tok-keyword">for</span> (<span class="tok-keyword">const</span> [name, agent] <span class="tok-keyword">of</span> agents) {
   agentRoutes.<span class="tok-fn">route</span>(`/${name}`, <span class="tok-fn">userAgentRouter</span>(name, agent))
+}
 
-app.<span class="tok-fn">route</span>(API_PATHS.agents, agentRoutes)</code></pre>
+<span class="tok-keyword">const</span> app = <span class="tok-keyword">new</span> <span class="tok-type">Hono</span>&lt;<span class="tok-type">AppEnv</span>&gt;();
+app.<span class="tok-fn">route</span>(<span class="tok-string">"/api/agents"</span>, agentRoutes)</code></pre>
           </div>
         </div>
       </div>
 
       <div v-click="3" class="flow-state">
-        <div v-click.hide="4" class="canvas-code-grid canvas-code-agent-full canvas-code-agent-use-agent">
+        <div v-click.hide="4" class="canvas-code-grid canvas-code-agent-hello">
           <div class="canvas-code-panel">
-            <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agents/hello.agent.ts#L1" target="_blank" rel="noreferrer">
-              <span>useAgent</span><em>hello.agent.ts ↗</em>
+            <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agents/hello.agent.ts#L14" target="_blank" rel="noreferrer">
+              <span>Hello agent</span><em>hello.agent.ts ↗</em>
             </a>
-            <pre><code><span class="tok-string">"use agent"</span>
-<span class="tok-keyword">export function</span> <span class="tok-fn">Hello</span>() {
-  <span class="tok-keyword">const</span> context = <span class="tok-fn">useInitialData</span>()
-  <span class="tok-fn">useModel</span>(MODEL, {
-    <span class="tok-prop">thinkingLevel</span>: <span class="tok-string">"off"</span>,
-  })
-  <span class="tok-keyword">for</span> (<span class="tok-keyword">const</span> tool <span class="tok-keyword">of</span>
-    <span class="tok-fn">notesTools</span>(context.userId, context.noteId))
+            <div class="canvas-code-columns canvas-code-columns-hello">
+              <pre><code><span class="tok-keyword">import</span> { useInitialData, useModel, useTool } <span class="tok-keyword">from</span> <span class="tok-string">"@flue/runtime"</span>
+<span class="tok-keyword">import</span> * <span class="tok-keyword">as</span> v <span class="tok-keyword">from</span> <span class="tok-string">"valibot"</span>
+<span class="tok-keyword">import</span> { notesTools } <span class="tok-keyword">from</span> <span class="tok-string">"../tools/notes.tool.ts"</span>
+
+<span class="tok-keyword">const</span> agentContextSchema = v.<span class="tok-fn">object</span>({
+  <span class="tok-prop">userId</span>: v.<span class="tok-fn">pipe</span>(v.<span class="tok-fn">string</span>()),
+  <span class="tok-prop">noteId</span>: v.<span class="tok-fn">pipe</span>(v.<span class="tok-fn">string</span>()),
+})
+
+<span class="tok-keyword">type</span> <span class="tok-type">AgentContext</span> = v.<span class="tok-type">InferOutput</span>&lt;<span class="tok-keyword">typeof</span> agentContextSchema&gt;</code></pre>
+              <pre><code><span class="tok-keyword">export function</span> <span class="tok-fn">Hello</span>() {
+  <span class="tok-keyword">const</span> context = <span class="tok-fn">useInitialData</span>&lt;<span class="tok-type">AgentContext</span>&gt;()
+
+  <span class="tok-fn">useModel</span>(<span class="tok-string">"cloudflare/@cf/zai-org/glm-4.7-flash"</span>, { <span class="tok-prop">thinkingLevel</span>: <span class="tok-string">"off"</span> })
+
+  <span class="tok-keyword">for</span> (<span class="tok-keyword">const</span> tool <span class="tok-keyword">of</span> <span class="tok-fn">notesTools</span>(context.userId, context.noteId)) {
     <span class="tok-fn">useTool</span>(tool)
+  }
 
   <span class="tok-keyword">return</span> [
     <span class="tok-string">"You are a concise writing assistant"</span>,
@@ -708,13 +831,65 @@ app.<span class="tok-fn">route</span>(API_PATHS.agents, agentRoutes)</code></pre
     <span class="tok-string">"For edits, call write_note"</span>,
   ].<span class="tok-fn">join</span>(<span class="tok-string">" "</span>)
 }
+
 Hello.initialData = agentContextSchema</code></pre>
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-click="5" class="flow-state">
-        <div v-click.hide="6" class="canvas-code-grid canvas-code-agent-full canvas-code-agent-tools">
+      <div v-click="4" class="flow-state">
+        <div v-click.hide="5" class="canvas-code-grid canvas-code-agent-composable">
+          <div class="canvas-code-panel">
+            <div class="code-path tone-user">
+              <span>Composable agent</span><em>model + sandbox + state + harness</em>
+            </div>
+            <div class="canvas-code-columns canvas-code-columns-composable">
+              <pre><code><span class="tok-keyword">import</span> { getSandbox } <span class="tok-keyword">from</span> <span class="tok-string">"@cloudflare/sandbox"</span>
+<span class="tok-keyword">import</span> { env } <span class="tok-keyword">from</span> <span class="tok-string">"cloudflare:workers"</span>
+<span class="tok-keyword">import</span> { <span class="tok-keyword">type</span> <span class="tok-type">AgentProps</span>, useModel, useSandbox, useTool } <span class="tok-keyword">from</span> <span class="tok-string">"@flue/runtime"</span>
+<span class="tok-keyword">import</span> { cloudflareSandbox } <span class="tok-keyword">from</span> <span class="tok-string">"@flue/runtime/cloudflare"</span>
+
+<span class="tok-keyword">export function</span> <span class="tok-fn">Example</span>({ id }: <span class="tok-type">AgentProps</span>) {
+  <span class="tok-fn">useModel</span>(MODEL)
+  <span class="tok-fn">useSandbox</span>(
+    <span class="tok-fn">cloudflareSandbox</span>(
+      <span class="tok-fn">getSandbox</span>(env.Sandbox, id)
+    )
+  )
+  <span class="tok-fn">useTool</span>(reviewFile)
+  <span class="tok-keyword">return</span> <span class="tok-fn">useWriteGate</span>()
+}</code></pre>
+              <pre><code><span class="tok-keyword">const</span> reviewFile = <span class="tok-fn">defineTool</span>({
+  <span class="tok-prop">name</span>: <span class="tok-string">"review_file"</span>,
+  <span class="tok-prop">description</span>: <span class="tok-string">"Review a file from the workspace"</span>,
+  <span class="tok-prop">harness</span>: <span class="tok-keyword">true</span>,
+  <span class="tok-keyword">async</span> <span class="tok-fn">run</span>({ harness }) {
+    <span class="tok-keyword">const</span> text = <span class="tok-keyword">await</span> harness.sandbox.<span class="tok-fn">readFile</span>(<span class="tok-string">"report.md"</span>)
+    <span class="tok-keyword">const</span> review = <span class="tok-keyword">await</span> harness.<span class="tok-fn">prompt</span>(<span class="tok-string">`Review:\n${text}`</span>)
+    <span class="tok-keyword">return</span> { <span class="tok-prop">output</span>: review.text }
+  },
+})</code></pre>
+              <pre><code><span class="tok-keyword">function</span> <span class="tok-fn">useWriteGate</span>() {
+  <span class="tok-keyword">const</span> [canWrite, setCanWrite] =
+    <span class="tok-fn">usePersistentState</span>(<span class="tok-string">"canWrite"</span>, <span class="tok-keyword">false</span>)
+  <span class="tok-fn">useTool</span>({
+    <span class="tok-prop">name</span>: <span class="tok-string">"enable_writes"</span>,
+    <span class="tok-prop">description</span>: <span class="tok-string">"Enable writing after approval"</span>,
+    <span class="tok-fn">run</span>() { <span class="tok-fn">setCanWrite</span>(<span class="tok-keyword">true</span>); <span class="tok-keyword">return</span> <span class="tok-string">"Writing enabled"</span> },
+  })
+  <span class="tok-keyword">if</span> (canWrite) <span class="tok-fn">useTool</span>(writeNote)
+  <span class="tok-keyword">return</span> canWrite
+    ? <span class="tok-string">"You may edit notes with write_note"</span>
+    : <span class="tok-string">"Read-only. Confirm before enabling writes"</span>
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-click="6" class="flow-state">
+        <div v-click.hide="7" class="canvas-code-grid canvas-code-agent-full canvas-code-agent-tools">
           <div class="canvas-code-panel">
             <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/tools/notes.tool.ts#L8" target="_blank" rel="noreferrer">
               <span>Tools</span><em>notes.tool.ts ↗</em>
@@ -746,8 +921,8 @@ Hello.initialData = agentContextSchema</code></pre>
         </div>
       </div>
 
-      <div v-click="6" class="flow-state">
-        <div v-click.hide="7" class="canvas-code-grid canvas-code-agent-full canvas-code-agent-userdo">
+      <div v-click="7" class="flow-state">
+        <div v-click.hide="8" class="canvas-code-grid canvas-code-agent-full canvas-code-agent-userdo">
           <div class="canvas-code-panel">
             <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L30" target="_blank" rel="noreferrer">
               <span>Materialize UserSyncBackendDO</span><em>user.do.ts ↗</em>
