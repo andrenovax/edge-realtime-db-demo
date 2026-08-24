@@ -23,6 +23,8 @@ relocation, and migrations across a fleet of small databases.
 > Companion repository for the technical deep dive **“Your Database,
 > Everywhere.”**
 
+**[View the slides](https://do-slides.hell-o.workers.dev/) · [Open the live demo](https://do.hell-o.workers.dev/)**
+
 ## What the demo implements
 
 - **Per-user SQLite databases** — an authenticated user ID deterministically

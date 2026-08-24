@@ -6,6 +6,8 @@ import * as RemovalPolicy from "alchemy/RemovalPolicy";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type { ClientDoWithRpcCallback } from "@livestore/adapter-cloudflare";
+import type { SyncBackendRpcInterface } from "@livestore/sync-cf/cf-worker";
 import type { UserDoRpc } from "@workers/livestore/user-contract";
 import { resolveFlueAlchemyManifest, type FlueAlchemyManifest } from "./flue-alchemy.ts";
 
@@ -74,10 +76,10 @@ export const LiveStoreWorker = (events: Cloudflare.Queues.Queue, name?: string) 
     compatibility: deploymentConfig.compatibility,
     env: {
       EVENTS_QUEUE: events,
-      USER_DO: Cloudflare.DurableObject<UserDoRpc>("UserDO", {
+      USER_DO: Cloudflare.DurableObject<ClientDoWithRpcCallback>("UserDO", {
         transferredFrom: ["api", "sync"],
       }),
-      USER_SYNC_BACKEND_DO: Cloudflare.DurableObject<Record<never, never>>("UserSyncBackendDO", {
+      USER_SYNC_BACKEND_DO: Cloudflare.DurableObject<SyncBackendRpcInterface>("UserSyncBackendDO", {
         transferredFrom: ["api", "sync"],
       }),
     },

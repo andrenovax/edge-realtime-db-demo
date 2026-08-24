@@ -8,8 +8,8 @@
  * prefix (today only per-user stores; a future "project:<id>" store adds
  * a binding plus a branch here, not a new URL).
  */
-import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sync-cf/cf-worker";
 import type { LiveStoreEnv } from "@infra/env";
+import { handleSyncRequest, matchSyncRequest, type CfTypes } from "@livestore/sync-cf/cf-worker";
 
 // Hosting both LiveStore DOs here keeps the bindings acyclic: the sync
 // backend's live-pull callback needs USER_DO in ITS env, and UserDO's
@@ -17,24 +17,25 @@ import type { LiveStoreEnv } from "@infra/env";
 export { UserSyncBackendDO } from "./user-sync-backend.do.ts";
 export { UserDO } from "./user.do.ts";
 
+const SYNC_BACKEND_BINDING = "USER_SYNC_BACKEND_DO" satisfies keyof LiveStoreEnv;
+
 export default {
-  async fetch(request: Request, env: LiveStoreEnv, ctx: ExecutionContext): Promise<Response> {
-    const searchParams = matchSyncRequest(request as unknown as CfTypes.Request);
+  fetch(request: CfTypes.Request, env: LiveStoreEnv, ctx: CfTypes.ExecutionContext) {
+    const searchParams = matchSyncRequest(request);
     if (searchParams === undefined) return new Response("not found", { status: 404 });
 
-    return (await handleSyncRequest({
-      request: request as unknown as CfTypes.Request,
+    return handleSyncRequest<Record<keyof LiveStoreEnv, unknown>>({
+      request,
       searchParams,
-      // Effect-typed generics recurse on our env shape; erase it.
-      env: env as never,
-      ctx: ctx as unknown as CfTypes.ExecutionContext,
-      syncBackendBinding: "USER_SYNC_BACKEND_DO",
+      env,
+      ctx,
+      syncBackendBinding: SYNC_BACKEND_BINDING,
       validatePayload: (_payload, { storeId, headers }) => {
         const userId = headers.get("x-user-id");
         if (!userId || env.USER_DO.idFromName(userId).toString() !== storeId) {
           throw new Error("forbidden: not your store");
         }
       },
-    })) as unknown as Response;
+    });
   },
 };

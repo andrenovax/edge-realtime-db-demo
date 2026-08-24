@@ -1,5 +1,5 @@
-import { makeDurableObject } from "@livestore/sync-cf/cf-worker";
 import type { LiveStoreEnv } from "@infra/env";
+import { makeDurableObject, type CfTypes } from "@livestore/sync-cf/cf-worker";
 import type { ProjectionMessage } from "@workers/admin/contract";
 
 let doEnv: LiveStoreEnv | undefined;
@@ -37,8 +37,8 @@ export class UserSyncBackendDO extends makeDurableObject({
     await queue.sendBatch(projections.map((body) => ({ body })));
   },
 }) {
-  constructor(ctx: DurableObjectState, env: LiveStoreEnv) {
-    super(ctx as never, env as never);
+  constructor(ctx: CfTypes.DurableObjectState, env: LiveStoreEnv) {
+    super(ctx, env);
     doEnv = env;
   }
 }

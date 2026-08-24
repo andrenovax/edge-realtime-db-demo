@@ -1,12 +1,10 @@
-import type { UserDO } from "./user.do.ts";
 import type { AgentModelVariant } from "@db/constants";
 import type { AgentConversation } from "@db/livestore";
+import type { UserDO } from "./user.do.ts";
 
 export type { AgentConversation, AgentModelVariant };
 
-// UserDO's cross-worker command surface for workers holding a USER_DO binding.
-// Type-only seam — the DO class itself never leaves this worker.
-export type UserDoRpc = Pick<
+type UserDoMethods = Pick<
   UserDO,
   | "addNote"
   | "updateNote"
@@ -16,5 +14,7 @@ export type UserDoRpc = Pick<
   | "listNotes"
   | "createConversation"
   | "getAgentConversation"
-> &
-  Rpc.DurableObjectBranded;
+>;
+
+// Cross-worker command surface for consumers holding a USER_DO binding.
+export type UserDoRpc = UserDoMethods & Rpc.DurableObjectBranded;

@@ -33,3 +33,13 @@ This is a [Flue](https://flueframework.com) project: agents are TypeScript funct
   `nub exec varlock run -- <command>`; the root `dev` and `deploy` scripts
   already do this.
 - Prefer 1Password `op(...)` references or Varlock local encryption over plaintext secrets in gitignored env files.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked as local Markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This repo uses a single-context domain-doc layout. See `docs/agents/domain.md`.

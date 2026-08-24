@@ -1,5 +1,5 @@
 {
-  "name": "flue-alchemy-demo",
+  "name": "durable-object-demo",
   "private": true,
   "type": "module",
   "scripts": {

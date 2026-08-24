@@ -1,0 +1,20 @@
+{
+  "name": "database-everywhere-slide-2",
+  "private": true,
+  "type": "module",
+  "packageManager": "nub@0.7.5",
+  "scripts": {
+    "dev": "slidev slides.md --open",
+    "build": "slidev build slides.md",
+    "deploy": "nub run build && node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist/_redirects', { force: true })\" && wrangler deploy --config wrangler.jsonc",
+    "export": "slidev export slides.md"
+  },
+  "devDependencies": {
+    "@slidev/cli": "52.18.0",
+    "@slidev/theme-default": "0.25.0",
+    "wrangler": "^4.124.0"
+  },
+  "overrides": {
+    "cytoscape": "3.33.4"
+  }
+}
