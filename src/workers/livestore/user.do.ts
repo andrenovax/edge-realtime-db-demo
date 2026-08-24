@@ -1,10 +1,10 @@
-import { createStoreDoPromise, type ClientDoWithRpcCallback } from "@livestore/adapter-cloudflare";
-import type { Store } from "@livestore/livestore";
-import { handleSyncUpdateRpc } from "@livestore/sync-cf/client";
-import { DurableObject } from "cloudflare:workers";
-import { events, schema, tables } from "@db/livestore";
 import type { AgentConversation } from "@db/livestore";
+import { events, schema, tables } from "@db/livestore";
 import type { LiveStoreEnv } from "@infra/env";
+import { makeAdapter, type ClientDoWithRpcCallback } from "@livestore/adapter-cloudflare";
+import { createStorePromise, type Store } from "@livestore/livestore";
+import { handleSyncUpdateRpc, makeDoRpcSync } from "@livestore/sync-cf/client";
+import { DurableObject } from "cloudflare:workers";
 import type {
   AddNotePayload,
   CreateConversationPayload,
@@ -28,7 +28,7 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
 
   // LiveStore live-pull callback (sync backend -> this client DO).
   async syncUpdateRpc(payload: Parameters<ClientDoWithRpcCallback["syncUpdateRpc"]>[0]) {
-    await handleSyncUpdateRpc(payload as never);
+    await handleSyncUpdateRpc(payload);
   }
 
   async #getStore() {
@@ -43,21 +43,26 @@ export class UserDO extends DurableObject<LiveStoreEnv> implements ClientDoWithR
     // Unlike ctx.id.name, the opaque ID survives stubs reconstructed with
     // idFromString(), including LiveStore's Cap'n Web callback path.
     const storeId = this.ctx.id.toString();
-    this.#store = await createStoreDoPromise({
+    const syncBackendStub = env.USER_SYNC_BACKEND_DO.get(
+      env.USER_SYNC_BACKEND_DO.idFromName(storeId),
+    );
+    this.#store = await createStorePromise({
       schema,
       storeId,
-      clientId: "user-do",
-      sessionId: `user-do-${Date.now()}`,
-      durableObject: {
-        ctx: this.ctx as never,
-        // LiveStore's binding-key generic recurses through UserDoRpc -> UserDO.
-        env: this.env as never,
-        bindingName: "USER_DO",
-      },
-      syncBackendStub: env.USER_SYNC_BACKEND_DO.get(
-        env.USER_SYNC_BACKEND_DO.idFromName(storeId),
-      ) as never,
-      livePull: true,
+      adapter: makeAdapter({
+        storage: this.ctx.storage,
+        clientId: "user-do",
+        sessionId: `user-do-${Date.now()}`,
+        syncOptions: {
+          backend: makeDoRpcSync({
+            syncBackendStub,
+            // The sync backend calls this instance back through this binding.
+            durableObjectContext: { bindingName: "USER_DO", durableObjectId: storeId },
+          }),
+          livePull: true,
+          initialSyncOptions: { _tag: "Blocking", timeout: 500 },
+        },
+      }),
     });
     this.#storeCreatedAt = Date.now();
     return this.#store;

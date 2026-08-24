@@ -8,13 +8,15 @@ const agentContextSchema = v.object({
   noteId: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(128)),
 });
 
+type AgentContext = v.InferOutput<typeof agentContextSchema>;
+
 // Every exported capitalized function in a 'use agent' module is an agent,
 // and the function's name is its durable identity. The return value is the
 // agent's system prompt.
 export function Hello() {
   // The opaque Flue instance id identifies both the conversation and its note.
   // The owner is injected separately so tools can reach only that user's DO.
-  const context = useInitialData<v.InferOutput<typeof agentContextSchema>>();
+  const context = useInitialData<AgentContext>();
   if (!context) throw new Error("Hello requires server-owned context");
 
   useModel("cloudflare/@cf/zai-org/glm-4.7-flash", { thinkingLevel: "off" });

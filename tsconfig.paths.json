@@ -8,6 +8,7 @@
       "@ui/hooks/*": ["./src/web/user/hooks/*"],
       "@ui/routes.context": ["./src/web/user/routes.context.ts"],
       "@infra/env": ["./infra/alchemy.run.ts"],
+      "@cloudflare/workers-types": ["./node_modules/@cloudflare/workers-types/index.ts"],
       "@db/admin": ["./db/admin/schema.ts"],
       "@db/auth": ["./db/auth/schema.ts"],
       "@db/constants": ["./db/constants.ts"],
