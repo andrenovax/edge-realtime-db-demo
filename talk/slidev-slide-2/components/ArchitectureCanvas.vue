@@ -160,7 +160,10 @@ defineProps<{
       <div class="flow-card-slot flow-card-slot-edge">
         <div class="trace-stack-card is-future"><b>Admin Worker</b><span>global reads</span></div>
         <div v-if="canvas === 'projection'" v-click="1" class="flow-card-state">
-          <div class="trace-stack-card is-active"><b>Admin Worker</b><span>global reads</span></div>
+          <div v-click.hide="2" class="trace-stack-card is-active"><b>Admin Worker</b><span>global reads</span></div>
+        </div>
+        <div v-if="canvas === 'projection'" v-click="2" class="flow-card-state">
+          <div class="trace-stack-card is-active is-edge-highlight"><b>Admin Worker</b><span>global reads</span></div>
         </div>
       </div>
     </div>
@@ -184,7 +187,10 @@ defineProps<{
           <div class="trace-stack-card is-active"><b>UserSyncBackendDO</b><span>canonical event log · SQLite</span></div>
         </div>
         <div v-if="canvas === 'projection'" v-click="1" class="flow-card-state">
-          <div class="trace-stack-card is-active is-user-highlight"><b>UserSyncBackendDO</b><span>canonical event log · SQLite</span></div>
+          <div v-click.hide="2" class="trace-stack-card is-active is-user-highlight"><b>UserSyncBackendDO</b><span>canonical event log · SQLite</span></div>
+        </div>
+        <div v-if="canvas === 'projection'" v-click="2" class="flow-card-state">
+          <div class="trace-stack-card is-active"><b>UserSyncBackendDO</b><span>canonical event log · SQLite</span></div>
         </div>
       </div>
 
@@ -888,6 +894,20 @@ Hello.initialData = agentContextSchema</code></pre>
         </div>
       </div>
 
+      <div v-click="5" class="flow-state">
+        <aside v-click.hide="6" class="workers-ai-panel" aria-label="Workers AI model examples">
+          <div class="workers-ai-panel-copy">
+            <small>Workers AI</small>
+            <strong>AI inference at the edge</strong>
+          </div>
+          <div class="workers-ai-model-tags">
+            <span class="is-selected">GLM 4.7 Flash</span>
+            <span>GPT-OSS 120B</span>
+            <span>Llama 4 Scout</span>
+          </div>
+        </aside>
+      </div>
+
       <div v-click="6" class="flow-state">
         <div v-click.hide="7" class="canvas-code-grid canvas-code-agent-full canvas-code-agent-tools">
           <div class="canvas-code-panel">
@@ -927,29 +947,83 @@ Hello.initialData = agentContextSchema</code></pre>
             <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L30" target="_blank" rel="noreferrer">
               <span>Materialize UserSyncBackendDO</span><em>user.do.ts ↗</em>
             </a>
-            <pre><code><span class="tok-keyword">async</span> <span class="tok-fn">#getStore</span>() {
-  <span class="tok-keyword">const</span> storeId = this.ctx.id.<span class="tok-fn">toString</span>()
-  <span class="tok-keyword">return</span> this.#store ??= <span class="tok-fn">createStoreDoPromise</span>({
-    schema, storeId,
-    <span class="tok-prop">syncBackendStub</span>: this.env.USER_SYNC_BACKEND_DO
-      .<span class="tok-fn">get</span>(this.env.USER_SYNC_BACKEND_DO.<span class="tok-fn">idFromName</span>(storeId)),
-  })
+            <pre><code><span class="tok-keyword">import</span> {
+  createStoreDoPromise,
+  <span class="tok-keyword">type</span> ClientDoWithRpcCallback
+} <span class="tok-keyword">from</span> <span class="tok-string">"@livestore/adapter-cloudflare"</span>;
+<span class="tok-keyword">import</span> { schema, tables } <span class="tok-keyword">from</span> <span class="tok-string">"@db/livestore"</span>;
+<span class="tok-keyword">import</span> { handleSyncUpdateRpc } <span class="tok-keyword">from</span> <span class="tok-string">"@livestore/sync-cf/client"</span>;
+<span class="tok-keyword">import type</span> { LiveStoreEnv } <span class="tok-keyword">from</span> <span class="tok-string">"@infra/env"</span>;
+<span class="tok-keyword">import</span> { DurableObject } <span class="tok-keyword">from</span> <span class="tok-string">"cloudflare:workers"</span>;
+
+<span class="tok-keyword">export class</span> UserDO <span class="tok-keyword">extends</span> DurableObject&lt;LiveStoreEnv&gt;
+  <span class="tok-keyword">implements</span> ClientDoWithRpcCallback {
+  <span class="tok-comment">// ...</span>
+  <span class="tok-keyword">async</span> <span class="tok-fn">syncUpdateRpc</span>(payload) {
+    <span class="tok-keyword">await</span> <span class="tok-fn">handleSyncUpdateRpc</span>(payload <span class="tok-keyword">as never</span>);
+  }
+
+  <span class="tok-keyword">async</span> <span class="tok-fn">#getStore</span>() {
+    <span class="tok-comment">// ...</span>
+    <span class="tok-keyword">const</span> storeId = this.ctx.id.<span class="tok-fn">toString</span>();
+    <span class="tok-keyword">const</span> userSyncBackendDoId = this.env
+      .USER_SYNC_BACKEND_DO.<span class="tok-fn">idFromName</span>(storeId);
+    <span class="tok-keyword">const</span> syncBackendStub = this.env
+      .USER_SYNC_BACKEND_DO.<span class="tok-fn">get</span>(userSyncBackendDoId);
+    this.#store = <span class="tok-keyword">await</span> <span class="tok-fn">createStoreDoPromise</span>({
+      schema,
+      storeId,
+      <span class="tok-prop">clientId</span>: <span class="tok-string">"user-do"</span>,
+      <span class="tok-prop">sessionId</span>: <span class="tok-string">`user-do-${Date.now()}`</span>,
+      <span class="tok-prop">durableObject</span>: {
+        <span class="tok-prop">ctx</span>: this.ctx,
+        <span class="tok-prop">env</span>: this.env,
+        <span class="tok-prop">bindingName</span>: <span class="tok-string">"USER_DO"</span>,
+      },
+      syncBackendStub,
+      <span class="tok-prop">livePull</span>: <span class="tok-keyword">true</span>,
+    });
+    <span class="tok-keyword">return</span> this.#store;
+  }
+  <span class="tok-comment">// ...</span>
 }</code></pre>
           </div>
           <div class="canvas-code-panel">
             <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L91" target="_blank" rel="noreferrer">
               <span>RPC</span><em>user.do.ts ↗</em>
             </a>
-            <pre><code><span class="tok-keyword">async</span> <span class="tok-fn">getNote</span>({ id }) {
-  <span class="tok-keyword">const</span> store = <span class="tok-keyword">await</span> this.<span class="tok-fn">#getStore</span>()
-  <span class="tok-keyword">return</span> store.<span class="tok-fn">query</span>(tables.notes.<span class="tok-fn">select</span>())
-    .<span class="tok-fn">find</span>(note =&gt; note.id === id)
-}
+            <pre><code><span class="tok-keyword">export class</span> UserDO <span class="tok-keyword">extends</span> DurableObject&lt;LiveStoreEnv&gt;
+  <span class="tok-keyword">implements</span> ClientDoWithRpcCallback {
+  <span class="tok-comment">// ...</span>
 
-<span class="tok-keyword">async</span> <span class="tok-fn">writeNote</span>({ id, text }) {
-  <span class="tok-keyword">const</span> store = <span class="tok-keyword">await</span> this.<span class="tok-fn">#getStore</span>()
-  store.<span class="tok-fn">commit</span>(events.<span class="tok-fn">noteUpdated</span>({ id, text, <span class="tok-prop">updatedAt</span>: Date.<span class="tok-fn">now</span>() }))
-  <span class="tok-keyword">return</span> { id, text }
+  <span class="tok-keyword">async</span> <span class="tok-fn">getNote</span>({ id }: GetNotePayload) {
+    <span class="tok-keyword">const</span> store = <span class="tok-keyword">await</span> this.<span class="tok-fn">#getStore</span>();
+    <span class="tok-keyword">return</span> store.<span class="tok-fn">query</span>(tables.notes.<span class="tok-fn">select</span>())
+      .<span class="tok-fn">find</span>((note) =&gt; note.id === id);
+  }
+
+  <span class="tok-keyword">async</span> <span class="tok-fn">writeNote</span>({ id, text }: WriteNotePayload) {
+    <span class="tok-keyword">const</span> store = <span class="tok-keyword">await</span> this.<span class="tok-fn">#getStore</span>();
+    <span class="tok-keyword">const</span> existing = store.<span class="tok-fn">query</span>(tables.notes.<span class="tok-fn">select</span>())
+      .<span class="tok-fn">find</span>((note) =&gt; note.id === id);
+    <span class="tok-keyword">const</span> base = existing ?? {
+      id,
+      <span class="tok-prop">status</span>: <span class="tok-string">"active"</span> <span class="tok-keyword">as const</span>,
+      <span class="tok-prop">updatedAt</span>: Date.<span class="tok-fn">now</span>(),
+    };
+    <span class="tok-keyword">if</span> (!existing) store.<span class="tok-fn">commit</span>(events.<span class="tok-fn">noteCreated</span>(base));
+
+    store.<span class="tok-fn">commit</span>(
+      events.<span class="tok-fn">noteUpdated</span>({
+        ...base,
+        text,
+        <span class="tok-prop">updatedAt</span>: Date.<span class="tok-fn">now</span>()
+      })
+    );
+    <span class="tok-keyword">return</span> { id, text, updatedAt };
+  }
+
+  <span class="tok-comment">// ...</span>
 }</code></pre>
           </div>
         </div>
@@ -962,14 +1036,89 @@ Hello.initialData = agentContextSchema</code></pre>
         <div class="wire-label label-projection-enqueue">enqueue accepted batch</div>
         <div class="wire-label label-projection-delivery">deliver batch · retry on failure</div>
         <div class="wire-label label-projection-fold">dedupe + accept newer source sequence</div>
-        <div class="canvas-code-grid canvas-code-projection-step">
+        <div v-click.hide="2" class="canvas-code-grid canvas-code-projection-step">
           <div class="canvas-code-panel">
             <a class="code-path tone-user" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user-sync-backend.do.ts#L12" target="_blank" rel="noreferrer">
               <span>Publish livestore events to queue</span><em>user-sync-backend.do.ts ↗</em>
             </a>
-            <pre><code><span class="tok-prop">onPush</span>: <span class="tok-keyword">async</span> (message, { storeId }) =&gt; {
-  <span class="tok-keyword">const</span> projections = message.batch.<span class="tok-fn">map</span>(event =&gt; ({ storeId, event }))
-  <span class="tok-keyword">await</span> queue.<span class="tok-fn">sendBatch</span>(projections.<span class="tok-fn">map</span>(body =&gt; ({ body })))
+            <pre><code><span class="tok-keyword">import</span> { makeDurableObject } <span class="tok-keyword">from</span> <span class="tok-string">"@livestore/sync-cf/cf-worker"</span>;
+<span class="tok-keyword">import type</span> { LiveStoreEnv } <span class="tok-keyword">from</span> <span class="tok-string">"@infra/env"</span>;
+
+<span class="tok-keyword">let</span> doEnv: LiveStoreEnv | <span class="tok-keyword">undefined</span>;
+<span class="tok-keyword">export class</span> UserSyncBackendDO <span class="tok-keyword">extends</span> <span class="tok-fn">makeDurableObject</span>({
+  <span class="tok-prop">onPush</span>: <span class="tok-keyword">async</span> (message, { storeId }) =&gt; {
+    <span class="tok-comment">// ...</span>
+    <span class="tok-keyword">const</span> queue = doEnv?.EVENTS_QUEUE;
+    <span class="tok-keyword">const</span> projections = message.batch.<span class="tok-fn">map</span>(event =&gt; ({ storeId, event }))
+    <span class="tok-keyword">await</span> queue.<span class="tok-fn">sendBatch</span>(projections.<span class="tok-fn">map</span>(body =&gt; ({ body })))
+  }
+
+  <span class="tok-fn">constructor</span>(ctx: CfTypes.DurableObjectState, env: LiveStoreEnv) {
+    <span class="tok-keyword">super</span>(ctx, env);
+    doEnv = env;
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div v-click="2" class="flow-state">
+        <div class="canvas-code-grid canvas-code-projection-admin">
+          <div class="canvas-code-panel is-edge-code-highlight">
+            <a class="code-path tone-edge" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/admin/admin.worker.ts#L1" target="_blank" rel="noreferrer">
+              <span>Update admin view</span><em>admin.worker.ts + admin.queue.ts ↗</em>
+            </a>
+            <pre><code><span class="tok-keyword">import</span> { adminNotes, userEvents } <span class="tok-keyword">from</span> <span class="tok-string">"@db/admin"</span>;
+<span class="tok-keyword">import type</span> { NoteEventArgs } <span class="tok-keyword">from</span> <span class="tok-string">"@db/livestore"</span>;
+<span class="tok-keyword">import</span> { eventNames } <span class="tok-keyword">from</span> <span class="tok-string">"@db/livestore/constants"</span>;
+<span class="tok-keyword">import type</span> { AdminEnv } <span class="tok-keyword">from</span> <span class="tok-string">"@infra/env"</span>;
+<span class="tok-keyword">import type</span> { ProjectionMessage } <span class="tok-keyword">from</span> <span class="tok-string">"./admin.contract.ts"</span>;
+
+<span class="tok-keyword">export default</span> {
+  <span class="tok-fn">fetch</span>(request: Request, env: AdminEnv) {
+    <span class="tok-keyword">if</span> (!<span class="tok-fn">isAdmin</span>(request.headers.<span class="tok-fn">get</span>(<span class="tok-string">"x-user-role"</span>))) {
+      <span class="tok-keyword">return new</span> Response(<span class="tok-string">"forbidden"</span>, { <span class="tok-prop">status</span>: <span class="tok-number">403</span> });
+    }
+    <span class="tok-comment">// ...</span>
+  },
+};
+
+<span class="tok-keyword">async function</span> <span class="tok-fn">queue</span>(
+  batch: MessageBatch&lt;ProjectionMessage&gt;,
+  env: AdminEnv
+) {
+  <span class="tok-keyword">const</span> db = <span class="tok-fn">drizzle</span>(env.DB);
+  <span class="tok-keyword">const</span> events = batch.messages.<span class="tok-fn">map</span>(({ body }) =&gt; ({
+    ...body.event,
+    <span class="tok-prop">storeId</span>: body.storeId,
+    <span class="tok-prop">projectedAt</span>: Date.<span class="tok-fn">now</span>(),
+  }));
+
+  <span class="tok-keyword">for</span> (<span class="tok-keyword">const</span> rows <span class="tok-keyword">of</span> <span class="tok-fn">chunkForD1Insert</span>(events, <span class="tok-number">7</span>)) {
+    <span class="tok-keyword">await</span> db.<span class="tok-fn">insert</span>(userEvents).<span class="tok-fn">values</span>(rows)
+      .<span class="tok-fn">onConflictDoNothing</span>();
+  }
+
+  <span class="tok-keyword">const</span> noteRows = events
+    .<span class="tok-fn">filter</span>(
+      (event) =&gt; event.name === eventNames.noteCreated
+        || event.name === eventNames.noteUpdated,
+    )
+    .<span class="tok-fn">toSorted</span>((a, b) =&gt; a.seqNum - b.seqNum)
+    .<span class="tok-fn">map</span>((event) =&gt; ({
+      <span class="tok-prop">storeId</span>: event.storeId,
+      ...(event.args <span class="tok-keyword">as</span> NoteEventArgs),
+      <span class="tok-prop">seqNum</span>: event.seqNum,
+    }));
+
+  <span class="tok-keyword">for</span> (<span class="tok-keyword">const</span> rows <span class="tok-keyword">of</span> <span class="tok-fn">chunkForD1Insert</span>(noteRows, <span class="tok-number">7</span>)) {
+    <span class="tok-keyword">await</span> db
+      .<span class="tok-fn">insert</span>(adminNotes)
+      .<span class="tok-fn">values</span>(rows)
+      .<span class="tok-fn">onConflictDoUpdate</span>({
+        <span class="tok-comment">// ...</span>
+      });
+  }
 }</code></pre>
           </div>
         </div>

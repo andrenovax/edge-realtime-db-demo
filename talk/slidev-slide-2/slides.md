@@ -37,6 +37,23 @@ class: opening disclaimer-opening
 </div>
 
 ---
+class: opening talk-structure-opening
+---
+
+<div class="talk-structure-copy">
+  <h1>What we’ll cover</h1>
+  <ol>
+    <li>Challenges and technologies involved</li>
+    <li>Live demo</li>
+    <li>Architecture and code behind it</li>
+  </ol>
+</div>
+
+<!--
+Set expectations for the talk: establish the challenges and technology choices, show the working system, then unpack its architecture and implementation.
+-->
+
+---
 class: opening world-opening single-db-opening
 ---
 
@@ -93,7 +110,7 @@ class: opening world-opening fleet-world-opening
 <div class="world-stage database-fleet-stage">
   <div class="opening-heading">
     <div class="opening-tag">THE IDEA</div>
-    <h1 class="world-slide-title">Split the database</h1>
+    <h1 class="world-slide-title">Shard the database at the edge</h1>
   </div>
   <img class="world-coastlines" src="/world-low-highlighted.svg?v=1" alt="Low-detail world map highlighting the United States, Ukraine, and Indonesia" />
 
@@ -125,7 +142,7 @@ class: opening partition-boundary-opening
 
 <div class="opening-heading">
   <div class="opening-tag">THE CHALLENGE</div>
-  <h1 class="world-slide-title">How to split?</h1>
+  <h1 class="world-slide-title">What gets its own shard?</h1>
 </div>
 
 <div class="boundary-card-row">
@@ -149,7 +166,7 @@ class: opening partition-boundary-opening
   </div>
   <div class="boundary-option-card">
     <span class="boundary-option-icon i-carbon-building" aria-hidden="true"></span>
-    <strong>Tenant</strong>
+    <strong>Organization</strong>
   </div>
 </div>
 
@@ -218,34 +235,34 @@ class: opening do-definition-opening
 <h1 class="solution-product-heading"><span>Durable Object</span><em>stateful worker</em></h1>
 
 <div class="do-feature-row">
-  <div v-click="1" class="do-feature-card">
+  <div class="do-feature-card">
     <span class="do-feature-icon i-carbon-data-base" aria-hidden="true"></span>
     <strong>SQLite</strong>
-    <div v-click="2" class="do-feature-tags">
+    <div class="do-feature-tags">
       <span class="do-feature-tag">kv</span>
       <span class="do-feature-tag">sql</span>
     </div>
   </div>
-  <div v-click="3" class="do-feature-card">
+  <div class="do-feature-card">
     <span class="do-feature-icon i-carbon-code" aria-hidden="true"></span>
     <strong>single-threaded</strong>
   </div>
-  <div v-click="4" class="do-feature-card">
+  <div class="do-feature-card">
     <span class="do-feature-icon i-carbon-location" aria-hidden="true"></span>
     <strong>created near first request</strong>
   </div>
-  <div v-click="5" class="do-feature-card do-feature-address">
+  <div class="do-feature-card do-feature-address">
     <span class="do-feature-icon i-carbon-tag" aria-hidden="true"></span>
     <strong>addressable by id</strong>
   </div>
-  <div v-click="6" class="do-feature-card">
+  <div class="do-feature-card">
     <span class="do-feature-icon i-carbon-data-connected" aria-hidden="true"></span>
     <strong>websockets</strong>
   </div>
 </div>
 
 <!--
-Reveal SQLite storage first, then show its KV and SQL interfaces; KV data is backed by the hidden SQLite table `__cf_kv`. Continue with single-threaded execution, first-request placement, stable addressability by ID, and WebSocket connection coordination. The Hibernation WebSocket API keeps clients connected while the object sleeps.
+All five capabilities are visible immediately. KV data is backed by the hidden SQLite table `__cf_kv`. The Hibernation WebSocket API keeps clients connected while the object sleeps.
 
 [Sources]
 - https://developers.cloudflare.com/durable-objects/concepts/what-are-durable-objects/
@@ -327,9 +344,9 @@ class: opening livestore-opening
 
 <div class="livestore-feature-row">
   <div v-click="1" class="livestore-feature-card">
-    <span class="livestore-feature-icon i-carbon-data-base" aria-hidden="true"></span>
-    <strong>SQLite in the browser</strong>
-    <small>instant local reads + writes</small>
+    <span class="livestore-feature-icon i-carbon-wifi-off" aria-hidden="true"></span>
+    <strong>Works offline</strong>
+    <small>edit locally · sync when reconnected</small>
   </div>
   <div v-click="2" class="livestore-feature-card">
     <span class="livestore-feature-icon i-carbon-document" aria-hidden="true"></span>
@@ -349,7 +366,7 @@ class: opening livestore-opening
 </div>
 
 <!--
-LiveStore gives the browser a local OPFS SQLite database, records changes as events, runs its browser-side runtime off the UI thread, and synchronizes with the per-user Durable Object backend over WebSocket.
+LiveStore keeps the app usable offline: edits are written to the local OPFS SQLite database and synchronize after the connection returns. It records changes as events, runs its browser-side runtime off the UI thread, and synchronizes with the per-user Durable Object backend over WebSocket.
 
 [Sources]
 - /Users/andrenovax_1/docs/flue-alchemy-demo/README.md
@@ -961,7 +978,7 @@ Click 3: extend the request through the Flue conversation DO and distinctly high
 
 Click 4: copy click 3's topology exactly. Remove the Hello agent panel and replace it beneath the active request path with one merged, non-linked Composable agent panel that does not cover active cards or connections. Keep its title orange. Keep the model, sandbox, `review_file`, and `canWrite` code unchanged so the audience can see how the primitives compose. Workers AI remains inactive.
 
-Click 5: copy the preceding topology without its code panel, preserving the corrected top-down Gateway → Agent route. Activate and distinctly highlight Workers AI in purple, route Flue → Workers AI across the top and down into the card, and show the model response returning to the Flue conversation DO.
+Click 5: copy the preceding topology without its code panel, preserving the corrected top-down Gateway → Agent route. Activate and distinctly highlight Workers AI in purple, route Flue → Workers AI across the top and down into the card, and show the model response returning to the Flue conversation DO. Introduce the compact Workers AI panel below the shared-state lane: AI inference at the edge, with the selected GLM 4.7 Flash model and current catalog examples shown as tags.
 
 Click 6: distinctly highlight the Flue conversation DO in orange. A model-selected read_note or write_note tool uses the closed-over userId and noteId to activate and reach only that user’s UserDO. Merge both implementations into one enlarged Tools panel below Denpasar. Deactivate Workers AI, Agent Worker, Gateway Worker, and React SPA so the tool boundary is isolated.
 
@@ -978,6 +995,8 @@ The model never supplies userId or noteId. The conversation DO and UserDO are se
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/agents/hello.agent.ts#L14
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/tools/notes.tool.ts#L8
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/livestore/user.do.ts#L30
+- https://developers.cloudflare.com/workers-ai/models/
+- https://developers.cloudflare.com/workers-ai/models/glm-4.7-flash/
 - https://flueframework.com/blog/flue-2/
 - https://flueframework.com/docs/guide/tools/
 - https://www.cloudflare.com/network/
@@ -1026,6 +1045,8 @@ setWhere: excluded.seq_num &gt; current.seq_num</code></pre></div>
 <!--
 Click 1: activate UserSyncBackendDO, Projection Queue, Admin Worker, and Admin D1 together, and distinctly highlight UserSyncBackendDO in orange. Show the complete projection path at once: accepted events enqueue into the projection queue, the queue delivers to the Admin Worker with retries, and the consumer folds idempotently into Admin D1. Keep all three arrows spatially separate. Move the enlarged producer panel slightly upward below the columns and title it Publish livestore events to queue. Keep the Ubud browser dim: projection is deliberately off its request path.
 
+Click 2: copy click 1's active topology and complete projection path. Remove the producer panel, keep UserSyncBackendDO active without the orange highlight, distinctly highlight Admin Worker in blue, and show one compact, single-column Update admin view code panel directly below the Ubud browser lane label.
+
 Keep the two D1 databases visibly separate: Auth D1 owns identity; Admin D1 owns eventual cross-user projections. The Denpasar label describes the request-edge example used throughout the walkthrough; the queue consumer and Durable Object are placed independently and should not be claimed to run in that colo without instrumentation.
 
 [Sources]
@@ -1069,23 +1090,86 @@ class: opening alchemy-opening
 <AlchemyDeployment />
 
 <!--
-Click 1: define the LiveStore Worker and its Durable Object bindings.
+Start with all five concepts visible and no code. The thesis is that resource references in the TypeScript program are the infrastructure graph: resources become typed inputs to the Workers that use them.
 
-Click 2: show how the Flue-generated Worker entry and Durable Object manifest become Alchemy resources.
+Click 1: define D1 databases and Queues as typed resource values. R2 and Durable Objects in the overview show the broader Cloudflare resource model; the code uses the resources provisioned by this demo.
 
-Click 3: put the private Workers behind the public Vite Gateway through service bindings.
+Click 2: define a Worker as a function of the resources it consumes. Alchemy turns those values into runtime bindings and preserves their types.
 
-Click 4: provision D1 databases and the projection queues alongside the Workers.
+Click 3: place providers, state, stage, and the application Effect inside `Alchemy.Stack`. This is the lifecycle boundary for the complete resource graph.
 
-Click 5: show that resource outputs form a dependency graph: LiveStore exists before the Workers that consume its Durable Object namespaces, and Gateway is assembled after its private targets.
+Click 4: compose the actual application. D1 feeds Auth and Admin, the Queue feeds LiveStore, LiveStore feeds User and Agent, and all five private Workers become typed inputs to Gateway. Gateway is visible here as the final composition node, not as a separate framework concept.
 
-Click 6: finish with the lifecycle scripts. `alchemy dev` evaluates the graph for the local stack; `alchemy deploy` deploys the stage; `alchemy destroy` removes resources according to their removal policies.
+Click 5: finish with the lifecycle scripts. `alchemy dev` evaluates the graph for the local stack; `alchemy deploy` deploys the stage; `alchemy destroy` removes resources according to their removal policies.
 
 [Sources]
 - /Users/andrenovax_1/docs/flue-alchemy-demo/infra/alchemy.run.ts
-- /Users/andrenovax_1/docs/flue-alchemy-demo/infra/flue-alchemy.ts
 - /Users/andrenovax_1/docs/flue-alchemy-demo/infra/package.json
-- https://alchemy.run/getting-started/
+- https://alchemy.run/what-is-alchemy/
+-->
+
+---
+class: opening integration-workarounds-opening
+---
+
+<div class="integration-workarounds-kicker">WHAT IT TOOK</div>
+<h1>Workarounds.</h1>
+<p class="integration-workarounds-subtitle">Four integration seams. One dependency patch.</p>
+
+<div class="integration-workarounds-table">
+  <div class="integration-workarounds-header" aria-hidden="true">
+    <span>SEAM</span>
+    <span>WHAT BROKE</span>
+    <span>WORKAROUND</span>
+  </div>
+
+  <div class="integration-workaround-row">
+    <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/flue-alchemy.ts"><strong>Flue × Alchemy</strong><span>↗</span></a>
+    <p>Flue recognizes Cloudflare’s Vite host—not Alchemy’s.</p>
+    <p>Capture Flue’s generated manifest; let Alchemy own the runtime.</p>
+  </div>
+
+  <div class="integration-workaround-row integration-workaround-patch">
+    <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/patches/%40livestore%2Bsync-cf%400.4.0.patch"><strong>LiveStore × Queue</strong><span>↗</span></a>
+    <p><code>onPush</code> ran before backend + head validation.</p>
+    <p>Move the hook after validation, before append.</p>
+  </div>
+
+  <div class="integration-workaround-row">
+    <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/jwt.util.ts#L78-L104"><strong>LiveStore × Gateway</strong><span>↗</span></a>
+    <p>WebSocket auth arrives inside double-encoded sync payloads.</p>
+    <p>Decode defensively before verifying the JWT.</p>
+  </div>
+
+  <div class="integration-workaround-row">
+    <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/vite.config.ts#L19-L32"><strong>Alchemy × Vite dev</strong><span>↗</span></a>
+    <p>Two Vite servers collide on cache + internal WebSockets.</p>
+    <p>Isolate cache, prebundle lazy modules, route Worker-first.</p>
+  </div>
+
+</div>
+
+<!--
+The important distinction is between the application model and the integration seams. The domain code still composes cleanly; the workarounds sit where young frameworks meet.
+
+Only the LiveStore `onPush` ordering is a package patch. The Flue integration is a removable host adapter. The Gateway and Vite items are project-owned integration fixes.
+
+The app uses LiveStore's WebSocket transport. `enable_request_signal` is documented for LiveStore's HTTP streaming transport and is not required by this sync path. The shared `nodejs_compat` flag is not presented as a LiveStore-specific fix because the repository does not establish that claim.
+
+[Sources]
+- /Users/andrenovax_1/docs/flue-alchemy-demo/docs/experiments/integration-workarounds-2026-08-24.md
+- /Users/andrenovax_1/docs/flue-alchemy-demo/infra/flue-alchemy.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/agent/flue.alchemy.worker.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/agent/vite.config.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/patches/@livestore+sync-cf@0.4.0.patch
+- /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/livestore/user-sync-backend.do.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/livestore/livestore.worker.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/gateway/jwt.util.ts
+- /Users/andrenovax_1/docs/flue-alchemy-demo/infra/alchemy.run.ts
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/flue-alchemy.ts
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/patches/%40livestore%2Bsync-cf%400.4.0.patch
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/jwt.util.ts#L78-L104
+- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/vite.config.ts#L19-L32
 -->
 
 ---

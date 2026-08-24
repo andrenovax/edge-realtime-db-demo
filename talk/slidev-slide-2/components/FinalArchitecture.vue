@@ -12,9 +12,6 @@
         <marker id="final-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
           <path d="M0,0 L8,4 L0,8 Z" />
         </marker>
-        <marker id="final-arrow-ai" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-          <path d="M0,0 L8,4 L0,8 Z" />
-        </marker>
       </defs>
 
       <g transform="translate(0 34)">
@@ -34,7 +31,7 @@
 
         <path class="wire" d="M795 260 V315" />
         <path class="wire wire-both" d="M795 397 V455" />
-        <path class="wire wire-ai" d="M930 219 C972 219 977 294 1018 294" />
+        <path class="wire" d="M930 219 C972 219 977 294 1018 294" />
         <path class="wire" d="M930 500 C970 500 980 464 1018 464" />
         <path class="wire" d="M1123 498 V530" />
       </g>
@@ -88,7 +85,7 @@
     <div class="final-node final-shared node-auth-d1">
       <b>Auth D1</b><span>accounts + sessions</span>
     </div>
-    <div class="final-node final-shared final-ai node-workers-ai">
+    <div class="final-node final-shared node-workers-ai">
       <b>Workers AI</b><span>serverless inference</span>
     </div>
     <div class="final-node final-shared node-projection-queue">
