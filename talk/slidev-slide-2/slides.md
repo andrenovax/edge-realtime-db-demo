@@ -46,11 +46,12 @@ class: opening talk-structure-opening
     <li>Challenges and technologies involved</li>
     <li>Live demo</li>
     <li>Architecture and code behind it</li>
+    <li>Limitations</li>
   </ol>
 </div>
 
 <!--
-Set expectations for the talk: establish the challenges and technology choices, show the working system, then unpack its architecture and implementation.
+Set expectations for the talk: establish the challenges and technology choices, show the working system, unpack its architecture and implementation, then examine the issues that remain in the current stack.
 -->
 
 ---
@@ -1109,11 +1110,119 @@ Click 5: finish with the lifecycle scripts. `alchemy dev` evaluates the graph fo
 -->
 
 ---
+class: opening ugly-section-opening
+---
+
+<div class="ugly-section-title">
+  <span>THE</span>
+  <h1>UGLY</h1>
+</div>
+
+<!--
+The architecture works. This section is about the costs that remain: physical placement, historical compatibility, unbounded event history, and integration seams.
+-->
+
+---
+class: opening ugly-detail-opening ugly-location-opening
+---
+
+<div class="ugly-tag">THE UGLY</div>
+<h1>Durable Object location is decided once</h1>
+
+<div class="ugly-locality-list">
+  <div><small>01</small><p>First initialization chooses the home region.</p></div>
+  <div><small>02</small><p>Location hints only work on first access.</p></div>
+  <div><small>03</small><p>Hints are best effort, not guarantees.</p></div>
+  <div><small>04</small><p>Users move.</p></div>
+  <div><small>05</small><p>Related Durable Objects may land in different regions.</p></div>
+</div>
+
+<div class="ugly-location-actions">
+  <div><small>MITIGATION</small><p>Initialize <code>AgentDO</code> from <code>UserDO</code> to fix placement.</p></div>
+  <div><small>REPLACEMENT INSTEAD OF RELOCATION</small><p>New DO identity → state transfer → routing cutover.</p></div>
+</div>
+
+<!--
+Durable Object location hints influence only initial placement; an existing object does not move when its user moves. Creating AgentDO from UserDO lets Cloudflare observe the relationship and can improve placement affinity, but it is not a co-location guarantee.
+
+There is no “move this DO” operation. Relocation is an application protocol: create a new identity near the desired region, copy or rebuild its state, atomically change the routing record, and keep the old identity available for rollback or forwarding during the cutover.
+
+[Sources]
+- https://developers.cloudflare.com/durable-objects/reference/data-location/
+- https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/
+- https://developers.cloudflare.com/durable-objects/best-practices/rules-of-durable-objects/
+-->
+
+---
+class: opening ugly-detail-opening ugly-migrations-opening
+---
+
+<div class="ugly-tag">THE UGLY</div>
+<h1>Schema evolution has a long tail</h1>
+
+<div class="ugly-issue-list">
+  <div class="ugly-issue"><small>01</small><p>State changes require event-log replay.</p></div>
+  <div class="ugly-issue"><small>02</small><p>Incompatible event changes create permanent event versions.</p></div>
+  <div class="ugly-issue"><small>03</small><p>Historical schemas and materializers must remain.</p></div>
+  <div class="ugly-issue"><small>04</small><p>Offline clients can emit old events or skip new ones.</p></div>
+  <div class="ugly-issue"><small>05</small><p>Inactive Durable Objects migrate on first use.</p></div>
+  <div class="ugly-issue"><small>06</small><p>Queue projections see mixed versions, duplicates and reordering.</p></div>
+</div>
+
+<!--
+“Permanent” means for as long as retained history contains that version: replay still needs its decoder and materializer. New event versions are therefore additive, and old clients can continue emitting old versions while they remain offline or un-upgraded.
+
+An inactive UserDO has no running isolate. Its new LiveStore state schema is opened and rematerialized only when traffic activates the object and first uses its store. That moves migration latency—and possible replay failures—onto the long tail of first requests rather than one coordinated migration window.
+
+LiveStore preserves canonical event order. The projection Queue is a separate, at-least-once delivery path, so its consumer must tolerate duplicates and ordering differences between event versions.
+
+[Sources]
+- https://docs.livestore.dev/patterns/app-evolution/
+- https://docs.livestore.dev/building-with-livestore/events/
+- https://docs.livestore.dev/building-with-livestore/state/sqlite-schema/
+- https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/
+- https://developers.cloudflare.com/queues/reference/delivery-guarantees/
+-->
+
+---
+class: opening ugly-detail-opening ugly-events-opening
+---
+
+<div class="ugly-tag">THE UGLY</div>
+<h1>The event log only grows</h1>
+
+<div class="ugly-history-list">
+  <div><small>01</small><p>Every client and backend retain event history.</p></div>
+  <div><small>02</small><p>New clients and migrations replay that history.</p></div>
+  <div><small>03</small><p>Storage and rebuild time grow together.</p></div>
+  <div><small>04</small><p>Historical payloads may retain deleted or sensitive data.</p></div>
+  <div><small>05</small><p>Official compaction is not implemented yet.</p></div>
+</div>
+
+<div class="ugly-event-solution">
+  <small>DESIRED MECHANISM</small>
+  <strong>Checkpoint current state.</strong>
+  <p>Compact confirmed history, then archive the replaced events.</p>
+  <p class="ugly-event-threshold">Trigger by bytes or measured replay time—not an arbitrary event count.</p>
+  <a href="https://github.com/livestorejs/livestore/issues/136">LiveStore compaction is planned—not implemented ↗</a>
+</div>
+
+<!--
+This is a desired future mechanism, not a current LiveStore feature. A safe custom protocol must define a trusted checkpoint format, preserve enough version metadata to rebuild deterministically, prove that every active client can start after the compaction boundary, and only then archive or delete older events.
+
+LiveStore's SQLite snapshots are useful state copies, but they are not event-log compaction checkpoints and do not make earlier events deletable. Until compaction exists, event history remains the source used for rematerialization.
+
+[Sources]
+- https://docs.livestore.dev/building-with-livestore/syncing/
+- https://github.com/livestorejs/livestore/issues/136
+-->
+
+---
 class: opening integration-workarounds-opening
 ---
 
-<div class="integration-workarounds-kicker">WHAT IT TOOK</div>
-<h1>Workarounds.</h1>
+<div class="integration-workarounds-kicker">THE UGLY</div>
+<h1>Integration workarounds</h1>
 
 <div class="integration-workarounds-table">
   <div class="integration-workarounds-header" aria-hidden="true">
