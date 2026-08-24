@@ -1,4 +1,4 @@
-# flue-alchemy-demo architecture
+# durable-object-demo architecture
 
 Structure of `src/`, organized by **actor/runtime plane** with worker encapsulation.
 One deployable worker per `src/workers/<name>/` dir; the SPA lives in

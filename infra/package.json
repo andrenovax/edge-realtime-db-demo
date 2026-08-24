@@ -1,5 +1,5 @@
 {
-  "name": "flue-alchemy-demo-infra",
+  "name": "durable-object-demo-infra",
   "private": true,
   "type": "module",
   "scripts": {
