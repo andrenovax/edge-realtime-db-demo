@@ -1077,7 +1077,7 @@ Read the topology left to right: the browser reaches one public Gateway Worker, 
 class: opening deployment-question-opening
 ---
 
-<h1>How the hell do I run and deploy<br />all of this together?</h1>
+<h1>How the hell do I <span>develop and deploy</span><br />all of this together?</h1>
 
 <!--
 Let the complete topology from the previous slide settle, then ask the operational question plainly. The next slide answers it with the single Alchemy stack used by both local development and deployment.
@@ -1114,7 +1114,6 @@ class: opening integration-workarounds-opening
 
 <div class="integration-workarounds-kicker">WHAT IT TOOK</div>
 <h1>Workarounds.</h1>
-<p class="integration-workarounds-subtitle">Four integration seams. One dependency patch.</p>
 
 <div class="integration-workarounds-table">
   <div class="integration-workarounds-header" aria-hidden="true">
@@ -1129,22 +1128,16 @@ class: opening integration-workarounds-opening
     <p>Capture Flue’s generated manifest; let Alchemy own the runtime.</p>
   </div>
 
-  <div class="integration-workaround-row integration-workaround-patch">
-    <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/patches/%40livestore%2Bsync-cf%400.4.0.patch"><strong>LiveStore × Queue</strong><span>↗</span></a>
-    <p><code>onPush</code> ran before backend + head validation.</p>
-    <p>Move the hook after validation, before append.</p>
-  </div>
-
-  <div class="integration-workaround-row">
-    <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/jwt.util.ts#L78-L104"><strong>LiveStore × Gateway</strong><span>↗</span></a>
-    <p>WebSocket auth arrives inside double-encoded sync payloads.</p>
-    <p>Decode defensively before verifying the JWT.</p>
-  </div>
-
   <div class="integration-workaround-row">
     <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/vite.config.ts#L19-L32"><strong>Alchemy × Vite dev</strong><span>↗</span></a>
     <p>Two Vite servers collide on cache + internal WebSockets.</p>
     <p>Isolate cache, prebundle lazy modules, route Worker-first.</p>
+  </div>
+
+  <div class="integration-workaround-row integration-workaround-patch">
+    <a class="integration-source-link" href="https://github.com/andrenovax/edge-realtime-db-demo/blob/main/patches/%40livestore%2Bsync-cf%400.4.0.patch"><strong>LiveStore × Queue</strong><span>↗</span></a>
+    <p><code>onPush</code> ran before backend + head validation.</p>
+    <p>Move the hook after validation, before append.</p>
   </div>
 
 </div>
@@ -1152,23 +1145,20 @@ class: opening integration-workarounds-opening
 <!--
 The important distinction is between the application model and the integration seams. The domain code still composes cleanly; the workarounds sit where young frameworks meet.
 
-Only the LiveStore `onPush` ordering is a package patch. The Flue integration is a removable host adapter. The Gateway and Vite items are project-owned integration fixes.
+Only the LiveStore `onPush` ordering is a package patch. The Flue integration is a removable host adapter. The Vite item is a project-owned integration fix.
 
 The app uses LiveStore's WebSocket transport. `enable_request_signal` is documented for LiveStore's HTTP streaming transport and is not required by this sync path. The shared `nodejs_compat` flag is not presented as a LiveStore-specific fix because the repository does not establish that claim.
 
 [Sources]
-- /Users/andrenovax_1/docs/flue-alchemy-demo/docs/experiments/integration-workarounds-2026-08-24.md
 - /Users/andrenovax_1/docs/flue-alchemy-demo/infra/flue-alchemy.ts
 - /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/agent/flue.alchemy.worker.ts
 - /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/agent/vite.config.ts
 - /Users/andrenovax_1/docs/flue-alchemy-demo/patches/@livestore+sync-cf@0.4.0.patch
 - /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/livestore/user-sync-backend.do.ts
 - /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/livestore/livestore.worker.ts
-- /Users/andrenovax_1/docs/flue-alchemy-demo/src/workers/gateway/jwt.util.ts
 - /Users/andrenovax_1/docs/flue-alchemy-demo/infra/alchemy.run.ts
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/infra/flue-alchemy.ts
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/patches/%40livestore%2Bsync-cf%400.4.0.patch
-- https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/gateway/jwt.util.ts#L78-L104
 - https://github.com/andrenovax/edge-realtime-db-demo/blob/main/src/workers/agent/vite.config.ts#L19-L32
 -->
 

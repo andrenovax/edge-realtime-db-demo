@@ -5438,13 +5438,17 @@
   top: 50%;
   left: 50%;
   width: 1120px;
-  color: var(--red);
+  color: #fff;
   font-size: 66px;
   font-weight: 840;
   letter-spacing: -0.052em;
   line-height: 1.02;
   text-align: center;
   transform: translate(-50%, -50%);
+}
+
+.deployment-question-opening h1 span {
+  color: var(--red);
 }
 
 /* Alchemy: five concepts stay visible while their code is revealed below */
@@ -5823,20 +5827,9 @@
   line-height: 1.02;
 }
 
-.integration-workarounds-subtitle {
-  position: absolute;
-  top: 139px;
-  left: 66px;
-  margin: 0;
-  color: var(--muted);
-  font-size: 18px;
-  font-weight: 620;
-  letter-spacing: -0.012em;
-}
-
 .integration-workarounds-table {
   position: absolute;
-  top: 193px;
+  top: 169px;
   left: 64px;
   width: 1152px;
 }
@@ -5863,7 +5856,7 @@
 
 .integration-workaround-row {
   position: relative;
-  min-height: 104px;
+  min-height: 146px;
   border-top: 1px solid var(--line);
 }
 
